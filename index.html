@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FlyLeno — TUURD Talk</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <main id="app">
+    <section id="viewport">
+      <canvas id="three"></canvas>
+      <div id="hud">
+        <div class="hud-title">TUURD <span>Talk</span></div>
+        <div class="hud-sub">Tonight's host: Grey Leno, piloted by <em>Drosophila melanogaster</em></div>
+      </div>
+      <div id="cams">
+        <button data-cam="audience" class="on">Audience</button>
+        <button data-cam="wide">Wide</button>
+        <button data-cam="close">Close-up</button>
+        <button data-cam="follow">Follow</button>
+        <button data-cam="free">Free</button>
+        <label class="chk"><input type="checkbox" id="showMarkers"> markers</label>
+      </div>
+      <div id="loading"><div class="spinner"></div><div id="loadingText">Loading…</div></div>
+    </section>
+
+    <aside id="sidebar">
+      <header>
+        <h1>Fly brain</h1>
+        <div id="brainStatus" class="status">starting…</div>
+      </header>
+
+      <section class="panel">
+        <div class="row stats">
+          <div><b id="statNeurons">–</b><span>neurons</span></div>
+          <div><b id="statSynapses">–</b><span>connections</span></div>
+          <div><b id="statTime">0.0 s</b><span>sim time</span></div>
+          <div><b id="statSpeed">–</b><span>× real-time</span></div>
+          <div><b id="statRate">–</b><span>spikes/s</span></div>
+        </div>
+        <div class="row controls">
+          <button id="btnPause">Pause</button>
+          <button id="btnReset">Reset</button>
+          <label>speed <input id="simSpeed" type="range" min="0.05" max="1" step="0.05" value="1"></label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Motor output <small>descending neurons → Leno</small></h2>
+        <div id="motor"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Spike raster <small id="rasterInfo"></small></h2>
+        <canvas id="raster" height="220"></canvas>
+      </section>
+
+      <section class="panel">
+        <h2>Show events <small>click to stimulate the fly</small></h2>
+        <div id="stimuli"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Population rates <small>Hz, mean per neuron</small></h2>
+        <div id="groups"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Super-classes <small>spikes by FlyWire super-class (log)</small></h2>
+        <canvas id="classes" height="150"></canvas>
+      </section>
+
+      <footer>
+        <a href="#" id="aboutLink">About &amp; credits</a>
+      </footer>
+    </aside>
+  </main>
+
+  <dialog id="about">
+    <h2>About FlyLeno</h2>
+    <div id="aboutBody"></div>
+    <form method="dialog"><button>Close</button></form>
+  </dialog>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

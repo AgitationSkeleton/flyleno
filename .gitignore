@@ -1,0 +1,17 @@
+# Third-party models: NOT redistributable (see README "Asset licensing").
+# They are regenerated locally with tools/export_*.py from files you own.
+assets/*.glb
+assets/_src/
+assets/*.zip
+assets/*.mhtml
+assets/*.blend
+
+
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+node_modules/
+
+# Game backdrop images exported from Nightmare Puppeteer (not redistributable)
+assets/show_bg/
