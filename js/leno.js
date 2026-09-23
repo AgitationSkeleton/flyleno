@@ -115,6 +115,23 @@ export class Leno {
 
   setMotor(m) { Object.assign(this.motor, m); }
 
+  /** One-shot body gestures triggered by behaviour: 'retch' | 'vomit' | 'fart'. */
+  trigger(kind) { this.gesture = { kind, t: 0, dur: { retch: 0.9, vomit: 1.6, fart: 0.8 }[kind] || 1 }; }
+
+  /** World positions/directions for effects. */
+  mouth() {
+    const h = this.bones.head.getWorldPosition(new THREE.Vector3());
+    return h.addScaledVector(this.forward(), 0.25 * HOST_SCALE).add(new THREE.Vector3(0, -0.05, 0));
+  }
+  butt() {
+    const p = this.bones.pelvis.getWorldPosition(new THREE.Vector3());
+    return p.addScaledVector(this.forward(), -0.2 * HOST_SCALE);
+  }
+  forward() { return new THREE.Vector3(0, 0, 1).applyQuaternion(this.root.quaternion); }
+  headDown() {
+    return this.forward().multiplyScalar(0.8).add(new THREE.Vector3(0, -0.6, 0)).normalize();
+  }
+
   update(dt) {
     if (!this.model) return;
     this.time += dt;
@@ -205,6 +222,29 @@ export class Leno {
       const knee = Math.max(0, -Math.cos(this.phase + (side === 'l' ? 0 : Math.PI))) * gait;
       this.rot(B['calf_' + side], X, 0.9 * knee + 0.5 * s.startle);
       this.rot(B['thigh_' + side], X, -0.4 * s.startle);
+    }
+    // one-shot gestures
+    const G = this.gesture;
+    if (G) {
+      G.t += dt;
+      const u = Math.min(1, G.t / G.dur), env = Math.sin(Math.PI * u);
+      if (G.kind === 'retch' || G.kind === 'vomit') {
+        const k = G.kind === 'vomit' ? 1.3 : 1;
+        const heave = env * k * (0.8 + 0.2 * Math.sin(G.t * 30));
+        this.rot(B.spine1, X, 0.55 * heave);
+        this.rot(B.spine2, X, 0.35 * heave);
+        this.rot(B.head, X, 0.25 * heave);
+        for (const side of ['l', 'r']) {           // hands to the belly
+          this.rot(B['upperarm_' + side], X, -0.7 * env);
+          this.rot(B['lowerarm_' + side], X, -1.3 * env);
+        }
+      } else if (G.kind === 'fart') {
+        this.rot(B.spine1, X, 0.3 * env);                  // lean forward, stick it out
+        this.rot(B.neck, Y, 0.9 * env);                    // look over the shoulder
+        this.rot(B.thigh_l, X, -0.25 * env); this.rot(B.thigh_r, X, -0.25 * env);
+        this.rot(B.calf_l, X, 0.4 * env); this.rot(B.calf_r, X, 0.4 * env);
+      }
+      if (u >= 1) this.gesture = null;
     }
     // bob
     this.model.position.y += Math.abs(Math.sin(this.phase)) * 0.06 * gait;

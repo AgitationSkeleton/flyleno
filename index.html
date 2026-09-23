@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FlyLeno — TUURD Talk</title>
   <link rel="stylesheet" href="css/style.css">
@@ -30,7 +31,13 @@
         <button data-cam="free">Free</button>
         <label class="chk"><input type="checkbox" id="showMarkers"> markers</label>
       </div>
-      <div id="loading"><div class="spinner"></div><div id="loadingText">Loading…</div></div>
+      <div id="throws">
+        <button id="throwTomato" title="a cultist in the audience throws a tomato">🍅 Throw tomato</button>
+        <button id="throwPipe" title="a cultist in the audience throws a metal pipe">🔧 Throw pipe</button>
+      </div>
+      <div id="loading"><div class="spinner"></div><div id="loadingText">Loading…</div>
+        <button id="startShow" hidden>▶ Start the show</button>
+        <div id="startNote" hidden>Starts the music and lets the fly hear it: when asked, share <b>this tab</b> with <b>"Also share tab audio"</b> ticked.</div></div>
     </section>
 
     <aside id="sidebar">
@@ -54,6 +61,34 @@
         </div>
       </section>
 
+      <section class="panel map-panel">
+        <div class="map-wrap">
+          <canvas id="neuromap"></canvas>
+          <div class="map-title">NEURAL STATE · ALL CELLS</div>
+          <div class="map-caption">Measured soma positions + deterministic missing-position layout · modelled dynamics</div>
+          <label class="map-rot"><input type="checkbox" id="mapRotate"> rotate</label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Mind <small>dopamine from the model's PAM / PPL1 neurons</small></h2>
+        <div class="meter bi"><div class="lbl">Dopamine<small>PAM − PPL1</small></div><div class="bar"><i id="daBar"></i></div><div class="num" id="daNum">0</div></div>
+        <div class="meter bi"><div class="lbl">Mood<small>slow average</small></div><div class="bar"><i id="moodBar"></i></div><div class="num" id="moodNum">0</div></div>
+        <div class="row" style="margin:6px 0 2px"><span class="status">Deciding:</span> <b id="mindNow" class="status">—</b>
+          <label class="chk" style="margin-left:auto"><input type="checkbox" id="initiative" checked> initiative</label></div>
+        <div id="qvals"></div>
+        <div class="row status" style="margin-top:6px"><span>synaptic learning: <b id="learnNum">0</b> mV/s on <span id="learnEdges">–</span> synapses</span></div>
+      </section>
+
+      <section class="panel">
+        <h2>Voice <small>articulator motor neurons → phonemes</small></h2>
+        <div class="meter"><div class="lbl">Voicing<small>DNg02/DNp13 + articulators</small></div><div class="bar"><i id="voiceBar"></i></div><div class="num" id="voiceNum">0</div></div>
+        <div id="transcript" class="transcript">…</div>
+        <div class="row lesson"><input id="lessonWord" placeholder="teach a word, e.g. hello" maxlength="24"><button id="lessonBtn">Teach</button></div>
+        <div id="lessonInfo" class="status"></div>
+        <div class="row status" id="audioSrc"></div>
+      </section>
+
       <section class="panel">
         <h2>Motor output <small>descending neurons → Leno</small></h2>
         <div id="motor"></div>
@@ -67,6 +102,33 @@
       <section class="panel">
         <h2>Show events <small>click to stimulate the fly</small></h2>
         <div id="stimuli"></div>
+      </section>
+
+      <section class="panel" id="music">
+        <h2>Music <small>heard by the fly</small></h2>
+        <div class="yt-frame"></div>
+        <div class="yt-title">—</div>
+        <div class="row yt-controls">
+          <button class="yt-prev" title="previous track">⏮</button><button class="yt-back" title="back 10 s">⏪</button>
+          <button class="yt-play" title="play / pause">▶</button><button class="yt-fwd" title="forward 10 s">⏩</button>
+          <button class="yt-next" title="next track">⏭</button>
+          <label class="yt-vol-l">🔊 <input class="yt-vol" type="range" min="0" max="100" value="60"></label>
+        </div>
+        <div class="row"><input class="yt-seek" type="range" min="0" max="1" step="0.1" value="0"><span class="yt-time status">0:00 / 0:00</span></div>
+        <div class="row status" style="margin-top:4px"><span id="hearMode">hearing: off</span><button id="pipeBtn" class="mini">pipe tab audio</button></div>
+        <div class="meter"><div class="lbl">JO-B low<small>30–300 Hz</small></div><div class="bar"><i id="hearLowBar"></i></div><div class="num" id="hearLowNum">0</div></div>
+        <div class="meter"><div class="lbl">JO-A high<small>0.3–4 kHz</small></div><div class="bar"><i id="hearHighBar"></i></div><div class="num" id="hearHighNum">0</div></div>
+      </section>
+
+      <section class="panel">
+        <h2>Brain settings</h2>
+        <label class="chk"><input type="checkbox" id="optAdapt" checked> spike-frequency adaptation <small class="status">(off = pure Shiu model; can run away)</small></label>
+        <label class="chk"><input type="checkbox" id="optPlastic" checked> dopamine plasticity on articulator synapses</label>
+        <div class="row"><button id="resetLearn" class="mini">forget learning</button></div>
+        <label class="rowlbl">stage ambience (taste/touch noise) <input id="ambience" type="range" min="0" max="3" step="0.1" value="1"></label>
+        <label class="rowlbl">hearing gain <input id="hearGain" type="range" min="0" max="2" step="0.05" value="1"></label>
+        <label class="rowlbl">sound volume <input id="sfxVol" type="range" min="0" max="1" step="0.05" value="0.9"></label>
+        <div id="bodyControls"></div>
       </section>
 
       <section class="panel">

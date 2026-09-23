@@ -1,0 +1,15 @@
+{
+  "_doc": "Leno's muscle layout shared by tools/build_connectome.py (assigns descending-neuron pools to muscles) and js/ragdoll.js (physics). Each DOF has an antagonistic muscle pair: <joint>_<dof>_flex and <joint>_<dof>_ext. Lateral joints exist as _l and _r. Angles in degrees, in the child body's frame relative to the parent at the rest pose (A-pose arms, straight legs); flex = positive direction.",
+  "axial": [
+    {"joint": "spine", "parent": "pelvis", "child": "chest", "bones": ["spine_01", "spine_03"], "dofs": {"pitch": [-25, 40], "yaw": [-35, 35], "roll": [-25, 25]}},
+    {"joint": "neck", "parent": "chest", "child": "head", "bones": ["neck_01", "head"], "dofs": {"pitch": [-35, 45], "yaw": [-70, 70]}}
+  ],
+  "lateral": [
+    {"joint": "hip", "parent": "pelvis", "child": "thigh", "bones": ["thigh"], "dofs": {"pitch": [-30, 100], "roll": [-15, 45], "yaw": [-30, 30]}},
+    {"joint": "knee", "parent": "thigh", "child": "calf", "bones": ["calf"], "dofs": {"pitch": [0, 140]}},
+    {"joint": "ankle", "parent": "calf", "child": "foot", "bones": ["foot"], "dofs": {"pitch": [-40, 40]}},
+    {"joint": "shoulder", "parent": "chest", "child": "upperarm", "bones": ["upperarm"], "dofs": {"pitch": [-60, 170], "roll": [-80, 90], "yaw": [-60, 60]}},
+    {"joint": "elbow", "parent": "upperarm", "child": "lowerarm", "bones": ["lowerarm"], "dofs": {"pitch": [0, 145]}}
+  ],
+  "excludeDnTypes": ["DNp09", "DNg97", "DNa01", "DNa02", "MDN", "DNp01", "DNg62", "DNg02", "DNp13", "oviDN"]
+}

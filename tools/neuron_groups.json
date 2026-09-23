@@ -502,6 +502,132 @@
    ],
    "rate": 100.0,
    "fictive": true
+  },
+  {
+   "key": "reward",
+   "label": "Reward (dopamine)",
+   "sub": "PAM dopaminergic neurons, driven by cheers, laughs and applause",
+   "query": {
+    "cell_type_prefix": [
+     "PAM"
+    ]
+   },
+   "rate": 40.0,
+   "hidden": true
+  },
+  {
+   "key": "punish",
+   "label": "Punishment (dopamine)",
+   "sub": "PPL1 dopaminergic neurons, driven by boos and gasps",
+   "query": {
+    "cell_type_prefix": [
+     "PPL1"
+    ]
+   },
+   "rate": 40.0,
+   "hidden": true
+  },
+  {
+   "key": "vocal",
+   "label": "Vocal drive",
+   "sub": "fictive: song/wing-power descending neurons DNg02 + DNp13",
+   "query": {
+    "cell_type_prefix": [
+     "DNg02",
+     "DNp13"
+    ]
+   },
+   "rate": 60.0,
+   "fictive": true
+  },
+  {
+   "key": "retchDrive",
+   "label": "Retch drive",
+   "sub": "fictive: pharyngeal-nerve motor neurons",
+   "query": {
+    "super_class": [
+     "motor"
+    ],
+    "nerve": [
+     "PhN"
+    ],
+    "exclude_cell_type": [
+     "CB0701"
+    ]
+   },
+   "rate": 60.0,
+   "fictive": true
+  },
+  {
+   "key": "fartDrive",
+   "label": "Fart drive",
+   "sub": "fictive: oviposition descending neurons (oviDN)",
+   "query": {
+    "cell_type_prefix": [
+     "oviDN"
+    ]
+   },
+   "rate": 80.0,
+   "fictive": true
+  },
+  {
+   "key": "hearLow",
+   "label": "Hearing: low band",
+   "sub": "JO-B antennal neurons (low-frequency sound/song), driven live by in-world audio (music, crowd, Leno)",
+   "query": {
+    "cell_type_prefix": [
+     "JO-B"
+    ]
+   },
+   "rate": 0.0,
+   "hidden": true,
+   "dynamic": true
+  },
+  {
+   "key": "hearHigh",
+   "label": "Hearing: high band",
+   "sub": "JO-A antennal neurons (high-frequency vibration), driven live by in-world audio",
+   "query": {
+    "cell_type_prefix": [
+     "JO-A"
+    ]
+   },
+   "rate": 0.0,
+   "hidden": true,
+   "dynamic": true
+  },
+  {
+   "key": "ambientTaste",
+   "label": "Ambience: taste",
+   "sub": "low-rate noise on all gustatory neurons",
+   "query": {
+    "super_class": [
+     "sensory"
+    ],
+    "cell_class": [
+     "gustatory"
+    ]
+   },
+   "rate": 5.0,
+   "hidden": true
+  },
+  {
+   "key": "ambientTouch",
+   "label": "Ambience: touch",
+   "sub": "low-rate noise on mechanosensory neurons except the antennal JO",
+   "query": {
+    "super_class": [
+     "sensory"
+    ],
+    "cell_class": [
+     "mechanosensory"
+    ],
+    "exclude_cell_type_prefix": [
+     "JO-"
+    ]
+   },
+   "rate": 1.0,
+   "hidden": true
   }
  ],
  "motor": [
@@ -571,6 +697,81 @@
     720575940660219265,
     720575940618238523
    ]
+  },
+  {
+   "key": "vocal",
+   "label": "Voice",
+   "sub": "DNg02 + DNp13 (song / wing power)",
+   "query": {
+    "cell_type_prefix": [
+     "DNg02",
+     "DNp13"
+    ]
+   }
+  },
+  {
+   "key": "pharynx",
+   "label": "Pharynx",
+   "sub": "PhN motor neurons (retch / vomit)",
+   "query": {
+    "super_class": [
+     "motor"
+    ],
+    "nerve": [
+     "PhN"
+    ],
+    "exclude_cell_type": [
+     "CB0701"
+    ]
+   }
+  },
+  {
+   "key": "fart",
+   "label": "Abdomen",
+   "sub": "oviDN (fart)",
+   "query": {
+    "cell_type_prefix": [
+     "oviDN"
+    ]
+   }
+  },
+  {
+   "key": "pam",
+   "label": "PAM (reward DA)",
+   "sub": "PAM dopaminergic",
+   "query": {
+    "cell_type_prefix": [
+     "PAM"
+    ]
+   }
+  },
+  {
+   "key": "ppl1",
+   "label": "PPL1 (punish DA)",
+   "sub": "PPL1 dopaminergic",
+   "query": {
+    "cell_type_prefix": [
+     "PPL1"
+    ]
+   }
+  }
+ ],
+ "_query_help": "Entries may use 'query' instead of 'root_ids': keys super_class, cell_class, cell_type_prefix, nerve (lists); all given keys must match.",
+ "readouts": [
+  {
+   "key": "articulators",
+   "label": "Articulators",
+   "sub": "mouthpart (MxLbN) + pharyngeal (PhN) motor neurons: Leno's 'vocal tract'",
+   "query": {
+    "super_class": [
+     "motor"
+    ],
+    "nerve": [
+     "MxLbN",
+     "PhN"
+    ]
+   },
+   "plastic": true
   }
  ]
 }

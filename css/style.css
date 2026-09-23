@@ -86,3 +86,35 @@ dialog a { color: var(--accent-2); }
   #app { grid-template-columns: 1fr; grid-template-rows: 55vh auto; height: auto; }
   #sidebar { border-left: 0; border-top: 1px solid var(--line); }
 }
+
+.map-panel { padding: 0; overflow: hidden; }
+.map-wrap { position: relative; height: 290px; background: #050608; }
+#neuromap { width: 100%; height: 100%; display: block; cursor: grab; }
+.map-title { position: absolute; top: 8px; left: 10px; font: 600 11px var(--mono); letter-spacing: .12em; color: #d9f3f5; pointer-events: none; }
+.map-caption { position: absolute; bottom: 8px; left: 10px; right: 10px; font: 10.5px var(--mono); color: #cfe9ea; opacity: .85; pointer-events: none; }
+.map-rot { position: absolute; top: 6px; right: 8px; font-size: 11px; color: var(--muted); display: flex; gap: 4px; align-items: center; }
+
+#startShow { margin-top: 10px; font: 700 16px system-ui; padding: 10px 22px; border-radius: 999px; border: 0; cursor: pointer;
+  background: var(--accent); color: #fff; box-shadow: 0 0 24px #e0263a88; }
+#startNote { color: var(--muted); max-width: 380px; text-align: center; font-size: 12px; }
+.transcript { font: 13px/1.5 var(--mono); color: #f3e7c0; background: #0b0b0e; border-radius: 4px; padding: 6px 8px; min-height: 42px; margin: 6px 0; word-break: break-word; }
+.lesson input { flex: 1; background: #0b0b0e; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font: inherit; }
+.lesson button, button.mini, .yt-controls button { background: #0b0b0e; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 3px 9px; cursor: pointer; font: inherit; }
+button.mini { margin-left: auto; font-size: 11px; }
+.qrow { display: grid; grid-template-columns: 64px 1fr 44px; gap: 6px; align-items: center; margin: 2px 0; font-size: 11.5px; }
+.qrow .bar { height: 6px; background: #0b0b0e; border-radius: 3px; position: relative; overflow: hidden; }
+.qrow .bar i { position: absolute; top: 0; bottom: 0; background: var(--accent-2); }
+.qrow.now .lbl { color: var(--warn); font-weight: 600; }
+.qrow .num { font: 11px var(--mono); text-align: right; }
+.yt-frame, #music iframe { width: 100%; height: 200px; border: 0; border-radius: 6px; display: block; background: #000; }
+.yt-title { font-weight: 600; margin: 6px 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.yt-controls { gap: 4px; }
+.yt-vol-l { margin-left: auto; display: flex; align-items: center; gap: 4px; color: var(--muted); }
+.yt-vol { width: 80px; }
+.yt-seek { flex: 1; }
+.rowlbl { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--muted); margin: 4px 0; }
+.rowlbl input[type=range] { width: 130px; }
+
+#throws { position: absolute; top: 14px; right: 14px; display: flex; gap: 6px; }
+#throws button { background: #000b; color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; font: inherit; }
+#throws button:hover { border-color: var(--accent); }

@@ -22,7 +22,8 @@ let P;                                   // params
 let dt, em, eg, cg, delaySteps, refSteps, wSyn;
 let ring = [], ringLen = [];
 let step = 0;
-let stim = new Map();                    // key -> { indices: Int32Array, rate }
+let stim = new Map();
+const stimIdx = new Map();              // key -> Int32Array (cached indices)                    // key -> { indices: Int32Array, rate }
 let superClass, nClasses = 0;
 let groupOf;                             // Int16Array neuron -> motor/stim group id (-1)
 let groupCounts, groupSizes, groupKeys = [];
@@ -31,6 +32,23 @@ let rasterRow;                           // Int16Array neuron -> raster row (-1)
 let rasterFixedRows = 0, RASTER_ROWS = 200, dynRowOwner, rasterEvents = [];
 let running = false, speed = 1, totalSpikes = 0, windowSpikes = 0;
 let loopTimer = null;
+// muscle pools (ragdoll) and per-neuron readouts (articulators)
+let muscleOf, muscleCounts, muscleSizes, muscleKeys = [];
+let readoutPos, readoutCounts, readoutKey = null;
+let lastSpike;                            // step of each neuron's last spike (for STDP traces)
+// dopamine-gated plasticity on synapses onto the plastic readout neurons
+let plEdge = null, plMap = null, plW, plW0, plElig, plEligT, plInStart, plInIdx, plPre;
+let isPlasticPost = null, daPam = 1, daPpl = 1;
+const PL = { eta: 0.6, tauElig: 1000, tauPre: 20, wMaxGain: 4, wMaxAbs: 2.5, enabled: true };
+let lastDA = 0, dwAccum = 0;
+// Spike-frequency adaptation (optional, default on): each spike raises the neuron's threshold by
+// ADAPT.dA mV, decaying with ADAPT.tau ms. Not part of Shiu et al.; it keeps broad or recurrent
+// input from igniting the model's self-sustained runaway state. a(t) = aSpike * exp(-(t - tSpike)/tau).
+const ADAPT = { on: true, dA: 1.0, tau: 150 };
+let aSpike;
+// every spike's neuron index in the current report window (for the neural map), capped
+let spikeBuf = new Int32Array(1 << 16), spikeLen = 0;
+const SPIKE_CAP = 1 << 19;
 
 const send = (type, data = {}, transfer) => postMessage({ type, ...data }, transfer || []);
 
@@ -125,19 +143,108 @@ function setup(meta) {
   // stimulus-only size correction for shared neurons
   groups.forEach(([, idx], gi) => { groupSizes[gi] = idx.filter((i) => groupOf[i] === gi).length || idx.length; });
 
-  // raster rows: motor neurons, then up to 6 per stimulus group, then dynamic rows
+  lastSpike = new Int32Array(N).fill(-1e9);
+  aSpike = new Float32Array(N);
+
+  // muscle pools
+  muscleOf = new Int16Array(N).fill(-1);
+  muscleKeys = (meta.muscles || []).map((m) => m.key);
+  muscleCounts = new Float64Array(muscleKeys.length);
+  muscleSizes = new Float64Array(muscleKeys.length);
+  (meta.muscles || []).forEach((m, k) => { muscleSizes[k] = m.indices.length || 1; for (const i of m.indices) muscleOf[i] = k; });
+
+  // per-neuron readout (articulators) + plastic synapses onto them
+  readoutPos = new Int16Array(N).fill(-1);
+  const ro = (meta.readouts || [])[0];
+  if (ro) {
+    readoutKey = ro.key;
+    ro.indices.forEach((i, k) => { readoutPos[i] = k; });
+    readoutCounts = new Float64Array(ro.indices.length);
+    if (ro.plastic) setupPlasticity(ro.indices);
+  }
+  daPam = meta.motor.find((m) => m.key === 'pam')?.indices.length || 1;
+  daPpl = meta.motor.find((m) => m.key === 'ppl1')?.indices.length || 1;
+
+  // raster rows: up to 6 neurons per motor group, then per visible stimulus group, then dynamic rows
   rasterRow = new Int16Array(N).fill(-1);
   let row = 0;
   const rowsInfo = [];
-  for (const m of meta.motor) for (const i of m.indices) if (rasterRow[i] < 0) { rasterRow[i] = row++; rowsInfo.push('m:' + m.key); }
+  for (const m of meta.motor) for (const i of m.indices.slice(0, 6)) if (rasterRow[i] < 0) { rasterRow[i] = row++; rowsInfo.push('m:' + m.key); }
   for (const s of meta.stimuli) {
-    if (s.fictive) continue;
+    if (s.fictive || s.hidden) continue;
     for (const i of s.indices.slice(0, 6)) if (rasterRow[i] < 0) { rasterRow[i] = row++; rowsInfo.push('s:' + s.key); }
   }
   rasterFixedRows = row;
   dynRowOwner = new Int32Array(RASTER_ROWS - row).fill(-1);
   VTH_GAP = P.vTh - P.v0;
   send('ready', { N, E, rows: RASTER_ROWS, fixedRows: rowsInfo, groupKeys });
+}
+
+// ------------------------------------------------------------------ plasticity
+// Three-factor rule on every synapse onto the plastic readout neurons (Leno's "vocal tract"):
+//   eligibility e: on a postsynaptic spike, e += exp(-(t - t_pre)/tau_pre)  (pre-before-post),
+//                  decaying with tau_elig
+//   dopamine DA  : tanh((PAM rate - PPL1 rate) / 20 Hz) of the model's own dopaminergic neurons
+//   dw = eta * DA * e * w_syn per second; |w| clamped to [0, max(wMaxGain*|w0|, wMaxAbs mV)], sign kept
+// Articulations that are followed by dopamine get more drive from the context that produced them.
+function setupPlasticity(posts) {
+  isPlasticPost = new Uint8Array(N);
+  for (const i of posts) isPlasticPost[i] = 1;
+  const list = [];
+  for (let e = 0; e < E; e++) if (isPlasticPost[targets[e]]) list.push(e);
+  plEdge = Int32Array.from(list);
+  const n = plEdge.length;
+  plMap = new Map();
+  plW = new Float32Array(n); plW0 = new Float32Array(n); plElig = new Float32Array(n); plEligT = new Int32Array(n);
+  plPre = new Int32Array(n);
+  for (let k = 0; k < n; k++) {
+    const e = plEdge[k];
+    let lo = 0, hi = N - 1;                          // pre neuron: last row with rowPtr <= e
+    while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (rowPtr[mid] <= e) lo = mid; else hi = mid - 1; }
+    plPre[k] = lo;
+    plMap.set(e, k);
+    plW[k] = plW0[k] = weights[e] * wSyn;
+  }
+  const byPost = new Map();
+  for (let k = 0; k < n; k++) { const p = targets[plEdge[k]]; if (!byPost.has(p)) byPost.set(p, []); byPost.get(p).push(k); }
+  plInStart = new Map(); const flat = [];
+  for (const [p, arr] of byPost) { plInStart.set(p, [flat.length, flat.length + arr.length]); for (const k of arr) flat.push(k); }
+  plInIdx = Int32Array.from(flat);
+}
+
+function eligDecay(k) {
+  const dtSteps = step - plEligT[k];
+  if (dtSteps > 0) { plElig[k] *= Math.exp(-(dtSteps * dt) / PL.tauElig); plEligT[k] = step; }
+}
+
+function onPlasticPostSpike(post) {
+  const r = plInStart.get(post);
+  if (!r) return;
+  for (let j = r[0]; j < r[1]; j++) {
+    const k = plInIdx[j];
+    const since = (step - lastSpike[plPre[k]]) * dt;
+    if (since > 5 * PL.tauPre) continue;
+    eligDecay(k);
+    plElig[k] += Math.exp(-since / PL.tauPre);
+  }
+}
+
+function applyDopamine(winMs, pamRate, pplRate) {
+  const da = Math.tanh((pamRate - pplRate) / 20);
+  lastDA = da;
+  if (!plEdge || !PL.enabled || Math.abs(da) < 0.02) return;
+  let dw = 0;
+  for (let k = 0; k < plEdge.length; k++) {
+    if (plElig[k] < 1e-4) continue;
+    eligDecay(k);
+    const w0 = plW0[k], sign = w0 >= 0 ? 1 : -1;
+    const wMax = Math.max(PL.wMaxGain * Math.abs(w0), PL.wMaxAbs);
+    let mag = Math.abs(plW[k]) + PL.eta * da * plElig[k] * wSyn * (winMs / 1000);
+    mag = Math.min(wMax, Math.max(0, mag));
+    dw += Math.abs(mag * sign - plW[k]);
+    plW[k] = mag * sign;
+  }
+  dwAccum += dw;
 }
 
 let dynPtr = 0, dynBudget = 0;
@@ -174,6 +281,16 @@ function emit(i, slot) {
   classCounts[superClass[i]]++;
   const gi = groupOf[i];
   if (gi >= 0) groupCounts[gi]++;
+  const mu = muscleOf[i];
+  if (mu >= 0) muscleCounts[mu]++;
+  const rp = readoutPos[i];
+  if (rp >= 0) { readoutCounts[rp]++; if (plEdge) onPlasticPostSpike(i); }
+  if (ADAPT.on) aSpike[i] = adaptation(i) + ADAPT.dA;
+  lastSpike[i] = step;
+  if (spikeLen < SPIKE_CAP) {
+    if (spikeLen === spikeBuf.length) { const nb = new Int32Array(spikeBuf.length * 2); nb.set(spikeBuf); spikeBuf = nb; }
+    spikeBuf[spikeLen++] = i;
+  }
   // raster: tagged neurons always; other neurons get a dynamic row (round-robin), capped per report
   let r = rasterRow[i];
   if (r < 0) {
@@ -191,6 +308,15 @@ function emit(i, slot) {
 }
 
 let VTH_GAP = 7;
+function adaptation(i) {
+  const a = aSpike[i];
+  return a === 0 ? 0 : a * Math.exp(-((step - lastSpike[i]) * dt) / ADAPT.tau);
+}
+
+function gauss() {
+  return Math.sqrt(-2 * Math.log(Math.random() || 1e-12)) * Math.cos(2 * Math.PI * Math.random());
+}
+
 function simStep() {
   const slot = step % delaySteps;
   // 1) deliver spikes emitted delaySteps ago (lazy targets are advanced first)
@@ -200,12 +326,13 @@ function simStep() {
     const end = rowPtr[pre + 1];
     for (let e = rowPtr[pre]; e < end; e++) {
       const post = targets[e];
+      const w = (isPlasticPost !== null && isPlasticPost[post]) ? plW[plMap.get(e)] : weights[e] * wSyn;
       if (!isActive[post]) {
         advance(post);
-        g[post] += weights[e] * wSyn;
+        g[post] += w;
         if (canSpike(post)) { isActive[post] = 1; activeList[activeCount++] = post; }
       } else {
-        g[post] += weights[e] * wSyn;
+        g[post] += w;
       }
     }
   }
@@ -215,11 +342,15 @@ function simStep() {
   for (const s of stim.values()) {
     const p = s.rate * dt * 1e-3;
     if (p <= 0) continue;
-    for (const i of s.indices) {
-      if (Math.random() < p) {
-        if (!isActive[i]) advance(i);
-        v[i] = P.vReset; g[i] = 0; emit(i, slot);
-      }
+    // number of spikes this step ~ Poisson(n p); pick that many neurons at random
+    const n = s.indices.length, lam = n * p;
+    let k = 0;
+    if (lam > 30) k = Math.max(0, Math.round(lam + Math.sqrt(lam) * gauss()));
+    else { const L = Math.exp(-lam); let q = Math.random(); while (q > L) { k++; q *= Math.random(); } }
+    for (let c = 0; c < k; c++) {
+      const i = s.indices[(Math.random() * n) | 0];
+      if (!isActive[i]) advance(i);
+      v[i] = P.vReset; g[i] = 0; emit(i, slot);
     }
   }
 
@@ -232,7 +363,7 @@ function simStep() {
     const vi = v0 + (v[i] - v0) * em + gi * cg;
     g[i] = gi * eg;
     tLast[i] = next;
-    if (vi > vth) {
+    if (vi > vth && (!ADAPT.on || vi > vth + adaptation(i))) {
       v[i] = vr; g[i] = 0; refUntil[i] = step + refSteps;
       emit(i, slot);
     } else {
@@ -276,17 +407,26 @@ function report(now) {
     groupCounts[k] = 0;
   }
   const classes = Array.from(classCounts); classCounts.fill(0);
+  applyDopamine(winMs, rates['m:pam'] || 0, rates['m:ppl1'] || 0);
+  const muscles = {};
+  for (let k = 0; k < muscleKeys.length; k++) { muscles[muscleKeys[k]] = (muscleCounts[k] / muscleSizes[k]) / (winMs / 1000); muscleCounts[k] = 0; }
+  const readout = readoutCounts ? Float32Array.from(readoutCounts) : null;
+  const spikes = spikeBuf.slice(0, spikeLen); spikeLen = 0;
+  if (readoutCounts) readoutCounts.fill(0);
   const ev = Float32Array.from(rasterEvents); rasterEvents.length = 0;
   send('tick', {
     t: step * dt / 1000, realtime: winMs / (wallAcc || 1), spikesPerSec: windowSpikes / (winMs / 1000),
-    active: activeCount, rates, classes, raster: ev, winMs,
-  }, [ev.buffer]);
+    active: activeCount, rates, classes, raster: ev, winMs, muscles, readout, spikes,
+    dopamine: lastDA, plasticity: dwAccum, plasticEdges: plEdge ? plEdge.length : 0,
+  }, [ev.buffer, spikes.buffer]);
+  dwAccum = 0;
   windowSpikes = 0; wallAcc = 0; stepsAcc = 0; lastReport = now; dynBudget = DYN_EVENTS_PER_REPORT;
 }
 
 function reset() {
   v.fill(P.v0); g.fill(0); tLast.fill(0); refUntil.fill(0); isActive.fill(0); activeCount = 0;
-  ringLen.fill(0); step = 0; totalSpikes = 0;
+  ringLen.fill(0); step = 0; totalSpikes = 0; lastSpike.fill(-1e9); aSpike.fill(0);
+  if (plEdge) { plElig.fill(0); plEligT.fill(0); }   // learned weights survive a reset
 }
 
 onmessage = async ({ data }) => {
@@ -304,9 +444,23 @@ onmessage = async ({ data }) => {
         setup(meta);
         break;
       }
-      case 'stim':
-        if (data.rate > 0) stim.set(data.key, { indices: Int32Array.from(data.indices), rate: data.rate });
-        else stim.delete(data.key);
+      case 'stim': {
+        // indices may be omitted for a rate-only update of a known group (live hearing input)
+        const cur = stim.get(data.key);
+        if (data.indices) stimIdx.set(data.key, Int32Array.from(data.indices));
+        const idx = stimIdx.get(data.key);
+        if (data.rate > 0 && idx) {
+          if (cur) cur.rate = data.rate; else stim.set(data.key, { indices: idx, rate: data.rate });
+        } else stim.delete(data.key);
+        break;
+      }
+      case 'adaptation':
+        Object.assign(ADAPT, data.params || {});
+        if (!ADAPT.on) aSpike.fill(0);
+        break;
+      case 'plasticity':
+        Object.assign(PL, data.params || {});
+        if (data.resetWeights && plEdge) { plW.set(plW0); plElig.fill(0); }
         break;
       case 'run':
         running = true; lastWall = lastReport = performance.now(); clearTimeout(loopTimer); loop();

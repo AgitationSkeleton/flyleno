@@ -1,0 +1,24 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>yt test</title></head>
+<body>
+<div id="a"></div><div id="b"></div>
+<pre id="log"></pre>
+<script>
+  const log = (m) => (document.getElementById('log').textContent += m + '\n');
+  window.results = [];
+  function onYouTubeIframeAPIReady() {
+    for (const [el, host] of [['a', 'https://www.youtube.com'], ['b', 'https://www.youtube-nocookie.com']]) {
+      new YT.Player(el, {
+        host, width: 320, height: 200, videoId: 'AELO0h04P5k',
+        playerVars: { list: 'PLxqmDuD9PdVr_e7dE7_7OY6SIJBD2KDnv', index: 2, playsinline: 1, origin: location.origin },
+        events: {
+          onReady: (e) => { log(host + ' ready ' + (e.target.getVideoData().title || '')); e.target.mute(); e.target.playVideo(); },
+          onStateChange: (e) => { log(host + ' state ' + e.data); window.results.push(host + ' state ' + e.data); },
+          onError: (e) => { log(host + ' ERROR ' + e.data); window.results.push(host + ' ERROR ' + e.data); },
+        },
+      });
+    }
+  }
+</script>
+<script src="https://www.youtube.com/iframe_api"></script>
+</body></html>

@@ -1,19 +1,36 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { loadStage } from './stage.js';
+import { loadOriginalStage } from './stage-original.js';
 import { Leno } from './leno.js';
 import { Sidebar } from './ui.js';
 import { decodeMotor, motorGains } from './motor.js';
 import { Director } from './director.js';
+import { NeuroMap } from './neuromap.js';
+import { AudioWorld } from './audio.js';
+import { MusicPlayer } from './youtube.js';
+import { Hearing } from './hearing.js';
+import { Behavior } from './behavior.js';
+import { Audience } from './audience.js';
+import { Mind, ACTIONS, toPhones } from './mind.js';
+import { FX } from './fx.js';
+import { PhysicsLeno } from './body.js';
+import { Cultists } from './cultists.js';
+import { Projectiles } from './projectiles.js';
+import { LiveCams } from './livecam.js';
 
+// YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
+if (location.hostname === '127.0.0.1') { location.replace(location.href.replace('//127.0.0.1', '//localhost')); await new Promise(() => {}); }
 const params = new URLSearchParams(location.search);
-const LITE = params.has('lite');           // no scene point lights, 1x pixel ratio (slow GPUs / headless tests)
-const loadingText = document.getElementById('loadingText');
+const LITE = params.has('lite');           // no stage point lights, 1x pixel ratio (slow GPUs / headless tests)
+const STAGE = params.get('stage') || 'original';   // 'original' (procedural, default) | 'game' (exported GLB)
+const BODY = params.get('body') || 'ragdoll';       // 'ragdoll' (physics, fly drives the muscles) | 'kinematic'
+const $ = (id) => document.getElementById(id);
+const loadingText = $('loadingText');
 const setLoading = (t) => { loadingText.textContent = t; console.log('[flyleno]', t); };
 
 // ------------------------------------------------------------------ renderer / scene
-const canvas = document.getElementById('three');
+const canvas = $('three');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(LITE ? 1 : Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -51,18 +68,36 @@ const onProgress = (label, e) => {
 
 let stage, leno;
 try {
-  stage = await loadStage(scene, { onProgress, lite: LITE });
+  stage = STAGE === 'game'
+    ? await (await import('./stage.js')).loadStage(scene, { onProgress, lite: LITE })
+    : await loadOriginalStage(scene, { lite: LITE });
   leno = await new Leno().load('assets/grey_leno.glb', onProgress);
 } catch (err) {
-  setLoading('Could not load the 3D assets (assets/*.glb). These are not in the repository — run the export tools ' +
-    'locally (see README). ' + err.message);
+  setLoading('Could not load the 3D assets. The Grey Leno model (assets/grey_leno.glb) and the game stage are not in the ' +
+    'repository; build them locally with the export tools (see README). ' + err.message);
   throw err;
 }
 scene.add(leno.root);
 leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
 const hostPos = leno.root.position.clone();
+// `host` is what the rest of the app talks to: the physics ragdoll, or the kinematic puppet as fallback
+let host = leno;
+if (BODY === 'ragdoll') {
+  try {
+    setLoading('Starting physics (Rapier)…');
+    host = await new PhysicsLeno(leno).init(stage, hostPos);
+  } catch (e) {
+    console.warn('ragdoll unavailable, using kinematic Leno', e);
+    leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
+  }
+}
+const hostAt = () => (host === leno ? leno.root.position : host.position);
 key.position.set(hostPos.x, hostPos.y + 14, hostPos.z + 10);
 key.target.position.copy(hostPos);
+const fx = new FX(scene);
+const cultists = new Cultists(scene, stage.markers.audience);
+const liveCams = stage.screens?.big ? new LiveCams(renderer, scene, stage.screens, () => host) : null;
+fx.floorY = hostPos.y + 0.01;
 
 // cameras
 const camMarker = stage.markers.camera;
@@ -73,12 +108,12 @@ const cams = {
   },
   wide: () => ({ pos: new THREE.Vector3().fromArray(camMarker.position), target: hostPos.clone().add(new THREE.Vector3(0, 2, 0)) }),
   close: () => {
-    const p = leno.root.position;
-    const f = new THREE.Vector3(0, 0, 1).applyQuaternion(leno.root.quaternion);
+    const p = hostAt();
+    const f = host.forward();
     return { pos: p.clone().addScaledVector(f, 6).add(new THREE.Vector3(0.8, 2.6, 0)), target: p.clone().add(new THREE.Vector3(0, 2.0, 0)) };
   },
   follow: () => {
-    const p = leno.root.position;
+    const p = hostAt();
     return { pos: p.clone().add(new THREE.Vector3(0, 5, 11)), target: p.clone().add(new THREE.Vector3(0, 1.6, 0)) };
   },
 };
@@ -90,7 +125,7 @@ function setCam(mode) {
 }
 document.querySelectorAll('#cams button').forEach((b) => (b.onclick = () => setCam(b.dataset.cam)));
 controls.addEventListener('start', () => { if (camMode !== 'free') { camMode = 'free'; setCam('free'); } });
-document.getElementById('showMarkers').onchange = (e) => (stage.markerGroup.visible = e.target.checked);
+$('showMarkers').onchange = (e) => (stage.markerGroup.visible = e.target.checked);
 resize();
 setCam('audience');
 
@@ -99,9 +134,36 @@ setLoading('Loading fly brain (FlyWire v783, ~31 MB)…');
 const meta = await fetch('data/neurons.json').then((r) => r.json());
 const worker = new Worker(new URL('./brain-worker.js', import.meta.url));
 const base = new URL('..', import.meta.url).href;
+const stimByKey = Object.fromEntries(meta.stimuli.map((s) => [s.key, s]));
 let sidebar;
 
+// direct, rate-only stimulation of internal groups (ambience, hearing, reinforcement)
+const sentIdx = new Set(), lastRate = {};
+function stimRate(k, rate) {
+  if (Math.abs((lastRate[k] ?? -1) - rate) < 0.5 && !(rate === 0 && lastRate[k] !== 0)) return;
+  lastRate[k] = rate;
+  const msg = { type: 'stim', key: k, rate };
+  if (!sentIdx.has(k)) { msg.indices = stimByKey[k].indices; sentIdx.add(k); }
+  worker.postMessage(msg);
+}
+const reinforceTimers = {};
+function reinforce(valence, seconds) {
+  const k = valence >= 0 ? 'reward' : 'punish';
+  stimRate(k, 40 * Math.min(1, Math.abs(valence)));
+  clearTimeout(reinforceTimers[k]);
+  reinforceTimers[k] = setTimeout(() => stimRate(k, 0), seconds * 1000);
+}
+// short stimulus pulse on a named group under its own key (so it does not clash with UI-managed stimuli)
+const pulseTimers = {};
+function pulse(alias, group, rate, seconds) {
+  worker.postMessage({ type: 'stim', key: alias, indices: stimByKey[group].indices, rate });
+  clearTimeout(pulseTimers[alias]);
+  pulseTimers[alias] = setTimeout(() => worker.postMessage({ type: 'stim', key: alias, rate: 0 }), seconds * 1000);
+}
+function setAmbience(x) { stimRate('ambientTaste', 5 * x); stimRate('ambientTouch', 1 * x); }
+
 const director = new Director((k, on) => sidebar?.setAuto(k, on), (text) => sidebar?.ticker(text));
+const mind = new Mind((k, on) => sidebar?.setAuto(k, on));
 sidebar = new Sidebar({
   meta,
   onStim: (s, rate) => worker.postMessage({ type: 'stim', key: s.key, indices: s.indices, rate }),
@@ -111,7 +173,163 @@ sidebar = new Sidebar({
   onAutopilot: (on) => { director.enabled = on; if (!on) director.stopAll(); },
 });
 
+// ------------------------------------------------------------------ audio, music, hearing
+const audio = new AudioWorld();
+const music = new MusicPlayer($('music'));
+music.init().catch((e) => { $('music').querySelector('.yt-title').textContent = 'YouTube player unavailable: ' + e.message; });
+const hearing = new Hearing(audio, music);
+hearing.onChange = () => {
+  $('hearMode').textContent = hearing.mode === 'piped' ? 'hearing: tab audio (music waveform + stage)'
+    : hearing.mode === 'internal' ? `hearing: stage sounds + music estimate${hearing.error ? ' (' + hearing.error + ')' : ''}` : 'hearing: off';
+  $('pipeBtn').hidden = hearing.mode === 'piped';
+};
+$('pipeBtn').onclick = () => hearing.pipeTabAudio();
+
+// ------------------------------------------------------------------ behaviour, audience, mind
+const leftOrRight = () => {
+  const p = hostAt().clone().project(camera);
+  return Math.max(-1, Math.min(1, p.x));
+};
+const audience = new Audience(audio, reinforce, {
+  onReact: (e) => {
+    sidebar.ticker(`Audience: ${e.kind}s at the ${e.act.replace('Hit', ' hit')}`);
+    cultists.react(e.kind, e.intensity);
+    // an unhappy crowd throws things
+    if (e.kind === 'boo' && Math.random() < 0.35) setTimeout(() => throwThing(Math.random() < 0.15 ? 'pipe' : 'tomato'), 400 + Math.random() * 900);
+  },
+});
+
+// ------------------------------------------------------------------ projectiles (tomatoes, pipes)
+const projectiles = host !== leno ? new Projectiles(scene, host, {
+  onApproach: () => pulse('loom', 'heckler', 200, 0.35),
+  onSplat: (p) => fx.splash(p),              // looming object -> LC4 looming detectors
+  onImpact: (it, { hitLeno, speed }) => {
+    const p = it.mesh.position.clone().project(camera), pan = Math.max(-1, Math.min(1, p.x));
+    const gain = Math.min(1.2, 0.3 + speed / 12);
+    if (it.kind === 'pipe') audio.sfx('pipe', { pan, gain }); else audio.sfx('splat', { pan, gain });
+    if (!hitLeno) return;
+    if (it.kind === 'tomato') {
+      pulse('hitTaste', 'tomato', 200, 0.8);                           // bitter juice on him
+      pulse('hitTouch', 'ambientTouch', 40, 0.4);
+      audience.react('tomatoHit');
+    } else {
+      pulse('hitTouch', 'ambientTouch', 90, 0.6);                      // a metal pipe hurts
+      reinforce(-0.8, 1.0);
+      audience.react('pipeHit');
+    }
+  },
+}) : null;
+function throwThing(kind) {
+  if (!projectiles) { sidebar.ticker('Throwing needs the physics body (not ?body=kinematic)'); return; }
+  projectiles.throw(kind, cultists.standRandom());
+}
+$('throwTomato').onclick = () => throwThing('tomato');
+$('throwPipe').onclick = () => throwThing('pipe');
+const behavior = new Behavior(meta, audio, {
+  onEvent: (type, d) => {
+    if (type === 'vomit') { host.trigger('vomit'); setTimeout(() => fx.vomit(() => host.mouth(), () => host.headDown(), 1.1), 500); }
+    if (type === 'retch') host.trigger('retch');
+    if (type === 'fart') { host.trigger('fart'); fx.fart(() => host.butt(), () => host.forward().negate()); }
+    if (type === 'speak') {
+      if (d.lesson && d.lesson.score >= 0.5) reinforce(0.7, 0.6);          // the teacher's reward
+      updateLesson();
+    }
+    audience.react(type, d);
+  },
+});
+
+// motor "acts" the audience can react to (rising edges)
+const edge = {};
+function acts(cmd) {
+  const on = { startle: cmd.startle > 0.6, groom: cmd.groom > 0.5, stroll: cmd.forward > 0.5 };
+  for (const k in on) { if (on[k] && !edge[k]) audience.react(k); edge[k] = on[k]; }
+}
+
+// ------------------------------------------------------------------ lessons
+let lessonTimer = null;
+function updateLesson() {
+  const L = behavior.lesson;
+  $('lessonInfo').textContent = L ? `target /${L.phones.join(' ')}/ · progress ${L.pos}/${L.phones.length} · hits ${L.hits}` : '';
+}
+$('lessonBtn').onclick = () => {
+  const text = $('lessonWord').value.trim();
+  clearInterval(lessonTimer);
+  if (!text || behavior.lesson?.text === text) { behavior.setLesson(null); $('lessonBtn').textContent = 'Teach'; updateLesson(); return; }
+  behavior.setLesson(text, toPhones(text));
+  $('lessonBtn').textContent = 'Stop';
+  // the lesson stimulus: every few seconds a stagehand says the word (the fly hears it via JO)
+  const sayIt = () => {
+    if (!audio.ctx) return;
+    const w = audio.word(text);
+    if (!w) behavior.lesson.phones.forEach((ph, i) => setTimeout(() => audio.phoneme(ph, { gain: 0.8 }), i * 130));
+  };
+  sayIt(); lessonTimer = setInterval(sayIt, 5000);
+  updateLesson();
+};
+
+// ------------------------------------------------------------------ settings
+$('optAdapt').onchange = (e) => worker.postMessage({ type: 'adaptation', params: { on: e.target.checked } });
+$('optPlastic').onchange = (e) => worker.postMessage({ type: 'plasticity', params: { enabled: e.target.checked } });
+$('resetLearn').onclick = () => worker.postMessage({ type: 'plasticity', resetWeights: true });
+$('ambience').oninput = (e) => setAmbience(+e.target.value);
+$('hearGain').oninput = (e) => (hearing.gain = +e.target.value);
+$('sfxVol').oninput = (e) => audio.setVolume(+e.target.value);
+$('initiative').onchange = (e) => { mind.initiative = e.target.checked; if (!e.target.checked) mind.stopAll(); };
+
+// Body controls (ragdoll)
+if (host !== leno) {
+  host.onFall = () => { audience.react('fall'); sidebar.ticker('Leno collapses!'); };
+  const bc = $('bodyControls');
+  bc.innerHTML = `<div class="status" style="margin-top:6px">Body: physics ragdoll, 46 muscles</div>
+    <label class="rowlbl">puppet strings (support) <input id="bSupport" type="range" min="0" max="1" step="0.05" value="${host.support}"></label>
+    <label class="rowlbl">VNC assist (leg rhythms) <input id="bVnc" type="range" min="0" max="1" step="0.05" value="${host.vncWeight}"></label>
+    <label class="rowlbl">direct DN → muscles <input id="bDirect" type="range" min="0" max="2" step="0.05" value="${host.directWeight}"></label>
+    <label class="chk"><input type="checkbox" id="bStage"> keep Leno on the stage (edge reflex)</label>`;
+  $('bSupport').oninput = (e) => (host.support = +e.target.value);
+  $('bVnc').oninput = (e) => (host.vncWeight = +e.target.value);
+  $('bDirect').oninput = (e) => (host.directWeight = +e.target.value);
+  $('bStage').onchange = (e) => (host.keepOnStage = e.target.checked);
+}
+
+// Mind panel: action values
+const qEls = {};
+for (const a of ACTIONS) {
+  const el = document.createElement('div');
+  el.className = 'qrow';
+  el.innerHTML = `<div class="lbl">${a.label}</div><div class="bar"><i></i></div><div class="num">0</div>`;
+  $('qvals').appendChild(el);
+  qEls[a.key] = { el, bar: el.querySelector('i'), num: el.querySelector('.num') };
+}
+const biBar = (bar, num, v) => {
+  const w = Math.min(1, Math.abs(v)) * 50;
+  bar.style.left = (v >= 0 ? 50 : 50 - w) + '%'; bar.style.width = w + '%';
+  bar.style.background = v >= 0 ? 'var(--good)' : 'var(--accent)';
+  num.textContent = v.toFixed(2);
+};
+function updateMindUI(t) {
+  biBar($('daBar'), $('daNum'), mind.da);
+  biBar($('moodBar'), $('moodNum'), mind.mood);
+  $('mindNow').textContent = mind.current ? mind.current.action : mind.initiative ? 'waiting…' : 'off';
+  for (const a of ACTIONS) {
+    const q = mind.Q[a.key], e = qEls[a.key];
+    const w = Math.min(1, Math.abs(q) * 2) * 50;
+    e.bar.style.left = (q >= 0 ? 50 : 50 - w) + '%'; e.bar.style.width = w + '%';
+    e.bar.style.background = q >= 0 ? 'var(--good)' : 'var(--accent)';
+    e.num.textContent = q.toFixed(2);
+    e.el.classList.toggle('now', mind.current?.action === a.key);
+  }
+  $('learnNum').textContent = (t.plasticity / (t.winMs / 1000)).toFixed(2);
+  $('learnEdges').textContent = t.plasticEdges?.toLocaleString() ?? '–';
+  const v = behavior.voiceEMA;
+  $('voiceBar').style.width = (v * 100).toFixed(0) + '%'; $('voiceNum').textContent = v.toFixed(2);
+  $('transcript').textContent = behavior.transcript.slice(-16).join(' ') || '…';
+}
+
+// ------------------------------------------------------------------ worker messages
 let lastMotor = null, runawayMs = 0;
+const neuromap = new NeuroMap($('neuromap'));
+neuromap.load().catch((e) => console.warn('neural map unavailable', e));
+$('mapRotate').onchange = (e) => (neuromap.autoRotate = e.target.checked);
 worker.onmessage = ({ data }) => {
   switch (data.type) {
     case 'progress':
@@ -121,22 +339,30 @@ worker.onmessage = ({ data }) => {
     case 'ready':
       sidebar.setReady(data);
       sidebar.status('running', 'ok');
-      document.getElementById('loading').classList.add('done');
+      setAmbience(+$('ambience').value);
       worker.postMessage({ type: 'run' });
+      setLoading('The fly is ready.');
+      $('loading').querySelector('.spinner').hidden = true;
+      $('startShow').hidden = false; $('startNote').hidden = false;
       break;
     case 'tick': {
-      // Some stimuli (e.g. Or56a) push the Shiu model into self-sustained runaway activity that
-      // outlives the stimulus. Detect it (nothing stimulated, still >250k spikes/s for 2 s of sim).
-      const anyStim = sidebar.manual.size + sidebar.auto.size > 0;
-      runawayMs = !anyStim && data.spikesPerSec > 250e3 ? runawayMs + data.winMs : 0;
-      if (runawayMs > 2000) {
+      // Self-sustained runaway (the Shiu model can ignite it, e.g. Or56a): >250k spikes/s for 3 s -> reset.
+      runawayMs = data.spikesPerSec > 250e3 ? runawayMs + data.winMs : 0;
+      if (runawayMs > 3000) {
         runawayMs = 0;
         if (director.enabled) director.commercialBreak(() => worker.postMessage({ type: 'reset' }));
-        else sidebar.ticker('Runaway self-sustained activity: press Reset to calm the fly');
+        else { worker.postMessage({ type: 'reset' }); sidebar.ticker('Runaway activity: brain reset'); }
       }
+      window.flyleno.lastTick = data;
+      if (data.spikes) neuromap.addSpikes(data.spikes);
       lastMotor = decodeMotor(data.rates, data.winMs);
-      leno.setMotor(lastMotor.command);
+      host.setMotor(lastMotor.command);
+      if (host.setPools) host.setPools(data.muscles);
+      acts(lastMotor.command);
+      behavior.tick(data);
+      mind.tick(data);
       sidebar.update(data, lastMotor);
+      updateMindUI(data);
       break;
     }
     case 'error': sidebar.status('error: ' + data.message, 'warn'); setLoading('Brain error: ' + data.message); break;
@@ -144,37 +370,77 @@ worker.onmessage = ({ data }) => {
 };
 worker.postMessage({ type: 'init', base });
 
+// ------------------------------------------------------------------ start (user gesture: audio + music + tab audio)
+$('startShow').onclick = () => {
+  audio.start();                   // creates the AudioContext synchronously, then loads the sound bank
+  hearing.attachInternal();
+  music.play();
+  hearing.pipeTabAudio();          // asks to share this tab's audio ("in-world piping")
+  $('loading').classList.add('done');
+  $('audioSrc').textContent = '';
+  setTimeout(() => { $('audioSrc').textContent = audio.usingBank ? 'sounds: Grey Leno / show sound bank' : audio.synth ? 'sounds: synthesised placeholders (?synth=1)' : 'sounds: sound bank not built yet (tools/audio): silent'; }, 1500);
+  hearing.onChange();
+};
+
 // ------------------------------------------------------------------ about
-document.getElementById('aboutLink').onclick = (e) => {
+$('aboutLink').onclick = (e) => {
   e.preventDefault();
-  document.getElementById('aboutBody').innerHTML = `
+  $('aboutBody').innerHTML = `
     <p>A whole-brain spiking model of the adult fruit fly (${meta.N.toLocaleString()} neurons,
-    ${meta.E.toLocaleString()} connections, ${meta.synapses.toLocaleString()} synapses) runs live in your browser and its
-    descending neurons puppeteer Grey Leno on the TUURD Talk stage. Talk-show events stimulate the fly's sensory neurons.</p>
+    ${meta.E.toLocaleString()} connections, ${meta.synapses.toLocaleString()} synapses) runs live in your browser and
+    puppeteers Grey Leno on a TUURD-Talk-style stage. Show events, the music and the crowd stimulate the fly's senses;
+    its descending, mouthpart and pharyngeal neurons drive Leno's body and voice; audience reactions reach its
+    dopaminergic neurons and shape what it learns and chooses.</p>
     <p><b>Brain model:</b> leaky integrate-and-fire network after Shiu et al. 2024, <i>Nature</i>
-    (<a href="https://github.com/philshiu/Drosophila_brain_model">philshiu/Drosophila_brain_model</a>, MIT),
-    connectome from FlyWire v783 (Dorkenwald et al. 2024; Schlegel et al. 2024), neuron IDs for stimuli/motor groups via
+    (<a href="https://github.com/philshiu/Drosophila_brain_model">philshiu/Drosophila_brain_model</a>, MIT), with optional
+    spike-frequency adaptation and dopamine-gated plasticity added here. Connectome FlyWire v783 (Dorkenwald et al. 2024;
+    Schlegel et al. 2024). Stimulus/motor neuron IDs partly via
     <a href="https://github.com/erojasoficial-byte/fly-brain">erojasoficial-byte/fly-brain</a> (MIT).</p>
-    <p><b>"Fictive" drives</b> stimulate descending neurons directly (as in Shiu et al.), the rest stimulate sensory neurons.</p>
-    <p><b>Stage:</b> TUURD Talk set from <i>Nightmare Puppeteer</i>. <b>Grey Leno:</b> original model by Vinesauce, Dead as Disco port by huckleberrypie.
-    These assets belong to their authors and are not distributed with this project.</p>`;
-  document.getElementById('about').showModal();
+    <p><b>Engineered layers (not in the connectome):</b> the phoneme mapping of motor neurons, the action selector
+    ("initiative"), the audience, and the stage-edge reflex.</p>
+    <p><b>Stage:</b> an original procedural set inspired by the TUURD Talk show of <i>Nightmare Puppeteer</i>.
+    <b>Grey Leno:</b> original character/model by Vinesauce, Dead as Disco port by huckleberrypie; his voice bank comes from
+    Vinesauce videos. Those assets belong to their authors and are not distributed with this project.</p>
+    <p><b>Music:</b> YouTube embed; the fly hears it through a capture of this tab's audio when you allow it.</p>`;
+  $('about').showModal();
 };
 
 // ------------------------------------------------------------------ loop
 const clock = new THREE.Clock();
+let hearAcc = 0;
 renderer.setAnimationLoop(() => {
   const dt = Math.min(0.05, clock.getDelta());
   director.update(dt);
-  leno.update(dt);
+  mind.update(dt);
+  audience.update(dt);
+  behavior.update(dt, { pan: leftOrRight() });
+  host.update(dt);
+  projectiles?.update(dt);
+  cultists.target = host.state?.headPos ?? hostAt().clone().add(new THREE.Vector3(0, 2.3, 0));
+  cultists.update(dt);
+  fx.floorY = hostAt().y + 0.01;
+  fx.update(dt);
   stage.screens.update(clock.elapsedTime);
+  hearAcc += dt;
+  if (hearAcc > 0.05) {
+    hearAcc = 0;
+    const h = hearing.update();
+    stimRate('hearLow', h.low); stimRate('hearHigh', h.high);
+    $('hearLowBar').style.width = (100 * h.low / hearing.maxRate).toFixed(0) + '%'; $('hearLowNum').textContent = h.low.toFixed(0);
+    $('hearHighBar').style.width = (100 * h.high / hearing.maxRate).toFixed(0) + '%'; $('hearHighNum').textContent = h.high.toFixed(0);
+  }
   if (camMode === 'follow' || camMode === 'close') {
     const c = cams[camMode]();
     camera.position.lerp(c.pos, 1 - Math.exp(-dt * 3));
     controls.target.lerp(c.target, 1 - Math.exp(-dt * 5));
   }
   controls.update();
+  liveCams?.update(dt);
   renderer.render(scene, camera);
+  neuromap.render(dt);
 });
 
-window.flyleno = { scene, camera, leno, stage, worker, director, motorGains, get motor() { return lastMotor; } };
+window.flyleno = {
+  scene, camera, controls, leno, host, stage, cultists, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
+  get motor() { return lastMotor; },
+};

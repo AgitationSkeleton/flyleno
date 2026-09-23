@@ -15,6 +15,7 @@ export class Sidebar {
     this.onStim = onStim;
     this.manual = new Set();
     this.auto = new Set();
+    this.autoCount = {};                // key -> number of controllers holding it on (director, mind)
     this.history = {};                  // group -> recent rates
     this.classes = meta.superClasses;
 
@@ -34,6 +35,7 @@ export class Sidebar {
     chips.className = 'chips';
     st.appendChild(chips);
     for (const s of meta.stimuli) {
+      if (s.hidden) continue;
       const btn = document.createElement('button');
       btn.className = 'chip' + (s.fictive ? ' fictive' : '');
       btn.title = `${s.sub} — ${s.indices.length} neurons (${s.cellTypes.slice(0, 4).join(', ')}) Poisson ${s.rate} Hz`;
@@ -65,7 +67,7 @@ export class Sidebar {
     const gr = $('groups');
     this.groupEls = {};
     const rows = [...meta.motor.map((m) => ['m:' + m.key, `${m.label}`, m.cellTypes.join(', '), MOTOR_COLOR]),
-      ...meta.stimuli.filter((s) => !s.fictive).map((s) => ['s:' + s.key, s.label, s.cellTypes.slice(0, 3).join(', '), STIM_COLOR])];
+      ...meta.stimuli.filter((s) => !s.fictive && !s.hidden).map((s) => ['s:' + s.key, s.label, s.cellTypes.slice(0, 3).join(', '), STIM_COLOR])];
     for (const [key, label, sub, color] of rows) {
       const el = document.createElement('div');
       el.className = 'grp';
@@ -96,14 +98,21 @@ export class Sidebar {
 
   isOn(key) { return this.manual.has(key) || this.auto.has(key); }
 
-  setAuto(key, on) { if (on) this.auto.add(key); else this.auto.delete(key); this.refreshStim(key); }
+  setAuto(key, on) {
+    const n = Math.max(0, (this.autoCount[key] || 0) + (on ? 1 : -1));
+    this.autoCount[key] = n;
+    if (n > 0) this.auto.add(key); else this.auto.delete(key);
+    this.refreshStim(key);
+  }
 
   refreshStim(key) {
     const s = this.meta.stimuli.find((x) => x.key === key);
     const on = this.isOn(key);
     const el = this.stimEls[key];
+    if (el) {
     el.btn.classList.toggle('on', on);
     el.btn.classList.toggle('auto', !this.manual.has(key) && this.auto.has(key));
+    }
     this.onStim(s, on ? s.rate : 0);
   }
 

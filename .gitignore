@@ -15,3 +15,6 @@ node_modules/
 
 # Game backdrop images exported from Nightmare Puppeteer (not redistributable)
 assets/show_bg/
+
+# Grey Leno voice/SFX bank cut from Vinesauce videos (not redistributable)
+assets/audio/

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Stage preview (original stage)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html, body { margin: 0; height: 100%; background: #07070a; color: #ddd; font: 13px system-ui, sans-serif; overflow: hidden; }
+    canvas { display: block; width: 100vw; height: 100vh; }
+    #ui { position: fixed; left: 12px; bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    #ui button { background: #1c1c26; color: #eee; border: 1px solid #333; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+    #ui button.on { background: #7a1426; border-color: #c33; }
+    #hud { position: fixed; left: 12px; top: 10px; font: 12px ui-monospace, monospace; color: #9aa; }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="three"></canvas>
+  <div id="hud">loading…</div>
+  <div id="ui">
+    <button data-cam="audience">Audience</button>
+    <button data-cam="wide">Wide</button>
+    <button data-cam="close">Close-up</button>
+    <button data-cam="right">Front-right</button>
+    <button data-cam="side">Side</button>
+    <button data-cam="back">From stage</button>
+    <button data-cam="top">Top</button>
+    <label><input type="checkbox" id="markers"> markers</label>
+    <label><input type="checkbox" id="walk"> walk</label>
+  </div>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+    import { loadOriginalStage } from '../js/stage-original.js';
+    import { Leno } from '../js/leno.js';
+
+    const params = new URLSearchParams(location.search);
+    const LITE = params.has('lite');
+    const canvas = document.getElementById('three');
+    const hud = document.getElementById('hud');
+    // Same renderer settings as js/main.js
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(LITE ? 1 : Math.min(devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.85;
+    renderer.info.autoReset = false;
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x07070a);
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environmentIntensity = 0.35;
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x302020, 0.5));
+    const key = new THREE.SpotLight(0xfff2e0, 180, 40, Math.PI / 9, 0.5, 1.2);
+    scene.add(key, key.target);
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 400);
+    const controls = new OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+    function resize() {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    addEventListener('resize', resize);
+    resize();
+
+    const t0 = performance.now();
+    const stage = await loadOriginalStage(scene, { lite: LITE });
+    const tStage = performance.now() - t0;
+    let leno = null;
+    try {
+      leno = await new Leno().load('../assets/grey_leno.glb');
+      scene.add(leno.root);
+      leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
+    } catch (e) { console.warn('Leno not available (assets/grey_leno.glb missing?)', e); }
+    const hostPos = new THREE.Vector3(...stage.markers.host.position);
+    if (leno) hostPos.copy(leno.root.position);
+    key.position.set(hostPos.x, hostPos.y + 14, hostPos.z + 10);
+    key.target.position.copy(hostPos);
+
+    const V = (x, y, z) => new THREE.Vector3(x, y, z);
+    const camMarker = stage.markers.camera;
+    const cams = {
+      audience: () => { const target = hostPos.clone().add(V(0, 2, 0)); return { pos: V(...camMarker.position).lerp(target, 0.45), target }; },
+      wide: () => ({ pos: V(...camMarker.position), target: hostPos.clone().add(V(0, 2, 0)) }),
+      close: () => {
+        const p = leno ? leno.root.position : hostPos;
+        const f = leno ? V(0, 0, 1).applyQuaternion(leno.root.quaternion) : V(0, 0, 1);
+        return { pos: p.clone().addScaledVector(f, 6).add(V(0.8, 2.6, 0)), target: p.clone().add(V(0, 2.0, 0)) };
+      },
+      right: () => ({ pos: V(9, 7, 9), target: V(-1, 1.5, -8) }),
+      side: () => ({ pos: V(34, 14, 26), target: V(0, 3, -4) }),
+      back: () => ({ pos: V(0, 9, -17), target: V(0, 3, 20) }),
+      top: () => ({ pos: V(0, 75, 8), target: V(0, 0, 4) }),
+    };
+    function setCam(mode) {
+      document.querySelectorAll('#ui button').forEach((b) => b.classList.toggle('on', b.dataset.cam === mode));
+      const c = cams[mode]();
+      camera.position.copy(c.pos);
+      controls.target.copy(c.target);
+      controls.update();
+    }
+    document.querySelectorAll('#ui button').forEach((b) => (b.onclick = () => setCam(b.dataset.cam)));
+    document.getElementById('markers').onchange = (e) => (stage.markerGroup.visible = e.target.checked);
+    let walk = false;
+    document.getElementById('walk').onchange = (e) => (walk = e.target.checked);
+    setCam(params.get('cam') || 'audience');
+
+    const clock = new THREE.Clock();
+    let calls = 0, tris = 0, frames = 0;
+    renderer.setAnimationLoop(() => {
+      const dt = Math.min(0.05, clock.getDelta());
+      if (leno) { leno.setMotor(walk ? { forward: 0.6, turn: 0.25 } : { forward: 0, turn: 0 }); leno.update(dt); }
+      stage.screens.update(clock.elapsedTime);
+      controls.update();
+      renderer.info.reset();
+      renderer.render(scene, camera);
+      calls = renderer.info.render.calls; tris = renderer.info.render.triangles;
+      if (++frames % 15 === 0) hud.textContent = `draw calls ${calls} · triangles ${(tris / 1000).toFixed(0)}k · stage built in ${tStage.toFixed(0)} ms${LITE ? ' · lite' : ''}`;
+    });
+    window.preview = { scene, camera, renderer, stage, leno, setCam, get calls() { return calls; }, get tris() { return tris; }, ready: true };
+  </script>
+</body>
+</html>
