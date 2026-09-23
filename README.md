@@ -83,6 +83,28 @@ low-poly goose waddles onto the stage. It honks (YouTube SFX) and defecates prof
 are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when barely hungry, tastes them
 (sugar neurons → MN9) and eats them.
 
+**Predators** (`js/predators.js`, engineered; random visits like the goose, never lethal, off with `?quiet`):
+- **Spider-Leno** (rare, every ~4–9 minutes): a spider with Leno's head rappels from the ceiling on a
+  silk thread. Its anchor creeps along the ceiling to stay above the host. It dangles and lunges.
+  - **Grab:** 60% of close lunges grab him. It reels him up the thread for 3–4.5 s, and the audience
+    gasps. Fly-Leno is held by the thorax.
+  - **Miss:** it bumps him instead.
+  - **Leaving:** it climbs back up after ~40–50 s.
+- **The glove** (every ~1.5–4 minutes): a floating white cartoon glove with a fly swatter. It hovers,
+  winds up and swats where he'll be. A hit knocks him around; a miss slaps the air.
+  - **Electric racket:** one visit in four is a bug-zapper racket instead. A hit zaps him: arcs,
+    crackle, twitching.
+  - **Leaving:** it floats off after ~25 s.
+- **What the fly gets:**
+  - The descent, the lunges and the wind-up are looming objects (LC4). The giant fibre often makes him
+    jump away from the swing.
+  - Hits, grabs and zaps drive mechanosensory neurons and punishment dopamine. Zaps also drive the
+    antennal JO.
+
+**Falls:** Leno stays in whatever pose he lands in; nothing snaps him upright. After ~4 s on the
+floor, the puppet strings help him up gradually, physically. He is put back on stage only if he has
+left the set. Dangling in a predator's grip, or eating on all fours, doesn't count as a fall.
+
 **Hecklers:** a heckler charges the stage, then either rants with both arms raised or pelts Leno with
 3–5 tomatoes and pipes thrown from its hand.
 
@@ -150,7 +172,8 @@ after 2.5 s, shown as a commercial break during the show.
   UFO drive LC4 looming neurons (expansion rate of their angular size).
 - **Light:** the follow spot, disco strobe and tractor beam falling on Leno add drive to the R1-6
   photoreceptors of both eyes, on top of what the stage screens show.
-- **Touch and taste:** tomato hits drive bitter taste and mechanosensory neurons, pipe hits drive
+- **Touch and taste:** tomato hits drive bitter taste and mechanosensory neurons (a tomato that misses
+  him lands as pulp on the floor or stage below where it burst), pipe hits drive
   mechanosensory neurons plus punishment dopamine, and occasional "dust" on the antennae drives JO.
 - **Ambience:** low-rate noise on taste and touch neurons.
 

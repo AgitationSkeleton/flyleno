@@ -220,6 +220,8 @@ export class FlyLeno {
   butt() { return this.state.buttPos.clone(); }
   headDown() { return this.forward().multiplyScalar(0.7).add(new THREE.Vector3(0, -0.7, 0)).normalize(); }
   applyImpulse(_name, v) { this.vel.addScaledVector(v, 1 / 60); }            // ~60 kg
+  /** a predator holds the thorax at p (world), or lets go (null) */
+  hold(p) { this.heldAt = p ? p.clone() : null; if (!p) this.flying = true; }
   setMouth(v) { for (const [o, i] of this.morphs) o.morphTargetInfluences[i] = v; }
 
   /** hatchling mode: move on the ground meshes without physics */
@@ -300,6 +302,12 @@ export class FlyLeno {
       this.vel.x *= 1 - Math.min(1, dt * 4); this.vel.z *= 1 - Math.min(1, dt * 4);     // knock-backs decay
       this.vel.y = Math.min(0, this.vel.y - 9.8 * dt);
       desired = fwd.clone().multiplyScalar(this.speed * dt).add(this.vel.clone().multiplyScalar(dt));
+    }
+    // held by a predator (spider-Leno): the thorax is dragged to the grab point, whatever the legs and wings do
+    if (this.heldAt) {
+      const t0 = this.kbody.translation();
+      desired = new THREE.Vector3(this.heldAt.x - t0.x, this.heldAt.y - 0.95 * S - t0.y, this.heldAt.z - t0.z).multiplyScalar(Math.min(1, dt * 6));
+      this.vel.set(0, 0, 0);
     }
     // move with the character controller (collides with seats, walls, platform)
     this.ctrl.computeColliderMovement(this.collider, { x: desired.x, y: desired.y, z: desired.z });

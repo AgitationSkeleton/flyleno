@@ -47,6 +47,7 @@ export class Behavior {
 
   /** feed each worker tick */
   tick(t) {
+    if (!(t.winMs > 0.5)) return;                      // skip degenerate report windows (they blow rates up to Infinity/NaN)
     const s = t.winMs / 1000;
     const a = 1 - Math.exp(-t.winMs / 200);
     if (t.readout) t.readout.forEach((c, k) => { this.act[k] += (c / s - this.act[k]) * a; });
@@ -66,6 +67,9 @@ export class Behavior {
     // ------------------------------------------------ voice
     const v = this.voicing();
     this.voiceEMA += (v - this.voiceEMA) * Math.min(1, dt * 4);
+    if (!Number.isFinite(this.voiceEMA)) {           // recover from a bad window instead of staying NaN forever
+      this.voiceEMA = 0; this.act.fill(0); for (const k in this.rates) this.rates[k] = 0;
+    }
     this.syllableTimer -= dt; this.pause -= dt;
     if (!this.inPhrase && this.pause <= 0 && this.voiceEMA > 0.3) { this.inPhrase = true; this.phraseT = 0; }
     if (this.inPhrase) {

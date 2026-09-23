@@ -238,9 +238,44 @@ export class ShowSfx {
     }
     if (kind === 'static') {                                  // TV static hiss
       const n = this.noise(), hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1500;
-      n.connect(hp).connect(out); this.env(out.gain, t, 0.05, gain * 0.5, 6.5, 0.4);
+      n.connect(hp).connect(out); this.env(out.gain, t, 0.05, gain * 0.04, 6.5, 0.4);   // quiet: white noise is loud
       n.start(t); n.stop(t + 7.1);
       return 7;
+    }
+    if (kind === 'skitter') {                                 // eight legs clicking
+      for (let k = 0; k < 14; k++) {
+        const st = t + k * rand(0.035, 0.07), n = ctx.createBufferSource(); n.buffer = this.audio.noise;
+        const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = rand(2500, 5000); bp.Q.value = 8;
+        const g = ctx.createGain(); n.connect(bp).connect(g).connect(out);
+        this.env(g.gain, st, 0.002, 0.5, 0.004, 0.02); n.start(st, Math.random()); n.stop(st + 0.04);
+      }
+      return 0.8;
+    }
+    if (kind === 'whoosh') {                                  // a swing through the air
+      const n = this.noise(), bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.5;
+      bp.frequency.setValueAtTime(400, t); bp.frequency.exponentialRampToValueAtTime(2200, t + 0.16); bp.frequency.exponentialRampToValueAtTime(600, t + 0.3);
+      n.connect(bp).connect(out); this.env(out.gain, t, 0.08, gain * 0.7, 0.05, 0.15);
+      n.start(t); n.stop(t + 0.35);
+      return 0.3;
+    }
+    if (kind === 'thwack') {                                  // swatter slap
+      const n = this.noise(), lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3000;
+      n.connect(lp).connect(out); this.env(out.gain, t, 0.001, gain, 0.01, 0.09);
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(180, t); o.frequency.exponentialRampToValueAtTime(60, t + 0.1);
+      const og = ctx.createGain(); o.connect(og).connect(out); this.env(og.gain, t, 0.001, 0.8, 0.01, 0.1);
+      n.start(t); n.stop(t + 0.15); o.start(t); o.stop(t + 0.15);
+      return 0.15;
+    }
+    if (kind === 'zap') {                                     // electric racket: crackle + mains buzz
+      const dur = 0.55, n = this.noise(), hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2500;
+      const cg = ctx.createGain(); n.connect(hp).connect(cg).connect(out);
+      cg.gain.setValueAtTime(0.0001, t);
+      for (let k = 0; k < 22; k++) cg.gain.setValueAtTime(Math.random() < 0.6 ? 0.7 : 0.05, t + k * dur / 22);
+      cg.gain.setValueAtTime(0.0001, t + dur);
+      const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 120;
+      const og = ctx.createGain(); o.connect(og).connect(out); this.env(og.gain, t, 0.005, 0.35, dur - 0.1, 0.08);
+      n.start(t, Math.random()); n.stop(t + dur + 0.05); o.start(t); o.stop(t + dur + 0.05);
+      return dur;
     }
     if (kind === 'pop') {
       const n = this.noise(), bp = ctx.createBiquadFilter(); bp.type = 'lowpass'; bp.frequency.value = 2500;

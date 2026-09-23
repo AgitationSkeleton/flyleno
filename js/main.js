@@ -28,6 +28,7 @@ import { Goose } from './goose.js';
 import { EntityColliders } from './colliders.js';
 import { ShowSfx } from './showsfx.js';
 import { Show, SEGMENTS } from './show.js';
+import { Predators } from './predators.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 // YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
@@ -242,7 +243,7 @@ const audience = new Audience(audio, reinforce, {
 // ------------------------------------------------------------------ projectiles (tomatoes, pipes)
 const projectiles = host !== leno ? new Projectiles(scene, host, {
   onApproach: () => pulse('loom', 'heckler', 200, 0.35),
-  onSplat: (p, onLeno) => { fx.splash(p); if (!onLeno) food.addTomato(p); },              // looming object -> LC4 looming detectors
+  onSplat: (p, onLeno, rest) => { fx.splash(p); if (!onLeno) food.addTomato(rest ?? p); },              // looming object -> LC4 looming detectors
   onImpact: (it, { hitLeno, speed }) => {
     const p = it.mesh.position.clone().project(camera), pan = Math.max(-1, Math.min(1, p.x));
     const gain = Math.min(1.2, 0.3 + speed / 12);
@@ -259,6 +260,7 @@ const projectiles = host !== leno ? new Projectiles(scene, host, {
     }
   },
 }) : null;
+if (projectiles) projectiles.ground = stage.ground;          // where missed tomatoes end up
 function throwThing(kind) {
   if (!projectiles) { sidebar.ticker('Throwing needs the physics body (not ?body=kinematic)'); return; }
   projectiles.throw(kind, cultists.standRandom());
@@ -458,6 +460,41 @@ $('optRundown').onchange = syncShowEnabled;
 showReady = true;
 syncShowEnabled();
 
+// ------------------------------------------------------------------ predators: spider-Leno, the swatter glove
+const chestOf = () => {
+  if (host === flyHost) return flyHost.root.position.clone().add(new THREE.Vector3(0, 0.95, 0));
+  const b = host.rag?.bodies.chest;
+  if (b) { const t = b.translation(); return new THREE.Vector3(t.x, t.y, t.z); }
+  return hostAt().clone().add(new THREE.Vector3(0, 1.6, 0));
+};
+const velOf = () => {
+  if (host === flyHost) return flyHost.vel.clone().add(flyHost.forward().multiplyScalar(flyHost.speed || 0));
+  const b = host.rag?.bodies.chest;
+  if (b) { const v = b.linvel(); return new THREE.Vector3(v.x, v.y, v.z); }
+  return new THREE.Vector3();
+};
+/** a predator holds him at p (a spring on the chest; Fly-Leno is dragged by the thorax) or lets go (null) */
+function holdHost(p) {
+  if (host === flyHost) { flyHost.hold(p); return; }
+  const b = host.rag?.bodies.chest;
+  if (!b || !p) return;
+  host.heldUntil = performance.now() + 300;          // dangling in a grip isn't a fall
+  const dt = 1 / 60, t = b.translation(), v = b.linvel(), m = 81;
+  const f = new THREE.Vector3(p.x - t.x, p.y - t.y, p.z - t.z).multiplyScalar(30).sub(new THREE.Vector3(v.x, v.y, v.z).multiplyScalar(8));
+  f.multiplyScalar(0.5 * m * dt).add(new THREE.Vector3(0, m * 9.81 * dt, 0));
+  b.applyImpulse({ x: f.x, y: f.y, z: f.z }, true);
+}
+let convulseT = 0;
+const ceiling = stage.root.getObjectByName('Ceiling');
+const predators = new Predators({
+  scene, sfx: showSfx,
+  hostHead: () => (host.state?.headPos ?? hostAt().clone().add(new THREE.Vector3(0, 2.3, 0))).clone(),
+  hostChest: chestOf, hostVel: velOf, isFly: () => host === flyHost,
+  ceilY: ceiling ? new THREE.Box3().setFromObject(ceiling).min.y - 0.4 : hostPos.y + 16,
+  knock: (v) => pushHost(v), hold: holdHost, convulse: (s) => (convulseT = s),
+  pulse, reinforce, crowd: crowdDo, react: (act) => audience.react(act), ticker: (t) => sidebar.ticker(t),
+});
+
 $('eggChance').oninput = (e) => { brood.chance = +e.target.value / 100; $('eggChanceNum').textContent = e.target.value + '%'; };
 
 // ?quiet: start with the show director (autopilot) and the fly's initiative off
@@ -465,6 +502,7 @@ if (params.has('quiet')) {
   director.enabled = false; $('autopilot').checked = false;
   mind.initiative = false; $('initiative').checked = false;
   goose.enabled = false;
+  predators.enabled = false;
   syncShowEnabled();
 }
 
@@ -475,7 +513,7 @@ function looming(dt) {
   if (!dt) return;
   const head = host.state?.headPos ?? hostAt().clone().add(new THREE.Vector3(0, 2.3, 0));
   let best = 0;
-  const objs = [...npcs.approaching().map((p) => ({ p, r: 0.6 })), ...show.loomers()];
+  const objs = [...npcs.approaching().map((p) => ({ p, r: 0.6 })), ...show.loomers(), ...predators.loomers()];
   const thetas = objs.map(({ p, r }) => 2 * Math.atan(r / Math.max(0.3, p.distanceTo(head))));
   if (loomPrev?.length === thetas.length) thetas.forEach((th, i) => (best = Math.max(best, (th - loomPrev[i]) / dt)));
   loomPrev = thetas;
@@ -671,10 +709,10 @@ function resetShow() {
   worker.postMessage({ type: 'reset' });
   if (projectiles) { for (const it of [...projectiles.items]) projectiles.remove(it); for (const s of projectiles.splats) scene.remove(s.mesh); projectiles.splats.length = 0; }
   if (host === flyHost) flyHost.place(physHost.home, 0);
-  else if (host.rag) { host.rag.place(host.home, 0); host.gesture = null; host.fallenFor = 0; }
+  else if (host.rag) { host.rag.place(host.home, 0); host.gesture = null; host.fallenFor = 0; host.getUp = 0; }
   else leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
   mind.mood = 0; behavior.nausea = 0; behavior.transcript.length = 0;
-  brood.clear(); goose.clear(); show.clear();
+  brood.clear(); goose.clear(); show.clear(); predators.clear(); convulseT = 0;
   food.clear(); for (const n of npcs.list) n.remove(); npcs.list.length = 0; cultists.hidden.clear(); instincts.hunger = 0.4;
   sidebar.ticker('Show reset');
 }
@@ -696,6 +734,13 @@ renderer.setAnimationLoop(() => {
   npcs.update(dt);
   director.hold = show.active;
   show.update(dt);
+  predators.update(dt, true);                        // random visits, like the goose
+  if (convulseT > 0) {                               // after a zap: twitching
+    convulseT -= dt;
+    const r = () => (Math.random() - 0.5) * 2;
+    if (host === flyHost) flyHost.vel.add(new THREE.Vector3(r(), 0, r()).multiplyScalar(0.8));
+    else if (host.rag) { host.rag.applyImpulse('chest', new THREE.Vector3(r() * 40, r() * 25, r() * 40)); host.rag.applyImpulse('pelvis', new THREE.Vector3(r() * 30, 0, r() * 30)); }
+  }
   brood.update(dt, host);
   goose.update(dt, true);                            // visits at random, on its own schedule
   // moving entities are solid too (stagehand, heckler, goose, hatchlings)
@@ -760,6 +805,6 @@ renderer.setAnimationLoop(() => {
 });
 
 window.flyleno = {
-  scene, camera, controls, leno, stageScreens, brood, goose, show, showSfx, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
+  scene, camera, controls, leno, stageScreens, brood, goose, show, showSfx, predators, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
   get motor() { return lastMotor; },
 };

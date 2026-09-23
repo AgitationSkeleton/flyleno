@@ -45,6 +45,8 @@ export class PhysicsLeno {
     this.poolRates = {};
     this.gesture = null;
     this.fallenFor = 0;
+    this.getUp = 0;                    // 0..1: puppet strings helping him up after a fall
+    this.heldUntil = 0;                // performance.now() ms while a predator holds him
     this.lastStartle = 0;
     this.activation = {};
     this.onFall = null;
@@ -161,24 +163,25 @@ export class PhysicsLeno {
     this.rag.setActivations(act);
     // the puppet strings let him crouch down to eat
     // eating on all fours: the puppet strings lower him, lean him forward over his hands and tip the pelvis
-    this.rag.setSupport(this.support * (1 - 0.35 * P.eat));
+    this.rag.setSupport(Math.min(1, this.support * (1 - 0.35 * P.eat) * (1 + 0.6 * this.getUp)));
     this.rag.setStance?.(0.36 * P.eat, 0.35 * P.eat, 1.35 * P.eat);
     this.rag.step(dt);
     this.rag.syncSkin();
 
-    // fallen for too long: stagehands stand him back up
-    // (being low on all fours while eating isn't a fall)
-    const down = st.fallen && this.posture.eat < 0.3;
+    // fallen: he stays in whatever pose he landed in (no snapping upright). After a while on the floor the puppet
+    // strings help him up gradually, physically. Being low on all fours while eating, or dangling in a predator's
+    // grip, isn't a fall. Only if he has left the set entirely is he put back on stage.
+    const held = this.heldUntil > performance.now();
+    const down = st.fallen && this.posture.eat < 0.3 && !held;
     this.fallenFor = down ? this.fallenFor + dt : 0;
     if (down && this.fallenFor > 0 && this.fallenFor - dt <= 0) this.onFall?.();
-    if (this.fallenFor > 5) {
-      this.fallenFor = 0;
-      // stand him up where he fell (ground height found by a ray), or back on stage if lost
-      const p = st.root.clone();
-      const hit = this.groundAt(p);
-      if (hit === null || (this.worldBox && !this.worldBox.containsPoint(p.clone().setY(this.worldBox.min.y + 0.1)))) p.copy(this.home);
-      else p.y = hit;
-      this.rag.place(p, st.heading);
+    this.getUp = this.fallenFor > 4 ? Math.min(1, this.getUp + dt * 0.4) : Math.max(0, this.getUp - dt * 0.8);
+    if (this.getUp > 0) this.rag.applyImpulse('chest', new THREE.Vector3(0, this.getUp * 0.5 * 81 * 9.81 * dt, 0));
+    const p = st.root;
+    const lost = this.worldBox && !this.worldBox.containsPoint(p.clone().setY(this.worldBox.min.y + 0.1));
+    if (lost || (this.fallenFor > 5 && this.groundAt(p) === null)) {
+      this.fallenFor = 0; this.getUp = 0;
+      this.rag.place(this.home, st.heading);
     }
   }
 }

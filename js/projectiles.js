@@ -124,15 +124,26 @@ export class Projectiles {
     }
   }
 
-  /** a tomato bursts: remove the body, leave a squashed splat (stuck to Leno's body part if it hit him) */
+  /** the floor / stage surface under p (the tomato may have burst on a wall, a seat back or a curtain) */
+  groundBelow(p) {
+    if (!this.ground?.length) return null;
+    this.ray ||= new THREE.Raycaster();
+    this.ray.set(new THREE.Vector3(p.x, p.y + 0.4, p.z), new THREE.Vector3(0, -1, 0)); this.ray.far = 60;
+    const hit = this.ray.intersectObjects(this.ground, false)[0];
+    return hit ? hit.point : null;
+  }
+
+  /** a tomato bursts: remove the body, leave a squashed splat (stuck to Leno's body part if it hit him,
+   *  otherwise the pulp lands on the surface below the impact) */
   splat(it, bodyName) {
     const p = it.mesh.position.clone();
     this.remove(it);
-    this.onSplat?.(p, bodyName);
+    const rest = bodyName ? p : (this.groundBelow(p) ?? p);
+    this.onSplat?.(p, bodyName, rest);
     const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(bodyName ? 0.2 : 0.32, 1), this.splatMat.clone());
-    mesh.position.copy(p);
+    mesh.position.copy(rest);
     if (bodyName) { mesh.scale.set(1, 0.4, 1); mesh.rotation.set(Math.random(), Math.random(), Math.random()); }
-    else { mesh.scale.set(1, 0.12, 1.2); mesh.rotation.y = Math.random() * 6.28; mesh.position.y -= 0.08; }   // squashed flat
+    else { mesh.scale.set(1, 0.12, 1.2); mesh.rotation.y = Math.random() * 6.28; mesh.position.y += 0.015; }   // squashed flat on the floor
     this.scene.add(mesh);
     let off = null;
     if (bodyName) { const b = this.host.rag.bodies[bodyName].translation(); off = new THREE.Vector3(p.x - b.x, p.y - b.y, p.z - b.z); }

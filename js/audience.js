@@ -29,6 +29,9 @@ const TABLE = {
   frogKicked: [0.80, 0.40, 0.70, 0.30, 0.10],
   backflip:   [1.00, 0.30, 0.90, 0.02, 0.40],
   backflipFail: [0.02, 0.40, 0.02, 0.90, 0.10],
+  spiderDrop: [0.50, 0.40, 0.50, 0.05, 0.60],
+  swatHit:    [0.20, 0.90, 0.10, 0.10, 0.60],
+  zap:        [0.20, 0.60, 0.10, 0.10, 0.90],
 };
 const KINDS = ['cheer', 'laugh', 'applause', 'boo', 'gasp'];
 const VALENCE = { cheer: 1, laugh: 0.7, applause: 1, boo: -1, gasp: -0.5 };
