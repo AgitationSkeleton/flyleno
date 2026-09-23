@@ -150,3 +150,28 @@ button.mini { margin-left: auto; font-size: 11px; }
 .rundown li.done { text-decoration: line-through; opacity: .6; }
 .segments { display: flex; flex-wrap: wrap; gap: 4px; }
 .segments button { font-size: 11px; }
+
+/* narrow screens (phones, small tablets): keep the viewport's overlay controls from overlapping */
+@media (max-width: 760px) {
+  #app { grid-template-rows: 62vh auto; grid-template-rows: 62svh auto; }
+  #hud { top: 8px; left: 10px; gap: 2px; }
+  .hud-title { font-size: 20px; }
+  .hud-sub { display: none; }
+  #onair { font-size: 10px; }
+  /* top right: throw buttons in a column, then the form and screen-mode toggles below them */
+  #throws { top: 8px; right: 8px; flex-direction: column; align-items: flex-end; gap: 4px; }
+  #throws button { padding: 4px 10px; font-size: 12px; }
+  #form { top: 108px; right: 8px; }
+  #screenModes { top: 142px; right: 8px; }
+  #form button, #screenModes button { padding: 4px 8px; font-size: 12px; }
+  /* bottom: the volume pill in the corner, the camera buttons wrapping on a row above it */
+  #volume { bottom: 8px; right: 8px; padding: 3px 10px; gap: 4px; }
+  #volume input { width: 84px; }
+  #cams { bottom: 46px; left: 8px; right: 8px; flex-wrap: wrap; gap: 4px; }
+  #cams button { padding: 4px 8px; font-size: 12px; }
+  #cams .chk { margin-left: 2px; font-size: 12px; }
+}
+/* phones held sideways: give the 3D view the whole screen height, controls below */
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 520px) {
+  #app { grid-template-rows: 100vh auto; grid-template-rows: 100svh auto; }
+}
