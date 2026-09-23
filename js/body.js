@@ -107,6 +107,9 @@ export class PhysicsLeno {
 
   // ---- interface shared with the kinematic Leno
   setMotor(cmd) { Object.assign(this.cmd, cmd); }
+  /** the puppeteer leads him toward `dir` (unit, horizontal) with strength 0..1, or stops (null) */
+  guide(dir, strength = 0) { this.guideDir = dir ? dir.clone() : null; this.guideK = strength; }
+
   /** knocked: the puppet strings go slack (amount 0..1) for `sec` seconds, then tighten again gradually */
   loosen(amount = 0.8, sec = 0.8) {
     const now = performance.now();
@@ -171,6 +174,19 @@ export class PhysicsLeno {
     this.rag.setActivations(act);
     // the puppet strings let him crouch down to eat
     // eating on all fours: the puppet strings lower him, lean him forward over his hands and tip the pelvis
+    // led home by the strings: the puppeteer carries the whole puppet along slowly (every body part together, so
+    // the pose isn't pulled apart), toward a walking pace of up to ~0.7 m/s; not while he's down, held or slack
+    if (this.guideDir && !st.fallen && this.heldUntil < performance.now()) {
+      const k = this.guideK * Math.min(1, this.support / 0.5) * (1 - this.slack);
+      if (k > 0.01) {
+        const pv = this.rag.bodies.pelvis.linvel(), along = pv.x * this.guideDir.x + pv.z * this.guideDir.z;
+        const acc = Math.max(0, Math.min(5, (0.8 * k - along) * 10));           // m/s² toward the target pace (enough to overcome the feet's grip)
+        if (acc > 0) for (const b of Object.values(this.rag.bodies)) {
+          const m = b.mass() * acc * dt;
+          b.applyImpulse({ x: this.guideDir.x * m, y: 0, z: this.guideDir.z * m }, true);
+        }
+      }
+    }
     // slack: drops fast when he's hit, comes back over about a second
     const slackWant = performance.now() < this.slackUntil ? this.slackAmt : 0;
     this.slack += (slackWant - this.slack) * Math.min(1, dt * (slackWant > this.slack ? 25 : 1.8));

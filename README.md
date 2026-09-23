@@ -65,6 +65,7 @@ the connectome, labelled as such in the sidebar).
 | fart | oviposition DNs (oviDN) | neural |
 | eating | touching food → all 129 sugar taste neurons → the model's MN9 (proboscis motor neuron) decides | neural |
 | walking toward food when hungry | food taxis | engineered (see below) |
+| drifting back to his starting mark | a home vector (path integration, which real flies do in the central complex, not modelled here) drives the brain's own DNa01/02 steering and P9 walking neurons, more strongly the farther and longer he's away; the ragdoll is also led gently by its strings, since its own walking is weak | engineered input onto neural DNs |
 | saccadic turns, walking in bouts | shaping of the turn/walk commands | engineered |
 | spontaneous actions | action selector ("initiative"): softmax over values learned from dopamine | engineered, driven by neural dopamine |
 | Fly-Leno flight | DNg02/DNp13 wing power; giant-fiber escape take-off | neural |
@@ -116,6 +117,9 @@ are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when bare
   - **Lightning:** strikes toward him with thunder and a flash on the eyes.
   - **Leaving:** it drifts off after 35–50 s.
 - **Vinesauce mushroom:** a power-up styled on the Vinesauce logo: green dome (yellow-green to teal) with white spots and a white badge with a teal V, on a white stem with green eyes and a smile.
+  It slides slowly for a few seconds, then settles, and it stops whenever he comes close. Eating it corrupts
+  the picture for 5 s like a bad NES cartridge: NES-palette pixels, swapped and garbage tiles, torn scanlines,
+  palette shifts and a chiptune garble. The fly sees the flicker on its photoreceptors.
   - It falls from the ceiling and slides about the stage.
   - Leno goes for it even when not hungry. Eating it gives a big 3.5 s dopamine reward, a power-up
     sound and cheers.

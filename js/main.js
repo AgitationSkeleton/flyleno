@@ -32,6 +32,7 @@ import { Predators } from './predators.js';
 import { Happenings } from './happenings.js';
 import { propLOD } from './lod.js';
 import { disposeObject } from './dispose.js';
+import { NesGlitch } from './glitch.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 // YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
@@ -387,7 +388,8 @@ $('initiative').onchange = (e) => { mind.initiative = e.target.checked; if (!e.t
 const food = new Food(scene);
 const npcs = new Npcs(scene, stage, { food, cultists, audio, onEvent: (t) => sidebar.ticker(t), throwFrom: (kind, p) => projectiles?.throw(kind, p) });
 const instincts = new Instincts({
-  food, stimRate, pulse, reinforce, audio,
+  food, stimRate, stimAlias, pulse, reinforce, audio,
+  home: hostPos.clone(),                            // the starting mark on the stage: home, where he drifts back to
   onEvent: (type, item) => {
     const pan = leftOrRight();
     if (type === 'eatStart') sidebar.ticker(`Leno extends his "proboscis" to the ${item.kind}`);
@@ -401,6 +403,7 @@ const instincts = new Instincts({
       if (item.kind === 'mushroom') {
         // power-up: a big, long dopamine reward
         reinforce(1, 3.5); showSfx.sting('powerup', { gain: 0.6 }); crowdDo('cheer', 1);
+        glitch.start(5); showSfx.sting('glitch', { gain: 0.5 });                  // the world corrupts like a bad NES cartridge
         sidebar.ticker('Leno eats the mushroom: POWER UP!');
       }
       if (item.rotten) {
@@ -618,7 +621,7 @@ if (params.has('quiet')) {
   syncShowEnabled();
 }
 
-for (const [id, k] of [['iSacc', 'saccades'], ['iBout', 'bouts'], ['iTaxis', 'taxis'], ['iDust', 'dust']]) $(id).onchange = (e) => (instincts.enabled[k] = e.target.checked);
+for (const [id, k] of [['iSacc', 'saccades'], ['iBout', 'bouts'], ['iTaxis', 'taxis'], ['iDust', 'dust'], ['iHome', 'homing']]) $(id).onchange = (e) => (instincts.enabled[k] = e.target.checked);
 let loomPrev = null;
 function looming(dt) {
   // LC4 looming detectors respond to the expansion rate of an approaching object's angular size
@@ -714,6 +717,7 @@ function updateMindUI(t) {
 
 // ------------------------------------------------------------------ worker messages
 let lastMotor = null, runawayMs = 0, lastTickWall = 0;
+const glitch = new NesGlitch($('viewport'), canvas);
 const neuromap = new NeuroMap($('neuromap'), { maxPixelRatio: MOBILE ? 1.25 : 2 });
 let wormsTotal = 0;
 neuromap.load().catch((e) => console.warn('neural map unavailable', e));
@@ -935,10 +939,13 @@ renderer.setAnimationLoop(() => {
   propLOD.update(camera, rawDt);
   liveCams?.update(rawDt);
   renderer.render(scene, camera);
+  const gk = glitch.update(rawDt);
+  stimAlias('glitchL', 'eyeL', gk ? 20 + 60 * gk * Math.random() : 0);   // the fly sees the flicker too
+  stimAlias('glitchR', 'eyeR', gk ? 20 + 60 * gk * Math.random() : 0);
   neuromap.render(rawDt);
 });
 
 window.flyleno = {
-  scene, camera, controls, leno, stageScreens, brood, goose, show, showSfx, predators, happenings, stageLODs, propLOD, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
+  scene, camera, controls, leno, stageScreens, brood, goose, show, showSfx, predators, happenings, stageLODs, propLOD, glitch, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
   get motor() { return lastMotor; },
 };

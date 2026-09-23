@@ -359,6 +359,15 @@ export class ShowSfx {
       o.start(t); lfo.start(t); o.stop(t + 0.6); lfo.stop(t + 0.6);
       return 0.6;
     }
+    if (kind === 'glitch') {                                  // broken-cartridge chiptune garble
+      for (let k = 0; k < 40; k++) {
+        const st = t + k * rand(0.03, 0.09), o = ctx.createOscillator(); o.type = Math.random() < 0.5 ? 'square' : 'triangle';
+        o.frequency.value = [110, 220, 330, 440, 660, 880, 1320, 1760][(Math.random() * 8) | 0] * (Math.random() < 0.3 ? 1.06 : 1);
+        const g = ctx.createGain(); o.connect(g).connect(out); this.env(g.gain, st, 0.002, 0.18 * (1 - k / 45), 0.03, 0.02);
+        o.start(st); o.stop(st + 0.07);
+      }
+      return 2.5;
+    }
     if (kind === 'pop') {
       const n = this.noise(), bp = ctx.createBiquadFilter(); bp.type = 'lowpass'; bp.frequency.value = 2500;
       n.connect(bp).connect(out); this.env(out.gain, t, 0.002, gain, 0.02, 0.25);

@@ -299,7 +299,7 @@ export class VineMushroom {
     const ctx = this.ctx, p = A.mesh.position;
     A.t += dt;
     if (A.item && !ctx.food.items.includes(A.item)) { this.active = null; return; }   // eaten
-    if (A.t > 70) { this.clear(); return; }
+    if (A.t > 150) { this.clear(); return; }
     const gy = ctx.groundAt(p) ?? A.ground;
     A.ground = gy;
     if (A.state === 'fall') {
@@ -317,9 +317,11 @@ export class VineMushroom {
     }
     // slides along like a power-up, turning back at the platform rim; stops when he's right there to eat it
     const host = ctx.hostPos();
-    const near = Math.hypot(host.x - p.x, host.z - p.z) < 1.8;
-    if (!near) {
-      const next = p.clone().addScaledVector(A.dir, 0.9 * dt);
+    // it slides slowly for a while, then settles; it stops whenever he comes close, so he can get to it
+    const near = Math.hypot(host.x - p.x, host.z - p.z) < 3.5;
+    A.slideT = (A.slideT || 0) + dt;
+    if (!near && A.slideT < 12) {
+      const next = p.clone().addScaledVector(A.dir, 0.45 * dt);
       const fromC = next.clone().sub(ctx.center).setY(0);
       if (fromC.length() > ctx.stageRadius * 0.72) A.dir.reflect(fromC.normalize()).setY(0).normalize();
       else { p.x = next.x; p.z = next.z; }
