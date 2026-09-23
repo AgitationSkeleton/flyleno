@@ -6,6 +6,7 @@
 // ankles"), or when Leno yells at him ("You're out of here, Mr. Frog!").
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { propLOD } from './lod.js';
 
 const S = 1.9;                                     // guest-sized: about Leno's seated height
 
@@ -80,7 +81,7 @@ export class Frog {
     if (this.active) return;
     const m = frogModel(), side = Math.random() < 0.5 ? -1 : 1;
     const start = this.center.clone().add(new THREE.Vector3(side * 12, 0, 1)); start.y = this.groundAt(start);
-    m.g.position.copy(start); this.scene.add(m.g);
+    m.g.position.copy(start); this.scene.add(m.g); propLOD.track(m.g);
     this.getHost = getHost;
     this.active = { ...m, state: 'enter', t: 0, until: dur, hop: null, croakT: 3, tongueT: 5 + Math.random() * 4, exit: start.clone(), strike: null, caught: false };
     this.onEvent?.('enter');

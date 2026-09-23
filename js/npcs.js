@@ -5,6 +5,7 @@
 // Movement is simple steering on the ground (ray cast to the stage/floor meshes).
 import * as THREE from 'three';
 import { standingFigure, figureMaterial, PALETTES, FIGURE_SCALE } from './cultist-model.js';
+import { propLOD } from './lod.js';
 
 const WALK = 2.2, RUN = 4.2;             // m/s (stage units)
 const down = new THREE.Vector3(0, -1, 0);
@@ -13,7 +14,7 @@ class Npc {
   constructor(world, palette) {
     this.world = world;
     this.fig = standingFigure(palette, world.mat);
-    world.scene.add(this.fig);
+    world.scene.add(this.fig); propLOD.track(this.fig);
     this.plan = [];                       // queue of steps
     this.t = 0; this.phase = Math.random() * 6;
     this.speed = 0;

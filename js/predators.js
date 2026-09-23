@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { propLOD } from './lod.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
@@ -85,7 +86,7 @@ export class SpiderLeno {
     const thread = new THREE.Line(new THREE.BufferGeometry().setFromPoints([anchor, anchor.clone()]),
       new THREE.LineBasicMaterial({ color: 0xe8e8f0, transparent: true, opacity: 0.8 }));
     thread.frustumCulled = false;
-    this.scene.add(m.root, thread);
+    this.scene.add(m.root, thread); propLOD.track(m.root);
     this.active = { ...m, anchor, thread, state: 'descend', t: 0, life: 38 + Math.random() * 10, lungeT: 2, len: 0.6, hang: 0, lunge: null, grab: null, mouth: 0 };
     this.sfx.sting('skitter', { gain: 0.6 });
     return true;
@@ -240,7 +241,7 @@ export class Swatter {
     const m = gloveAndTool(electric);
     const a = Math.random() * 6.28;
     m.g.position.copy(hostHead).add(V(Math.cos(a) * 14, 6, Math.sin(a) * 14));
-    this.scene.add(m.g);
+    this.scene.add(m.g); propLOD.track(m.g);
     this.active = { ...m, electric, reach: (electric ? 1.2 : 1.55) * 1.6, state: 'enter', t: 0, life: 22 + Math.random() * 8, cool: 1.2, swing: null, angle: -1.2, bolts: [], convulse: 0 };
     return true;
   }

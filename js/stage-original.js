@@ -14,6 +14,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+import { InstancedLOD } from './lod.js';
 
 // Droid Sans Bold, (c) 2008 The Android Open Source Project, Apache License 2.0
 // (three.js repo: examples/fonts/droid/NOTICE). Loaded from the CDN at runtime, not bundled.
@@ -370,10 +371,11 @@ function makeScreens() {
 
 // ------------------------------------------------------------------ reusable geometries
 /** One bay of a square box truss, length 1 along +X, cross-section 1x1 (scale per instance). */
-function trussBayGeometry() {
+function trussBayGeometry(far = false) {
   const parts = [];
   const c = 0.44, t = 0.07; // chord offset, member thickness
   for (const y of [-c, c]) for (const z of [-c, c]) parts.push(new THREE.BoxGeometry(1, t, t).translate(0, y, z));
+  if (far) return mergeGeometries(parts.map((g) => g.toNonIndexed()));   // far away: just the four chords
   const dl = Math.hypot(1, 2 * c), da = Math.atan2(2 * c, 1);
   for (const s of [-c, c]) {
     parts.push(new THREE.BoxGeometry(dl, t * 0.6, t * 0.6).rotateZ(s > 0 ? da : -da).translate(0, 0, s)); // vertical faces
@@ -384,6 +386,22 @@ function trussBayGeometry() {
   parts.push(new THREE.BoxGeometry(t * 0.6, t * 0.6, 2 * c).translate(-0.5, c, 0));
   parts.push(new THREE.BoxGeometry(t * 0.6, t * 0.6, 2 * c).translate(-0.5, -c, 0));
   return mergeGeometries(parts.map((g) => g.toNonIndexed()));
+}
+
+/** Low-detail seats: 'mid' = plain boxes, 'far' = cushion + backrest and a single shell. Returns [blue, black]. */
+function seatGeometriesLow(level) {
+  const blue = [], black = [];
+  const add = (arr, g, m) => arr.push(g.toNonIndexed().applyMatrix4(m));
+  add(blue, new THREE.BoxGeometry(0.64, 0.16, 0.6), M(0, 0.56, -0.05));
+  add(blue, new THREE.BoxGeometry(0.66, 0.8, 0.17), M(0, 1.0, -0.5, 0, -0.14));
+  if (level === 'mid') {
+    add(blue, new THREE.BoxGeometry(0.5, 0.2, 0.12), M(0, 1.36, -0.56, 0, -0.14));
+    add(black, new THREE.BoxGeometry(0.62, 0.74, 0.05), M(0, 1.0, -0.6, 0, -0.14));
+    for (const s of [-1, 1]) add(black, new THREE.BoxGeometry(0.07, 0.8, 0.7), M(s * 0.37, 0.42, -0.24));
+  } else {
+    add(black, new THREE.BoxGeometry(0.8, 0.8, 0.7), M(0, 0.4, -0.26));                        // sides + pedestal as one block
+  }
+  return [mergeGeometries(blue), mergeGeometries(black)];
 }
 
 /** Cinema seat facing +Z, origin on the floor at the sitter's position. Returns [blue, black]. */
@@ -402,10 +420,21 @@ function seatGeometries() {
   return [mergeGeometries(blue), mergeGeometries(black)];
 }
 
-/** Stylised toilet, facing +Z, origin on the floor under its centre; seat at (0, 0.62, 0.26). */
-function toiletGeometry() {
+/** Stylised toilet, facing +Z, origin on the floor under its centre; seat at (0, 0.62, 0.26).
+ *  q = level of detail: 1 full, 0.4 mid, 0 far (a few boxes and a coarse bowl). */
+function toiletGeometry(q = 1) {
   const parts = [];
   const add = (g, m) => parts.push((g.index ? g.toNonIndexed() : g).applyMatrix4(m));
+  if (q < 1) {
+    const seg = q > 0 ? 10 : 6;
+    const profile = [[0, 0], [0.15, 0], [0.135, 0.12], [0.135, 0.27], [0.245, 0.46], [0.29, 0.585], [0.225, 0.6], [0, 0.42]].map(([r, y]) => new THREE.Vector2(r, y));
+    add(new THREE.LatheGeometry(profile, seg), M(0, 0, 0.14, 0, 0, 0, 1, 1, 1.3));
+    if (q > 0) add(new THREE.TorusGeometry(0.225, 0.035, 3, 12), M(0, 0.615, 0.15, 0, Math.PI / 2, 0, 1, 1.3, 0.7));
+    add(new THREE.BoxGeometry(0.54, 0.46, 0.24), M(0, 0.8, -0.37));
+    add(new THREE.BoxGeometry(0.28, 0.3, 0.22), M(0, 0.45, -0.22));
+    add(new THREE.BoxGeometry(0.5, 0.6, 0.035), M(0, 0.93, -0.21, 0, -0.12));
+    return mergeGeometries(parts);
+  }
   const profile = [[0, 0], [0.15, 0], [0.16, 0.03], [0.135, 0.12], [0.135, 0.27], [0.18, 0.38], [0.245, 0.46],
     [0.285, 0.54], [0.29, 0.585], [0.275, 0.6], [0.225, 0.6], [0.2, 0.55], [0.09, 0.42], [0, 0.4]].map(([r, y]) => new THREE.Vector2(r, y));
   add(new THREE.LatheGeometry(profile, 28), M(0, 0, 0.14, 0, 0, 0, 1, 1, 1.3));                      // pedestal + bowl
@@ -418,17 +447,17 @@ function toiletGeometry() {
   return mergeGeometries(parts);
 }
 
-/** Hanging stage-light can, aiming along +Z. Lens disc returned separately. */
-function canGeometries() {
+/** Hanging stage-light can, aiming along +Z. Lens disc returned separately. seg = round segments (20 full, 8 far). */
+function canGeometries(seg = 20) {
   const body = mergeGeometries([
-    new THREE.CylinderGeometry(0.42, 0.48, 1.1, 20, 1, true).rotateX(Math.PI / 2).toNonIndexed(),
-    new THREE.CylinderGeometry(0.44, 0.44, 0.08, 20).rotateX(Math.PI / 2).translate(0, 0, -0.55).toNonIndexed(),
-    new THREE.CylinderGeometry(0.52, 0.52, 0.06, 20, 1, true).rotateX(Math.PI / 2).translate(0, 0, 0.52).toNonIndexed(),
+    new THREE.CylinderGeometry(0.42, 0.48, 1.1, seg, 1, true).rotateX(Math.PI / 2).toNonIndexed(),
+    new THREE.CylinderGeometry(0.44, 0.44, 0.08, seg).rotateX(Math.PI / 2).translate(0, 0, -0.55).toNonIndexed(),
+    new THREE.CylinderGeometry(0.52, 0.52, 0.06, seg, 1, true).rotateX(Math.PI / 2).translate(0, 0, 0.52).toNonIndexed(),
     new THREE.BoxGeometry(1.2, 0.08, 0.1).translate(0, 0.62, 0).toNonIndexed(),
     new THREE.BoxGeometry(0.08, 0.62, 0.1).translate(-0.58, 0.31, 0).toNonIndexed(),
     new THREE.BoxGeometry(0.08, 0.62, 0.1).translate(0.58, 0.31, 0).toNonIndexed(),
   ]);
-  const lens = new THREE.CircleGeometry(0.4, 20).translate(0, 0, 0.5);
+  const lens = new THREE.CircleGeometry(0.4, seg).translate(0, 0, 0.5);
   return { body, lens };
 }
 
@@ -870,7 +899,21 @@ export async function loadOriginalStage(scene, { lite = false } = {}) {
   scene.add(markerGroup);
 
   const ground = [platformTop, platformSide, floor];
-  return { root, markers, ground, markerGroup, screens };
+
+  // ---------------- levels of detail for the instanced set pieces (call lods[i].update(camera.position) per frame;
+  // build them after the physics colliders have read the full instance sets)
+  const buildLODs = () => {
+    const get = (n) => root.getObjectByName(n);
+    const [sbMid, skMid] = seatGeometriesLow('mid'), [sbFar, skFar] = seatGeometriesLow('far');
+    const far = canGeometries(8);
+    return [
+      new InstancedLOD([{ mesh: get('SeatsFabric'), levels: [sbMid, sbFar] }, { mesh: get('SeatsFrame'), levels: [skMid, skFar] }], [10, 24]),
+      new InstancedLOD([{ mesh: get('Toilets'), levels: [toiletGeometry(0.4), toiletGeometry(0)] }], [14, 30]),
+      new InstancedLOD([{ mesh: get('Truss'), levels: [trussBayGeometry(true)] }], [22]),
+      new InstancedLOD([{ mesh: get('LightCans'), levels: [far.body] }, { mesh: get('LightLenses'), levels: [far.lens] }], [20]),
+    ];
+  };
+  return { root, markers, ground, markerGroup, screens, buildLODs };
 }
 
 function round4(v) { return Math.round(v * 1e4) / 1e4; }

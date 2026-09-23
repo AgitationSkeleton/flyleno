@@ -3,6 +3,7 @@
 // as flies do.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { propLOD } from './lod.js';
 
 const SCALE = 1.4;                        // the set is ~1.4x human scale
 
@@ -76,7 +77,7 @@ export class Goose {
     const start = this.center.clone().add(new THREE.Vector3(side * 12, 0, -2 + Math.random() * 6));
     start.y = this.groundAt(start);
     m.g.position.copy(start);
-    this.scene.add(m.g);
+    this.scene.add(m.g); propLOD.track(m.g);
     const stops = Array.from({ length: 4 + ((Math.random() * 4) | 0) }, () => {
       const a = Math.random() * 6.28, r = 1 + Math.random() * 6;
       return this.center.clone().add(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r + 1.5));

@@ -10,6 +10,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { propLOD } from './lod.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -248,7 +249,7 @@ export class VineMushroom {
     const ctx = this.ctx, c = ctx.center, a = Math.random() * 6.28, r = Math.sqrt(Math.random()) * ctx.stageRadius * 0.55;
     const mesh = mushroomModel();
     mesh.position.set(c.x + Math.cos(a) * r, ctx.ceilY - 1, c.z + Math.sin(a) * r);
-    ctx.scene.add(mesh);
+    ctx.scene.add(mesh); propLOD.track(mesh);
     const d = Math.random() * 6.28;
     this.active = { mesh, vy: 0, bounces: 0, state: 'fall', t: 0, dir: V(Math.cos(d), 0, Math.sin(d)), item: null, ground: c.y };
     ctx.sfx.sting('powerup', { gain: 0.45 });
@@ -326,7 +327,9 @@ export class MiniAliens {
     const MAX = 48;
     this.meshes = [upper, leg, leg].map((g) => {
       const m = new THREE.InstancedMesh(g, mat, MAX); m.count = 0; m.frustumCulled = false; m.castShadow = true;
-      m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); ctx.scene.add(m); return m;
+      m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); ctx.scene.add(m);
+      propLOD.track(m, { center: () => ctx.hostPos(), size: 0.5, minTris: 60 });   // the swarm is around him
+      return m;
     });
     this.ray = new THREE.Raycaster();
   }

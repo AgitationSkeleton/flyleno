@@ -4,6 +4,7 @@
 // audio), substrate vibration (leg mechanosensors) and, when it heads toward him, a looming object (LC4).
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { propLOD } from './lod.js';
 
 const S = 1.4;
 
@@ -74,7 +75,7 @@ export class Car {
     const m = carModel(), side = Math.random() < 0.5 ? -1 : 1;
     const start = this.center.clone().add(new THREE.Vector3(side * 16, 0, 2));
     m.g.position.copy(start); m.g.position.y = this.groundAt(start);
-    this.scene.add(m.g);
+    this.scene.add(m.g); propLOD.track(m.g);
     this.active = { ...m, dir: -side, R, ang: null, lapLeft: laps * Math.PI * 2, speed: 0, phase: 'in', exit: start, honkT: 0, engine: this.sfx.engine() };
     this.onEvent?.('enter');
   }

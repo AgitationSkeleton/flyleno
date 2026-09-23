@@ -30,6 +30,7 @@ import { ShowSfx } from './showsfx.js';
 import { Show, SEGMENTS } from './show.js';
 import { Predators } from './predators.js';
 import { Happenings } from './happenings.js';
+import { propLOD } from './lod.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 // YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
@@ -109,6 +110,8 @@ if (BODY === 'ragdoll') {
   }
 }
 const physHost = host !== leno ? host : null;       // the ragdoll body (null when unavailable)
+// levels of detail for the instanced set pieces (built now that the colliders have read the full instance sets)
+const stageLODs = stage.buildLODs ? stage.buildLODs() : [];
 let flyHost = null;                                 // Fly-Leno body, created on first use
 const hostAt = () => (host === leno ? leno.root.position : host.position);
 key.position.set(hostPos.x, hostPos.y + 14, hostPos.z + 10);
@@ -857,12 +860,14 @@ renderer.setAnimationLoop(() => {
     }
   }
   controls.update();
+  for (const l of stageLODs) l.update(camera.position);
+  propLOD.update(camera, rawDt);
   liveCams?.update(rawDt);
   renderer.render(scene, camera);
   neuromap.render(rawDt);
 });
 
 window.flyleno = {
-  scene, camera, controls, leno, stageScreens, brood, goose, show, showSfx, predators, happenings, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
+  scene, camera, controls, leno, stageScreens, brood, goose, show, showSfx, predators, happenings, stageLODs, propLOD, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
   get motor() { return lastMotor; },
 };

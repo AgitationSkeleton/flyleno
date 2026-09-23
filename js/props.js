@@ -7,6 +7,7 @@
 //   Ufo         - Grey Leno's ride home, with a tractor beam
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { propLOD } from './lod.js';
 
 const v3 = (a) => new THREE.Vector3(a[0], a[1], a[2]);
 
@@ -54,7 +55,7 @@ export class BandStand {
     g.add(cushion, mic);
     g.scale.setScalar(1.4); g.position.copy(at);
     g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
-    scene.add(g);
+    scene.add(g); propLOD.track(g);
     this.group = g;
   }
 }
@@ -161,7 +162,7 @@ export class Balloons {
       g.add(new THREE.Mesh(this.stringGeo, new THREE.MeshBasicMaterial({ color: 0xdddddd })));
       const a = Math.random() * 6.28, r = Math.sqrt(Math.random()) * 7;
       g.position.set(center.x + Math.cos(a) * r, 17 + Math.random() * 5, center.z + Math.sin(a) * r);
-      this.scene.add(g);
+      this.scene.add(g); propLOD.track(g, { minTris: 100 });
       this.list.push({ g, vy: -(0.8 + Math.random() * 0.5), t: Math.random() * 6, life: 30 + Math.random() * 10 });
     }
   }
@@ -199,7 +200,7 @@ export class Ufo {
     this.light = new THREE.SpotLight(0xb8fff0, 0, 40, 0.35, 0.5, 1); this.light.position.set(0, -0.6, 0);
     g.add(this.light, this.light.target); this.light.target.position.set(0, -20, 0);
     g.visible = false;
-    scene.add(g);
+    scene.add(g); propLOD.track(g);
     this.g = g; this.state = 'off'; this.t = 0; this.beamLevel = 0;
   }
 

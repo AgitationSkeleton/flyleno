@@ -136,6 +136,16 @@ distance from the viewing camera, with 10% hysteresis so seats don't flicker:
 - **Mid** (16–32 m): about half the segments, 364 triangles; the head still follows Leno.
 - **Far** (over 32 m): one merged piece of 104 triangles (robe, hood, white mask), with the head fixed.
 
+**Other levels of detail** (`js/lod.js`):
+- **Instanced set pieces:** seats, toilets, truss bays and light cans each get one or two simpler geometries and
+  are re-bucketed by camera distance whenever the camera moves:
+  - seats: 516 → 36 → 24 fabric triangles; toilets: coarse lathe and boxes; truss: just the four chords far away;
+    light cans: 8 instead of 20 segments.
+- **One-off props:** the frog, car, goose, stagehand/heckler, spider, glove, mushroom, bandstand, balloons, UFO
+  and the mini aliens swap each mesh to an automatically simplified copy (three.js `SimplifyModifier`, ~30% of
+  the vertices) when it is small on screen.
+- **Effect:** about 30–45% fewer triangles from the default cameras.
+
 **Hecklers:** a heckler charges the stage, then either rants with both arms raised or pelts Leno with
 3–5 tomatoes and pipes thrown from its hand.
 
