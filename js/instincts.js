@@ -38,7 +38,9 @@ export class Instincts {
     const fwd = host.forward();
 
     // ---- food: taxis, taste on contact, eating
-    const near = this.food.nearest(pos, 18);
+    // humanoid Leno ignores goose droppings; Fly-Leno is keen on them
+    const near = this.food.nearest(pos, 18, host.isFly ? null : (it) => it.kind !== 'poop');
+    const eager = host.isFly && near?.item.kind === 'poop';
     let inReach = false;
     this.status = '';
     if (near) {
@@ -49,12 +51,12 @@ export class Instincts {
       let ang = Math.atan2(fwd.x * to.z - fwd.z * to.x, fwd.x * to.x + fwd.z * to.z);   // + = food to the left? (y-up)
       ang = -ang;
       this.taxis = false;
-      if (this.enabled.taxis && this.hunger > 0.25 && !inReach && !this.eating) {
+      if (this.enabled.taxis && this.hunger > (eager ? 0.05 : 0.25) && !inReach && !this.eating) {
         // like a fly homing on food: pivot until facing it, then walk straight in (slowly at the end)
         this.taxis = true;
         if (Math.abs(ang) > 0.35) { out.turn = Math.sign(ang); out.forward = 0; }
         else { out.turn = clamp(ang * 2, -0.5, 0.5); out.forward = Math.max(out.forward ?? 0, near.dist > 2 ? 0.7 : 0.35); }
-        this.status = `hungry (${(this.hunger * 100) | 0}%): heading for the ${near.item.kind}`;
+        this.status = eager ? 'smells goose droppings - buzzing over' : `hungry (${(this.hunger * 100) | 0}%): heading for the ${near.item.kind}`;
       }
       // taste: legs/mouth on the food -> sugar receptor neurons
       this.stimRate('sugarTaste', inReach ? 45 * near.item.sweet : 0);

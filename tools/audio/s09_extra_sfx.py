@@ -37,6 +37,9 @@ SOURCES = [
     ("sfx", "retch", "pf93OHsjkQM", "event", 3),
     ("sfx", "retch", "A3wzIw1tWkw", "event", 3),
     ("sfx", "retch", "jqHViajqnwc", "event", 3),
+    ("sfx", "honk", "zcDiAD8RGq8", "event", 3),
+    ("sfx", "honk", "J0WO22NhTK8", "event", 3),
+    ("sfx", "honk", "A8nqfY3rUKw", "event", 1),
 ]
 
 
@@ -88,8 +91,8 @@ def main():
     man_path = os.path.join(OUT, "manifest.json")
     man = json.load(open(man_path, encoding="utf-8"))
     # the agent's retch clips are burps: move them
-    old = man["sfx"].pop("retch", [])
-    if old and not man["sfx"].get("burp"):
+    old = man["sfx"].pop("retch", []) if not man["sfx"].get("burp") else []    # one-time relabel only
+    if old:
         os.makedirs(os.path.join(OUT, "sfx", "burp"), exist_ok=True)
         for c in old:
             new = c["file"].replace("sfx/retch/retch_", "sfx/burp/burp_")

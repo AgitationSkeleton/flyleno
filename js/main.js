@@ -24,6 +24,7 @@ import { Instincts } from './instincts.js';
 import { FlyLeno } from './flybody.js';
 import { StageScreens, parseYouTubeId } from './screens.js';
 import { Brood } from './brood.js';
+import { Goose } from './goose.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 // YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
@@ -315,7 +316,7 @@ $('initiative').onchange = (e) => { mind.initiative = e.target.checked; if (!e.t
 
 // ------------------------------------------------------------------ food, stagehand / heckler, fly instincts
 const food = new Food(scene);
-const npcs = new Npcs(scene, stage, { food, cultists, audio, onEvent: (t) => sidebar.ticker(t) });
+const npcs = new Npcs(scene, stage, { food, cultists, audio, onEvent: (t) => sidebar.ticker(t), throwFrom: (kind, p) => projectiles?.throw(kind, p) });
 const instincts = new Instincts({
   food, stimRate, pulse, reinforce, audio,
   onEvent: (type, item) => {
@@ -323,8 +324,8 @@ const instincts = new Instincts({
     if (type === 'eatStart') sidebar.ticker(`Leno extends his "proboscis" to the ${item.kind}`);
     if (type === 'bite') { audio.sfx('splat', { pan, gain: 0.25 }); if (Math.random() < 0.3) audio.mutter('hmm', { pan, gain: 0.5 }); }
     if (type === 'ate') {
-      sidebar.ticker(`Leno finished the ${item.kind}`);
-      audience.react('eat');
+      sidebar.ticker(item.kind === 'poop' ? 'Fly-Leno happily slurps up the goose droppings' : `Leno finished the ${item.kind}`);
+      audience.react(item.kind === 'poop' ? 'eatPoop' : 'eat');
       if (Math.random() < 0.45) setTimeout(() => { audio.sfx('burp', { pan: leftOrRight() }); audience.react('burp'); }, 900);
     }
   },
@@ -364,7 +365,21 @@ const brood = new Brood({
     if (type === 'hatch') { sidebar.ticker('An egg hatches!'); audience.react('hatch'); }
   },
 });
+const goose = new Goose({
+  scene, stage, food, audio,
+  onEvent: (type) => {
+    if (type === 'enter') { sidebar.ticker('A goose wanders onto the stage…'); audience.react('goose'); }
+    if (type === 'leave') sidebar.ticker('The goose waddles off');
+  },
+});
+$('releaseGoose').onclick = () => goose.spawn();
 $('eggChance').oninput = (e) => { brood.chance = +e.target.value / 100; $('eggChanceNum').textContent = e.target.value + '%'; };
+
+// ?quiet: start with the show director (autopilot) and the fly's initiative off
+if (params.has('quiet')) {
+  director.enabled = false; $('autopilot').checked = false;
+  mind.initiative = false; $('initiative').checked = false;
+}
 
 for (const [id, k] of [['iSacc', 'saccades'], ['iBout', 'bouts'], ['iTaxis', 'taxis'], ['iDust', 'dust']]) $(id).onchange = (e) => (instincts.enabled[k] = e.target.checked);
 let loomPrev = null;
@@ -568,7 +583,7 @@ function resetShow() {
   else if (host.rag) { host.rag.place(host.home, 0); host.gesture = null; host.fallenFor = 0; }
   else leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
   mind.mood = 0; behavior.nausea = 0; behavior.transcript.length = 0;
-  brood.clear();
+  brood.clear(); goose.clear();
   food.clear(); for (const n of npcs.list) n.remove(); npcs.list.length = 0; cultists.hidden.clear(); instincts.hunger = 0.4;
   sidebar.ticker('Show reset');
 }
@@ -589,6 +604,7 @@ renderer.setAnimationLoop(() => {
   }
   npcs.update(dt);
   brood.update(dt, host);
+  goose.update(dt, director.enabled);
   looming(dt);
   host.update(dt);
   // lip-sync: mouth follows the loudness of Leno's own sounds (fast open, slower close); feeding opens it too
@@ -632,6 +648,6 @@ renderer.setAnimationLoop(() => {
 });
 
 window.flyleno = {
-  scene, camera, controls, leno, stageScreens, brood, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
+  scene, camera, controls, leno, stageScreens, brood, goose, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
   get motor() { return lastMotor; },
 };

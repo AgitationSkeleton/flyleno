@@ -27,7 +27,7 @@ It is a static site with no build step: three.js and Rapier load from a CDN, and
 # third-party assets (not in git, see "Asset licensing")
 blender -b assets/_src/leno/DAD_Leno.blend --python tools/export_leno.py -- assets/grey_leno.glb   # + grey_leno_head.glb
 python tools/audio/run_pipeline.sh     # Leno voice/SFX bank from the two Vinesauce videos (venv, GPU); see tools/audio/README.md
-python tools/audio/s09_extra_sfx.py    # boo / cheer / vomit / gag sound effects (YouTube SFX uploads)
+python tools/audio/s09_extra_sfx.py    # boo / cheer / vomit / gag / goose-honk sound effects (YouTube SFX uploads)
 python tools/export_tuurd_stage.py     # optional: the original game stage (?stage=game)
 
 python tools/serve.py                  # no-cache dev server (module workers need http://)
@@ -77,6 +77,19 @@ The fly **sees** the big screen: its left and right halves (brightness + frame-t
 weighted by whether the screen is in Leno's field of view, drive 400 sampled R1-6 photoreceptors per
 eye. For a YouTube video that needs "pipe tab audio", whose tab capture also carries the picture;
 browsers don't expose iframe pixels otherwise. The video's sound reaches the fly's ears the same way.
+
+**The goose** (`js/goose.js`): now and then (while autopilot is on), or via the 🦆 Goose button, a
+low-poly goose waddles onto the stage. It honks (YouTube SFX) and defecates profusely. The droppings
+are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when barely hungry, tastes them
+(sugar neurons → MN9) and eats them.
+
+**Hecklers:** a heckler charges the stage, then either rants with both arms raised or pelts Leno with
+3–5 tomatoes and pipes thrown from its hand.
+
+**Eating posture:** humanoid Leno gets down on all fours to eat. The puppet strings lower him, lean
+him forward over his hands and tip his pelvis. Fly-Leno lowers its head to the food.
+
+`?quiet` starts the page with autopilot and initiative off.
 
 **Eggs and hatchlings** (`js/brood.js`, engineered):
 - **Laying:** each time Leno reaches a new surface (floor, a platform step, the platform top, or a
@@ -184,6 +197,7 @@ burps and are kept as `sfx/burp`. So those categories come from short YouTube so
 - **Vomiting:** UnDhyWnHPD0, RgJ8wfuDfo4, yoD5T0N1SzU.
 - **Gagging:** pf93OHsjkQM, A3wzIw1tWkw, jqHViajqnwc.
 - **Pipe clang:** f8mL0_4GeV0.
+- **Goose honks:** zcDiAD8RGq8, J0WO22NhTK8, A8nqfY3rUKw.
 
 All clips are git-ignored.
 

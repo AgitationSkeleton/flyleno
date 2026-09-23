@@ -1,6 +1,7 @@
 // Walking show characters built from the robed figure (js/cultist-model.js):
 //   stagehand - grey robe, gold mantle: walks on from the wings carrying a sugar cube, sets it down near Leno, leaves
-//   heckler   - red robe: gets up from an audience seat, charges toward Leno, shakes a fist and yells, returns
+//   heckler   - red robe: gets up from an audience seat, charges toward Leno, then either rants with both arms
+//               raised or pelts him with tomatoes/pipes, and goes back to its seat
 // Movement is simple steering on the ground (ray cast to the stage/floor meshes).
 import * as THREE from 'three';
 import { standingFigure, figureMaterial, PALETTES, FIGURE_SCALE } from './cultist-model.js';
@@ -70,8 +71,9 @@ class Npc {
 }
 
 export class Npcs {
-  constructor(scene, stage, { food, cultists, audio, onEvent }) {
+  constructor(scene, stage, { food, cultists, audio, onEvent, throwFrom }) {
     this.scene = scene; this.stage = stage; this.food = food; this.cultists = cultists; this.audio = audio;
+    this.throwFrom = throwFrom;        // (kind, fromPosition) => void : throws at Leno
     this.onEvent = onEvent;
     this.mat = figureMaterial();
     this.list = [];
@@ -123,7 +125,8 @@ export class Npcs {
   }
 
   /** a red-robed audience member storms toward Leno, shakes a fist and yells, then goes back to their seat */
-  heckle(getLeno) {
+  heckle(getLeno, mode = null) {
+    const pelt = mode ? mode === 'pelt' : Math.random() >= 0.5;
     const seats = this.cultists.seats;
     const i = (Math.random() * seats.length) | 0;
     const seatPos = seats[i].p.clone();
@@ -138,11 +141,28 @@ export class Npcs {
     n.plan.push(
       { type: 'walk', to: target, within: 0.5, speed: RUN },
       { type: 'face', to: () => getLeno().pos },
-      { type: 'pose', dur: 2.2, pose: (f, t) => {
-        f.armR.rotation.x = -2.5 + 0.35 * Math.sin(t * 16); f.armR.rotation.z = -0.2;       // shaking fist overhead
-        f.body.rotation.x = -0.12 + 0.08 * Math.sin(t * 8); f.head.rotation.x = -0.15;
-        if (!n.yelled) { n.yelled = true; this.audio.crowd('boo', { gain: 0.9 }); }
-      } },
+      ...(!pelt || !this.throwFrom ? [
+        // rant: both arms raised overhead, shaking, yelling
+        { type: 'pose', dur: 2.4, pose: (f, t) => {
+          const shake = 0.3 * Math.sin(t * 15);
+          f.armL.rotation.set(-3.05 + shake, 0, 0.3); f.armR.rotation.set(-3.05 - shake, 0, -0.3);   // straight up
+          f.body.rotation.x = -0.15 + 0.08 * Math.sin(t * 8); f.head.rotation.x = -0.25;
+          if (!n.yelled) { n.yelled = true; this.audio.crowd('boo', { gain: 0.9 }); }
+        } },
+      ] : Array.from({ length: 3 + ((Math.random() * 3) | 0) }, (_, k) => ({
+        // pelting: wind up and throw overarm, a tomato or (sometimes) a pipe per throw
+        type: 'pose', dur: 0.75, pose: (f, t) => {
+          const u = t / 0.75;
+          f.armR.rotation.set(u < 0.55 ? -2.6 * (u / 0.55) - 0.4 : -3.0 + 3.4 * ((u - 0.55) / 0.45), 0, -0.15);
+          f.armL.rotation.set(-0.5, 0, 0.2);
+          f.body.rotation.x = u < 0.55 ? -0.2 : 0.25;
+          if (u > 0.6 && !n['threw' + k]) {
+            n['threw' + k] = true;
+            const hand = new THREE.Vector3(); f.armR.localToWorld(hand.copy(f.handOffset));
+            this.throwFrom(Math.random() < 0.75 ? 'tomato' : 'pipe', hand.add(new THREE.Vector3(0, 0.3, 0)));
+            if (k === 0) this.audio.crowd('boo', { gain: 0.8 });
+          }
+        } }))),
       { type: 'walk', to: seatPos.clone().add(new THREE.Vector3(0, 0, 0.8)), within: 0.5, speed: WALK },
       { type: 'pose', dur: 0.1, then: () => { n.remove(); this.cultists.setHidden(i, false); } },
     );

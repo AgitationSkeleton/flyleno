@@ -53,7 +53,7 @@ let headGltf = null;                            // the head model is downloaded 
 export class FlyLeno {
   /** opts.scale: overall size (1 = host; hatchlings smaller); opts.mini: no physics (ground by ray cast on opts.ground) */
   constructor(scene, opts = {}) {
-    this.scene = scene;
+    this.scene = scene; this.isFly = true;
     this.k = opts.scale ?? 1; this.mini = !!opts.mini; this.groundMeshes = opts.ground || [];
     this.ray = new THREE.Raycaster();
     this.root = new THREE.Group(); this.root.name = 'FlyLeno';

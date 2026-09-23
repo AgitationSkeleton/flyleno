@@ -103,6 +103,7 @@ export async function initPhysics() {
 }
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _q = new THREE.Quaternion(), _q2 = new THREE.Quaternion();
+const _v3 = new THREE.Vector3(), _q3 = new THREE.Quaternion(), _X = new THREE.Vector3(1, 0, 0);
 const _m = new THREE.Matrix4(), _m2 = new THREE.Matrix4(), _s = new THREE.Vector3();
 const UP = new THREE.Vector3(0, 1, 0);
 
@@ -390,8 +391,12 @@ export class RagdollLeno {
 
   // strings: pull-only vertical spring-dampers toward standing height; move the upright anchor
   // (teleported each substep to the pelvis position and heading, so its motors only see tilt and yaw rate)
+  /** posture of the puppet strings: drop (0..1 of standing height), lean (m forward of the feet), pitch (rad, pelvis forward) */
+  setStance(drop = 0, lean = 0, pitch = 0) { this.stance = { drop, lean, pitch }; }
+
   updateStrings(dt) {
     const S = SUPPORT_TUNING, sag = S.slack * this.scale;
+    const stance = this.stance || { drop: 0, lean: 0, pitch: 0 };
     if (this.support > 0 && dt > 0) {
       const W = this.totalMass * 9.81;
       for (const st of Object.values(this.strings)) {
@@ -402,15 +407,16 @@ export class RagdollLeno {
         const vy = lv.y + (av.z * arm.x - av.x * arm.z);      // (w x r).y
         const py = t.y + arm.y;
         const share = S[st.share];
-        const f = share * (this.kLin * (st.groundY + st.bindY - sag - py) - this.cLin * vy);
+        const f = share * (this.kLin * (st.groundY + st.bindY * (1 - stance.drop) - sag - py) - this.cLin * vy);
         let fx = 0, fz = 0;
         if (st.target === 'chest' && S.center > 0) {
           // the puppeteer holds the control bar above the feet: horizontal spring toward the feet midpoint
           const fl = this.bodies.foot_l.translation(), fr = this.bodies.foot_r.translation();
           const kh = this.support * S.center * W / (st.bindY), ch = kh * S.centerDamp;
           const vx = lv.x + (av.y * arm.z - av.z * arm.y), vz = lv.z + (av.x * arm.y - av.y * arm.x);
-          fx = kh * ((fl.x + fr.x) / 2 - (t.x + arm.x)) - ch * vx;
-          fz = kh * ((fl.z + fr.z) / 2 - (t.z + arm.z)) - ch * vz;
+          const pr = this.bodies.pelvis.rotation(); _v3.set(0, 0, 1).applyQuaternion(_q2.set(pr.x, pr.y, pr.z, pr.w)).setY(0).normalize();
+          fx = kh * ((fl.x + fr.x) / 2 + _v3.x * stance.lean - (t.x + arm.x)) - ch * vx;
+          fz = kh * ((fl.z + fr.z) / 2 + _v3.z * stance.lean - (t.z + arm.z)) - ch * vz;
           const fh = Math.hypot(fx, fz), lim = 0.5 * W;
           if (fh > lim) { fx *= lim / fh; fz *= lim / fh; }
         }
@@ -421,6 +427,7 @@ export class RagdollLeno {
     const pb = this.bodies.pelvis, t = pb.translation(), r = pb.rotation();
     const fwd = _v2.set(0, 0, 1).applyQuaternion(_q.set(r.x, r.y, r.z, r.w));
     _q2.setFromAxisAngle(UP, Math.atan2(fwd.x, fwd.z));
+    if (stance.pitch) _q2.multiply(_q3.setFromAxisAngle(_X, stance.pitch));        // lean the pelvis forward
     this.uprightAnchor.setTranslation(t, true);
     this.uprightAnchor.setRotation({ x: _q2.x, y: _q2.y, z: _q2.z, w: _q2.w }, true);
   }

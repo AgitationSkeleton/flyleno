@@ -22,10 +22,11 @@ const GESTURES = {
 
 // sustained postures (weight 0..1, smoothed), e.g. from js/instincts.js
 const POSTURES = {
-  // fly-like feeding: crouch and bring the face down to the food ("proboscis extension")
-  eat: { spine_pitch_flex: 1, neck_pitch_flex: 1, hip_l_pitch_flex: 0.35, hip_r_pitch_flex: 0.35,
-    knee_l_pitch_flex: 0.6, knee_r_pitch_flex: 0.6, ankle_l_pitch_flex: 0.3, ankle_r_pitch_flex: 0.3,
-    shoulder_l_pitch_flex: 0.35, shoulder_r_pitch_flex: 0.35 },
+  // feeding on all fours: kneel (hips + knees fully bent), pitch the torso forward, arms straight down/forward
+  // to the floor to take the weight, head lowered to the food (like a fly putting its mouthparts on it)
+  eat: { hip_l_pitch_flex: 0.85, hip_r_pitch_flex: 0.85, knee_l_pitch_flex: 0.66, knee_r_pitch_flex: 0.66,
+    ankle_l_pitch_ext: 0.8, ankle_r_pitch_ext: 0.8, spine_pitch_flex: 0.35, neck_pitch_flex: 0.55,
+    shoulder_l_pitch_flex: 0.48, shoulder_r_pitch_flex: 0.48, elbow_l_pitch_flex: 0.05, elbow_r_pitch_flex: 0.05 },
   // fly-like leg rubbing: forearms up in front of the chest, hands together (oscillation added in update)
   rub: { shoulder_l_pitch_flex: 0.45, shoulder_r_pitch_flex: 0.45, shoulder_l_roll_ext: 0.45, shoulder_r_roll_ext: 0.45,
     elbow_l_pitch_flex: 0.75, elbow_r_pitch_flex: 0.75, shoulder_l_yaw_flex: 0.4, shoulder_r_yaw_flex: 0.4, neck_pitch_flex: 0.25 },
@@ -175,13 +176,17 @@ export class PhysicsLeno {
     }
     this.rag.setActivations(act);
     // the puppet strings let him crouch down to eat
-    this.rag.setSupport(this.support * (1 - 0.55 * P.eat));
+    // eating on all fours: the puppet strings lower him, lean him forward over his hands and tip the pelvis
+    this.rag.setSupport(this.support * (1 - 0.35 * P.eat));
+    this.rag.setStance?.(0.36 * P.eat, 0.35 * P.eat, 1.35 * P.eat);
     this.rag.step(dt);
     this.rag.syncSkin();
 
     // fallen for too long: stagehands stand him back up
-    this.fallenFor = st.fallen ? this.fallenFor + dt : 0;
-    if (st.fallen && this.fallenFor > 0 && this.fallenFor - dt <= 0) this.onFall?.();
+    // (being low on all fours while eating isn't a fall)
+    const down = st.fallen && this.posture.eat < 0.3;
+    this.fallenFor = down ? this.fallenFor + dt : 0;
+    if (down && this.fallenFor > 0 && this.fallenFor - dt <= 0) this.onFall?.();
     if (this.fallenFor > 5) {
       this.fallenFor = 0;
       // stand him up where he fell (ground height found by a ray), or back on stage if lost
