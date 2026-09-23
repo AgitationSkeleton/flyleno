@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { propLOD } from './lod.js';
+import { keep, disposeObject } from './dispose.js';
 
 const v3 = (a) => new THREE.Vector3(a[0], a[1], a[2]);
 
@@ -152,6 +153,7 @@ export class Balloons {
     this.scene = scene; this.list = [];
     this.geo = new THREE.SphereGeometry(0.35, 12, 10).scale(1, 1.18, 1);
     this.stringGeo = new THREE.CylinderGeometry(0.005, 0.005, 0.9, 3).translate(0, -0.85, 0);
+    keep(this.geo); keep(this.stringGeo);
     this.floorY = 0;
   }
   drop(center, n = 26) {
@@ -174,11 +176,11 @@ export class Balloons {
       else { b.g.position.y = bottom + Math.abs(Math.sin(b.t * 2.5)) * 0.08; }
       b.g.position.x += Math.sin(b.t * 0.9) * 0.2 * dt;
       b.g.rotation.z = Math.sin(b.t * 1.3) * 0.15;
-      if (b.life <= 0) this.scene.remove(b.g);
+      if (b.life <= 0) disposeObject(b.g);
     }
     this.list = this.list.filter((b) => b.life > 0);
   }
-  clear() { for (const b of this.list) this.scene.remove(b.g); this.list = []; }
+  clear() { for (const b of this.list) disposeObject(b.g); this.list = []; }
 }
 
 export class Ufo {

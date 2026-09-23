@@ -46,6 +46,7 @@ export class PhysicsLeno {
     this.gesture = null;
     this.fallenFor = 0;
     this.getUp = 0;                    // 0..1: puppet strings helping him up after a fall
+    this.slackAmt = 0; this.slackUntil = 0; this.slack = 0;   // strings loosened by a knock (0 = taut, 1 = cut)
     this.heldUntil = 0;                // performance.now() ms while a predator holds him
     this.lastStartle = 0;
     this.activation = {};
@@ -106,6 +107,13 @@ export class PhysicsLeno {
 
   // ---- interface shared with the kinematic Leno
   setMotor(cmd) { Object.assign(this.cmd, cmd); }
+  /** knocked: the puppet strings go slack (amount 0..1) for `sec` seconds, then tighten again gradually */
+  loosen(amount = 0.8, sec = 0.8) {
+    const now = performance.now();
+    if (now > this.slackUntil) this.slackAmt = 0;
+    this.slackAmt = Math.max(this.slackAmt, Math.min(1, amount));
+    this.slackUntil = Math.max(this.slackUntil, now + sec * 1000);
+  }
   setPools(rates) { this.poolRates = rates || {}; }
   setPosture(p) { Object.assign(this.postureTarget, p); }
   trigger(kind) { this.gesture = { kind, t: 0, dur: { retch: 0.9, vomit: 1.6, fart: 0.8, lay: 1.4 }[kind] || 1 }; }
@@ -163,7 +171,10 @@ export class PhysicsLeno {
     this.rag.setActivations(act);
     // the puppet strings let him crouch down to eat
     // eating on all fours: the puppet strings lower him, lean him forward over his hands and tip the pelvis
-    this.rag.setSupport(Math.min(1, this.support * (1 - 0.35 * P.eat) * (1 + 0.6 * this.getUp)));
+    // slack: drops fast when he's hit, comes back over about a second
+    const slackWant = performance.now() < this.slackUntil ? this.slackAmt : 0;
+    this.slack += (slackWant - this.slack) * Math.min(1, dt * (slackWant > this.slack ? 25 : 1.8));
+    this.rag.setSupport(Math.min(1, this.support * (1 - 0.35 * P.eat) * (1 + 0.6 * this.getUp)) * (1 - this.slack));
     this.rag.setStance?.(0.36 * P.eat, 0.35 * P.eat, 1.35 * P.eat);
     this.rag.step(dt);
     this.rag.syncSkin();

@@ -134,6 +134,11 @@ are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when bare
     local-only like the rest of the sound bank.
   - They scatter after 30–40 s.
 
+**Knockbacks:** a hit (swatter, spider, zap, alien kick, pipe or falling rig, the car, a backflip) makes the
+puppet strings go slack for a moment, so he really is knocked over; they tighten again over about a second.
+Fly-Leno is thrown into a short uncontrolled tumble instead (its walking and flight control would otherwise cancel
+the push), and thrown or falling objects hand it their momentum.
+
 **Falls:** Leno stays in whatever pose he lands in; nothing snaps him upright. After ~4 s on the
 floor, the puppet strings help him up gradually, physically. He is put back on stage only if he has
 left the set. Dangling in a predator's grip, or eating on all fours, doesn't count as a fall.
@@ -209,7 +214,8 @@ after 2.5 s, shown as a commercial break during the show.
 - **Hatching:** after 12–22 s the egg wobbles and hatches into a mini Leno, randomly humanoid or
   fly-form.
 - **Hatchlings:** they wander in fly-like bouts near where they hatched, return toward their parent
-  when it is far away, chirp in a sped-up Leno voice, and fly-form ones flutter. Up to 16 hatchlings.
+  when it is far away, chirp in a sped-up Leno voice, and fly-form ones flutter. Up to 16 hatchlings; each one
+  leaves the show after 3–5 minutes.
 - **Brain:** hatchlings run on simple autonomous behaviour; only the host is driven by the fly brain.
 
 **Senses:**

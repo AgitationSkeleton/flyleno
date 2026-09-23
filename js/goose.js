@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { propLOD } from './lod.js';
+import { keep, disposeObject } from './dispose.js';
 
 const SCALE = 1.4;                        // the set is ~1.4x human scale
 
@@ -61,6 +62,7 @@ export class Goose {
     this.center = new THREE.Vector3(c[0], c[1], c[2]);
     this.poopGeo = new THREE.IcosahedronGeometry(0.07, 0).scale(1, 0.55, 1.5);
     this.poopMat = new THREE.MeshStandardMaterial({ color: 0x4a4a22, roughness: 0.55, metalness: 0.05 });
+    keep(this.poopGeo); keep(this.poopMat);
   }
 
   groundAt(p) {
@@ -110,7 +112,7 @@ export class Goose {
       g.position.y += (this.groundAt(g.position) - g.position.y) * Math.min(1, dt * 10);
       moving = true;
     } else if (A.stops.length) { A.stops.shift(); A.pause = 0.8 + Math.random() * 2; }
-    else { this.scene.remove(g); this.active = null; this.onEvent?.('leave'); return; }
+    else { disposeObject(g); this.active = null; this.onEvent?.('leave'); return; }
     // waddle: body rolls side to side, legs step, neck bobs forward with each step
     A.phase += dt * (moving ? 9 : 2);
     g.rotation.z = moving ? Math.sin(A.phase) * 0.12 : 0;
@@ -137,5 +139,5 @@ export class Goose {
     }
   }
 
-  clear() { if (this.active) { this.scene.remove(this.active.g); this.active = null; } }
+  clear() { if (this.active) { disposeObject(this.active.g); this.active = null; } }
 }

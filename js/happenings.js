@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { propLOD } from './lod.js';
+import { keep, disposeObject } from './dispose.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -109,21 +110,41 @@ export class Rapture {
 
 // ------------------------------------------------------------------------------------------------ rain cloud
 export class RainCloud {
-  constructor(ctx) { this.ctx = ctx; this.active = null; }
+  constructor(ctx) {
+    this.ctx = ctx; this.active = null;
+    // the lightning flash stays in the scene (off between storms) so the light count never changes
+    this.flash = new THREE.PointLight(0xdde8ff, 0, 18, 1.5);
+    ctx.scene.add(this.flash);
+    // materials are made once and reused (their shaders compile at startup: see prewarm())
+    this.cloudMat = keep(new THREE.MeshStandardMaterial({ color: 0x5a5f68, roughness: 1, transparent: true, opacity: 0.95, flatShading: true }));
+    this.dropMat = keep(new THREE.MeshBasicMaterial({ color: 0xa9c8e8, transparent: true, opacity: 0.55 }));
+    this.puffGeos = [0.5, 0.6, 0.7, 0.8, 0.9].map((r) => keep(new THREE.IcosahedronGeometry(r, 1)));
+    this.dropGeo = keep(new THREE.BoxGeometry(0.012, 0.38, 0.012));
+  }
+
+  /** compile the storm's shaders now (a hidden-in-plain-sight dummy for one compile pass) */
+  prewarm(renderer, camera) {
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(this.puffGeos[0], this.cloudMat), new THREE.InstancedMesh(this.dropGeo, this.dropMat, 1));
+    g.position.copy(camera.position).add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(5));
+    this.ctx.scene.add(g);
+    try { renderer.compile(this.ctx.scene, camera); } catch (e) { /* not fatal */ }
+    this.ctx.scene.remove(g);
+  }
 
   start() {
     if (this.active) return false;
     const ctx = this.ctx, g = new THREE.Group();
-    const mat = new THREE.MeshStandardMaterial({ color: 0x5a5f68, roughness: 1, transparent: true, opacity: 0.95, flatShading: true });
+    const mat = this.cloudMat;
+    mat.opacity = 0.95;
     for (let k = 0; k < 11; k++) {
-      const m = new THREE.Mesh(new THREE.IcosahedronGeometry(rand(0.5, 0.9), 1), mat);
+      const m = new THREE.Mesh(this.puffGeos[(Math.random() * this.puffGeos.length) | 0], mat);
       m.position.set(rand(-1.3, 1.3), rand(-0.2, 0.35), rand(-0.9, 0.9)); m.scale.y = 0.7; g.add(m);
     }
     const N = 240;
-    const drops = new THREE.InstancedMesh(new THREE.BoxGeometry(0.012, 0.38, 0.012), new THREE.MeshBasicMaterial({ color: 0xa9c8e8, transparent: true, opacity: 0.55 }), N);
+    const drops = new THREE.InstancedMesh(this.dropGeo, this.dropMat, N);
     drops.frustumCulled = false;
-    const flash = new THREE.PointLight(0xdde8ff, 0, 18, 1.5);
-    g.add(flash);
+    const flash = this.flash;
     const head = ctx.hostHead();
     g.position.copy(head).add(V(3, 6, 0)); g.scale.setScalar(0.1);
     ctx.scene.add(g, drops);
@@ -135,7 +156,7 @@ export class RainCloud {
 
   clear() {
     const A = this.active; if (!A) return;
-    A.rain.stop(); this.ctx.scene.remove(A.g, A.drops); if (A.bolt) this.ctx.scene.remove(A.bolt);
+    A.rain.stop(); disposeObject(A.g); disposeObject(A.drops); disposeObject(A.bolt); this.flash.intensity = 0;
     this.active = null;
     this.ctx.stimAlias('boltL', 'eyeL', 0); this.ctx.stimAlias('boltR', 'eyeR', 0);
   }
@@ -152,6 +173,7 @@ export class RainCloud {
     const want = head.clone().add(V(0, 4.2, 0));
     A.g.position.lerp(want, Math.min(1, dt * 1.3));
     A.g.scale.setScalar(0.1 + 0.9 * A.level);
+    A.flash.position.copy(A.g.position);
     A.mat.opacity = 0.95 * A.level;
     A.rain.set(A.level);
     A.groundT -= dt;
@@ -182,7 +204,7 @@ export class RainCloud {
       const pts = [c.clone().add(V(0, -0.3, 0))];
       for (let k = 1; k < 7; k++) pts.push(c.clone().lerp(head, k / 7).add(V(rand(-0.3, 0.3), 0, rand(-0.3, 0.3))));
       pts.push(head.clone().add(V(0, 0.3, 0)));
-      if (A.bolt) ctx.scene.remove(A.bolt);
+      disposeObject(A.bolt);
       A.bolt = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xeef4ff, toneMapped: false }));
       A.bolt.frustumCulled = false; ctx.scene.add(A.bolt);
       setTimeout(() => ctx.sfx.sting('thunder', { gain: 0.9 }), 250);
@@ -191,7 +213,7 @@ export class RainCloud {
     if (A.flashT > 0) {
       A.flashT -= dt;
       A.flash.intensity = A.flashT > 0 ? 400 : 0;
-      if (A.flashT <= 0 && A.bolt) { ctx.scene.remove(A.bolt); A.bolt = null; }
+      if (A.flashT <= 0 && A.bolt) { disposeObject(A.bolt); A.bolt = null; }
     }
     const eye = A.flashT > 0 ? 80 : 0;
     ctx.stimAlias('boltL', 'eyeL', eye); ctx.stimAlias('boltR', 'eyeR', eye);
@@ -268,7 +290,7 @@ export class VineMushroom {
 
   clear() {
     const A = this.active; if (!A) return;
-    if (A.item && this.ctx.food.items.includes(A.item)) this.ctx.food.remove(A.item); else this.ctx.scene.remove(A.mesh);
+    if (A.item && this.ctx.food.items.includes(A.item)) this.ctx.food.remove(A.item); else disposeObject(A.mesh);
     this.active = null;
   }
 

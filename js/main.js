@@ -31,6 +31,7 @@ import { Show, SEGMENTS } from './show.js';
 import { Predators } from './predators.js';
 import { Happenings } from './happenings.js';
 import { propLOD } from './lod.js';
+import { disposeObject } from './dispose.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 // YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
@@ -39,6 +40,8 @@ if (location.hostname === '127.0.0.1') { location.replace(location.href.replace(
 if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace(location.href.replace(/^http:/, 'https:')); await new Promise(() => {}); }
 const params = new URLSearchParams(location.search);
 const LITE = params.has('lite');           // no stage point lights, 1x pixel ratio (slow GPUs / headless tests)
+// phones and tablets: a touch screen or a narrow window gets lower pixel densities (GPU memory is tight there)
+const MOBILE = matchMedia('(pointer: coarse)').matches || innerWidth <= 760;
 const STAGE = params.get('stage') || 'original';   // 'original' (procedural, default) | 'game' (exported GLB)
 const BODY = params.get('body') || 'ragdoll';       // 'ragdoll' (physics, fly drives the muscles) | 'kinematic'
 const $ = (id) => document.getElementById(id);
@@ -49,7 +52,9 @@ const setLoading = (t) => { loadingText.textContent = t; console.log('[flyleno]'
 const canvas = $('three');
 // alpha: the stage's YouTube screen is an iframe *behind* the canvas, shown through a transparent hole
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true, alpha: true });
-renderer.setPixelRatio(LITE ? 1 : Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(LITE ? 1 : Math.min(devicePixelRatio, MOBILE ? 1.5 : 2));
+// if the browser reclaims the GPU context (memory pressure on phones), let three.js restore it instead of going blank
+canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); console.warn('[flyleno] WebGL context lost'); });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.85;
@@ -255,6 +260,14 @@ const projectiles = host !== leno ? new Projectiles(scene, host, {
   onSplat: (p, onLeno, rest) => { fx.splash(p); if (!onLeno) food.addTomato(rest ?? p); },              // looming object -> LC4 looming detectors
   onImpact: (it, { hitLeno, speed }) => {
     const p = it.mesh.position.clone().project(camera), pan = Math.max(-1, Math.min(1, p.x));
+    if (hitLeno && host !== flyHost && !it.knocked && (it.kind === 'pipe' || it.kind === 'camera' || it.kind === 'light')) {
+      it.knocked = true; loosenHost(it.kind === 'pipe' ? 150 : 300);
+    }
+    if (hitLeno && host === flyHost && !it.knocked) {
+      it.knocked = true;
+      const push = { tomato: 30, rose: 0, pipe: 140, camera: 260, light: 200 }[it.kind] ?? 60;
+      if (push) flyHost.applyImpulse('thorax', it.prevVel.clone().setLength(push).add(new THREE.Vector3(0, push * 0.3, 0)));
+    }
     const gain = Math.min(1.2, 0.3 + speed / 12);
     if (it.kind === 'rose') {
       // a rose: a soft landing, and on him a compliment (reward)
@@ -463,14 +476,21 @@ function cue(text) {
   // sidebar.ticker(`Cue card: "${text}"`);
 }
 function pushHost(v) {
-  if (host === flyHost) flyHost.applyImpulse('pelvis', v);
-  else host.rag?.applyImpulse('pelvis', v);
+  if (host === flyHost) { flyHost.applyImpulse('pelvis', v); return; }
+  if (!host.rag) return;
+  host.rag.applyImpulse('pelvis', v);
+  loosenHost(v.length());
+}
+/** a knock of `impulse` N·s: the puppet strings go slack for a moment so he can actually be knocked over */
+function loosenHost(impulse) {
+  if (host === flyHost || !host.loosen || impulse < 30) return;
+  host.loosen(Math.min(0.95, 0.35 + impulse / 350), 0.4 + Math.min(1.2, impulse / 400));
 }
 function backflip() {
   if (host === flyHost) { flyHost.applyImpulse('pelvis', new THREE.Vector3(0, 520, 0)); return; }
   if (!host.rag) return;
   const axis = host.forward().cross(new THREE.Vector3(0, 1, 0));        // head goes back
-  host.rag.applyImpulse('pelvis', new THREE.Vector3(0, 700, 0));
+  host.rag.applyImpulse('pelvis', new THREE.Vector3(0, 700, 0)); host.loosen?.(0.9, 1.2);
   host.rag.applyTorqueImpulse('chest', axis.clone().multiplyScalar(28));
   host.rag.applyTorqueImpulse('pelvis', axis.clone().multiplyScalar(22));
 }
@@ -518,12 +538,13 @@ function holdHost(p) {
   const b = host.rag?.bodies.chest;
   if (!b || !p) return;
   host.heldUntil = performance.now() + 300;          // dangling in a grip isn't a fall
+  host.loosen?.(0.85, 0.3);
   const dt = 1 / 60, t = b.translation(), v = b.linvel(), m = 81;
   const f = new THREE.Vector3(p.x - t.x, p.y - t.y, p.z - t.z).multiplyScalar(30).sub(new THREE.Vector3(v.x, v.y, v.z).multiplyScalar(8));
   f.multiplyScalar(0.5 * m * dt).add(new THREE.Vector3(0, m * 9.81 * dt, 0));
   b.applyImpulse({ x: f.x, y: f.y, z: f.z }, true);
 }
-let convulseT = 0;
+let convulseT = 0, carShoveT = 0;
 const ceiling = stage.root.getObjectByName('Ceiling');
 const predators = new Predators({
   scene, sfx: showSfx,
@@ -569,6 +590,7 @@ const happenings = new Happenings({
       host.rag.applyImpulse(i ? 'calf_r' : 'calf_l', dir.clone().multiplyScalar(90));
       host.rag.applyImpulse('pelvis', dir.clone().setY(0).multiplyScalar(110).add(new THREE.Vector3(0, 70, 0)));
       host.rag.applyImpulse('chest', dir.clone().setY(0).multiplyScalar(60));
+      loosenHost(160);
     }
     pulse('alienKick', 'ambientTouch', 60, 0.3); reinforce(-0.15, 0.4); audience.react('alienKick');
   },
@@ -581,6 +603,8 @@ const happenings = new Happenings({
   ovation: (dur) => standingOvation(dur),
   stimAlias, pulse, reinforce, ticker: (t) => sidebar.ticker(t),
 });
+
+happenings.rain.prewarm(renderer, camera);        // the first rain cloud mustn't stall the show compiling shaders
 
 $('eggChance').oninput = (e) => { brood.chance = +e.target.value / 100; $('eggChanceNum').textContent = e.target.value + '%'; };
 
@@ -690,7 +714,7 @@ function updateMindUI(t) {
 
 // ------------------------------------------------------------------ worker messages
 let lastMotor = null, runawayMs = 0, lastTickWall = 0;
-const neuromap = new NeuroMap($('neuromap'));
+const neuromap = new NeuroMap($('neuromap'), { maxPixelRatio: MOBILE ? 1.25 : 2 });
 let wormsTotal = 0;
 neuromap.load().catch((e) => console.warn('neural map unavailable', e));
 $('mapRotate').checked = true; neuromap.autoRotate = true;            // rotates by default
@@ -797,7 +821,7 @@ function resetShow() {
   for (const k of Object.keys(pulseTimers)) worker.postMessage({ type: 'stim', key: k, rate: 0 });
   for (const k of ['reward', 'punish']) stimRate(k, 0);
   worker.postMessage({ type: 'reset' });
-  if (projectiles) { for (const it of [...projectiles.items]) projectiles.remove(it); for (const s of projectiles.splats) scene.remove(s.mesh); projectiles.splats.length = 0; }
+  if (projectiles) { for (const it of [...projectiles.items]) projectiles.remove(it); for (const s of projectiles.splats) disposeObject(s.mesh); projectiles.splats.length = 0; }
   if (host === flyHost) flyHost.place(physHost.home, 0);
   else if (host.rag) { host.rag.place(host.home, 0); host.gesture = null; host.fallenFor = 0; host.getUp = 0; }
   else leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
@@ -825,12 +849,28 @@ renderer.setAnimationLoop(() => {
   director.hold = show.active;
   show.update(dt);
   predators.update(dt, true);                        // random visits, like the goose
+  if (host !== flyHost && show.car.present && host.rag) {
+    const hp = hostAt();
+    for (const c of show.car.colliders()) if (hp.clone().setY(0).distanceTo(c.pos.clone().setY(0)) < c.radius + 0.5) { loosenHost(200); break; }
+  }
+  if (host === flyHost && show.car.present) {
+    carShoveT -= dt;
+    const fp = flyHost.root.position;
+    for (const c of show.car.colliders()) {
+      const away = fp.clone().sub(c.pos).setY(0), d = away.length();
+      if (d < c.radius + 0.6 && fp.y < c.pos.y + c.height + 0.5 && carShoveT <= 0) {
+        carShoveT = 0.5;
+        flyHost.applyImpulse('thorax', away.normalize().multiplyScalar(160 + 60 * show.car.active.speed).add(new THREE.Vector3(0, 90, 0)));
+        break;
+      }
+    }
+  }
   happenings.update(dt, true);
   if (convulseT > 0) {                               // after a zap: twitching
     convulseT -= dt;
     const r = () => (Math.random() - 0.5) * 2;
     if (host === flyHost) flyHost.vel.add(new THREE.Vector3(r(), 0, r()).multiplyScalar(0.8));
-    else if (host.rag) { host.rag.applyImpulse('chest', new THREE.Vector3(r() * 40, r() * 25, r() * 40)); host.rag.applyImpulse('pelvis', new THREE.Vector3(r() * 30, 0, r() * 30)); }
+    else if (host.rag) { host.rag.applyImpulse('chest', new THREE.Vector3(r() * 40, r() * 25, r() * 40)); host.rag.applyImpulse('pelvis', new THREE.Vector3(r() * 30, 0, r() * 30)); host.loosen?.(0.7, 0.3); }
   }
   brood.update(dt, host);
   goose.update(dt, true);                            // visits at random, on its own schedule

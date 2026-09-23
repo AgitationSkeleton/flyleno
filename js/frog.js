@@ -7,6 +7,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { propLOD } from './lod.js';
+import { disposeObject } from './dispose.js';
 
 const S = 1.9;                                     // guest-sized: about Leno's seated height
 
@@ -95,7 +96,7 @@ export class Frog {
     this.onEvent?.('leave', { reason });
   }
 
-  clear() { if (this.active) { this.scene.remove(this.active.g); this.active = null; } }
+  clear() { if (this.active) { disposeObject(this.active.g); this.active = null; } }
 
   headPos() { return this.active ? this.active.head.localToWorld(new THREE.Vector3(0, 0, 0.15)) : null; }
   tipPos() { return this.active?.tongue.visible ? this.active.tip.getWorldPosition(new THREE.Vector3()) : null; }

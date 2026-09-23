@@ -75,6 +75,9 @@ const lowCache = new WeakMap();                          // full geometry -> sim
 
 function triangles(g) { return (g.index ? g.index.count : g.attributes.position.count) / 3; }
 
+/** the cached simplified copy of `geo`, if one was made */
+export function lowOf(geo) { return lowCache.get(geo) || null; }
+
 /** a simplified copy keeping ~`keep` of the vertices (normals recomputed; flat-shaded materials ignore them) */
 export function simplified(geo, keep = 0.3) {
   if (lowCache.has(geo)) return lowCache.get(geo);
@@ -108,6 +111,7 @@ export class PropLOD {
       const low = simplified(g, keep);
       if (!low) return;
       if (!g.boundingSphere) g.computeBoundingSphere();
+      o.userData.lodFull = g;                                // so disposal frees the full geometry even while the low one shows
       this.items.push({ mesh: o, root, full: g, low, far: false, center, size });
     });
     return root;

@@ -3,6 +3,7 @@
 // impact within reach of one of his bodies.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { keep, disposeObject } from './dispose.js';
 
 const G_GROUND = 1;   // must match js/ragdoll.js: projectiles join the "ground" group so ragdoll parts collide with them
 const groups = (member, filter) => ((member & 0xffff) << 16) | (filter & 0xffff);
@@ -20,9 +21,12 @@ export class Projectiles {
     this.tomatoMat = new THREE.MeshStandardMaterial({ color: 0xc8231c, roughness: 0.45 });
     this.splatMat = new THREE.MeshStandardMaterial({ color: 0xa3140f, roughness: 0.9, transparent: true });
     this.stemMat = new THREE.MeshStandardMaterial({ color: 0x2f7d2a });
+    this.stemGeo = new THREE.ConeGeometry(0.03, 0.05, 5);
+    this.splatGeo = { leno: new THREE.IcosahedronGeometry(0.2, 1), floor: new THREE.IcosahedronGeometry(0.32, 1) };
     this.pipeGeo = new THREE.CylinderGeometry(0.045, 0.045, 1.3, 12, 1);
     this.pipeMat = new THREE.MeshStandardMaterial({ color: 0x9aa0a6, metalness: 0.9, roughness: 0.35 });
     this.splats = [];
+    for (const r of [this.tomatoGeo, this.tomatoMat, this.splatMat, this.stemMat, this.stemGeo, this.splatGeo.leno, this.splatGeo.floor, this.pipeGeo, this.pipeMat]) keep(r);
   }
 
   get ready() { return !!(this.host?.rag && this.host?.RAPIER); }
@@ -76,7 +80,7 @@ export class Projectiles {
       ];
     }
     const g = new THREE.Group();
-    for (const [geo, mat] of this.roseParts) g.add(new THREE.Mesh(geo, mat));
+    for (const [geo, mat] of this.roseParts) g.add(new THREE.Mesh(keep(geo), keep(mat)));
     return g;
   }
 
@@ -115,7 +119,7 @@ export class Projectiles {
     collider = world.createCollider(R.ColliderDesc.ball(0.11).setMass(0.2).setRestitution(0.05).setFriction(0.9)
       .setCollisionGroups(groups(G_GROUND, 0xffff)), body);
     mesh = new THREE.Mesh(this.tomatoGeo, this.tomatoMat);
-    const stem = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.05, 5), this.stemMat); stem.position.y = 0.11; mesh.add(stem);
+    const stem = new THREE.Mesh(this.stemGeo, this.stemMat); stem.position.y = 0.11; mesh.add(stem);
     return this.add({ kind, body, collider, mesh, v });
   }
 
@@ -131,7 +135,7 @@ export class Projectiles {
   }
 
   remove(item) {
-    this.scene.remove(item.mesh);
+    disposeObject(item.mesh);                     // rig pieces are one-offs; shared geometries are kept
     try { this.host.world.removeRigidBody(item.body); } catch { /* already gone */ }
     this.items.splice(this.items.indexOf(item), 1);
   }
@@ -182,7 +186,7 @@ export class Projectiles {
       s.life -= dt;
       if (s.follow) { const b = this.host.rag.bodies[s.follow]; if (b) { const p = b.translation(); s.mesh.position.set(p.x + s.off.x, p.y + s.off.y, p.z + s.off.z); } }
       s.mesh.material.opacity = Math.min(1, s.life / 3);
-      if (s.life <= 0) { this.scene.remove(s.mesh); this.splats.splice(this.splats.indexOf(s), 1); }
+      if (s.life <= 0) { disposeObject(s.mesh); this.splats.splice(this.splats.indexOf(s), 1); }
     }
   }
 
@@ -202,7 +206,7 @@ export class Projectiles {
     this.remove(it);
     const rest = bodyName ? p : (this.groundBelow(p) ?? p);
     this.onSplat?.(p, bodyName, rest);
-    const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(bodyName ? 0.2 : 0.32, 1), this.splatMat.clone());
+    const mesh = new THREE.Mesh(bodyName ? this.splatGeo.leno : this.splatGeo.floor, this.splatMat.clone());   // own material: it fades
     mesh.position.copy(rest);
     if (bodyName) { mesh.scale.set(1, 0.4, 1); mesh.rotation.set(Math.random(), Math.random(), Math.random()); }
     else { mesh.scale.set(1, 0.12, 1.2); mesh.rotation.y = Math.random() * 6.28; mesh.position.y += 0.015; }   // squashed flat on the floor

@@ -79,6 +79,12 @@ export class Sidebar {
 
     this.raster = $('raster');
     this.classCanvas = $('classes');
+    // canvases are only redrawn while they are on screen (phones: most of the sidebar is scrolled away)
+    this.onScreen = new WeakMap();
+    this.io = 'IntersectionObserver' in window
+      ? new IntersectionObserver((es) => es.forEach((e) => this.onScreen.set(e.target, e.isIntersecting)), { rootMargin: '100px' })
+      : null;
+    for (const c of [this.raster, this.classCanvas]) this.io?.observe(c);
     this.resizeCanvases();
     addEventListener('resize', () => this.resizeCanvases());
   }
@@ -145,6 +151,7 @@ export class Sidebar {
       h.push(motor.smoothed[key] ?? r);
       if (h.length > 60) h.shift();
       const el = this.groupEls[key];
+      if (!this.visible(el.spark)) continue;
       el.num.textContent = (motor.smoothed[key] ?? r).toFixed(1);
       const c = el.spark, ctx = c.getContext('2d');
       ctx.clearRect(0, 0, c.width, c.height);
@@ -157,8 +164,15 @@ export class Sidebar {
     }
 
     // raster (scrolling: shift by elapsed time, draw only the new spikes)
-    this.drawRaster(tick.t, tick.raster);
-    this.drawClasses(tick.classes);
+    if (this.visible(this.raster)) this.drawRaster(tick.t, tick.raster);
+    if (this.visible(this.classCanvas)) this.drawClasses(tick.classes);
+  }
+
+  /** is this element on screen? (unknown = yes; the observer fills it in) */
+  visible(el) {
+    if (!this.io) return true;
+    if (!this.onScreen.has(el)) { this.io.observe(el); this.onScreen.set(el, true); }
+    return this.onScreen.get(el);
   }
 
   drawRaster(tNow, ev) {

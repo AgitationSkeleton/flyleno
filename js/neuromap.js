@@ -7,10 +7,16 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 const DECAY_PER_S = 6;          // glow decays ~e-fold in 1/6 s
 
 export class NeuroMap {
-  constructor(canvas) {
+  constructor(canvas, { maxPixelRatio = 2 } = {}) {
     this.canvas = canvas;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    this.pixelRatio = Math.min(devicePixelRatio, maxPixelRatio);
+    this.renderer.setPixelRatio(this.pixelRatio);
+    // if the browser reclaims the GPU context under memory pressure, let three.js restore it instead of going blank
+    canvas.addEventListener('webglcontextlost', (e) => e.preventDefault());
+    // only work while visible: phones keep the map scrolled away most of the time
+    this.onScreen = true;
+    if ('IntersectionObserver' in window) new IntersectionObserver((es) => (this.onScreen = es[0].isIntersecting), { rootMargin: '100px' }).observe(canvas);
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x050608);
     this.camera = new THREE.PerspectiveCamera(30, 1, 0.01, 20);
@@ -48,7 +54,7 @@ export class NeuroMap {
     geo.computeBoundingSphere();
     const mat = new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      uniforms: { uSize: { value: 1.6 * Math.min(devicePixelRatio, 2) } },
+      uniforms: { uSize: { value: 1.6 * this.pixelRatio } },
       vertexShader: /* glsl */`
         attribute float act; attribute float dead; varying float vAct; varying float vDead; uniform float uSize;
         void main() {
@@ -83,8 +89,10 @@ export class NeuroMap {
   }
 
   /** spikes: Int32Array of neuron indices that fired since the last call */
+  get active() { return this.onScreen && !document.hidden; }
+
   addSpikes(spikes) {
-    if (!this.act) return;
+    if (!this.act || !this.active) return;
     const a = this.act;
     for (let k = 0; k < spikes.length; k++) { const i = spikes[k]; a[i] = Math.min(1, a[i] + 0.6); }
   }
@@ -136,7 +144,7 @@ export class NeuroMap {
   }
 
   render(dt) {
-    if (!this.act) return;
+    if (!this.act || !this.active) return;
     this.crawl(dt);
     const f = Math.exp(-DECAY_PER_S * dt), a = this.act;
     for (let i = 0; i < a.length; i++) if (a[i] > 0.002) a[i] *= f; else a[i] = 0;

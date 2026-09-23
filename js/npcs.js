@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { standingFigure, figureMaterial, PALETTES, FIGURE_SCALE } from './cultist-model.js';
 import { propLOD } from './lod.js';
+import { keep, disposeObject } from './dispose.js';
 
 const WALK = 2.2, RUN = 4.2;             // m/s (stage units)
 const down = new THREE.Vector3(0, -1, 0);
@@ -67,7 +68,7 @@ class Npc {
     if (this.carrying) f.armL.rotation.x = -1.2;                     // holding the cube out in front
   }
 
-  remove() { this.world.scene.remove(this.fig); this.done = true; }
+  remove() { disposeObject(this.fig); this.done = true; }
 }
 
 export class Npcs {
@@ -80,6 +81,7 @@ export class Npcs {
     this.ray = new THREE.Raycaster();
     this.cubeGeo = new THREE.BoxGeometry(0.11, 0.11, 0.11).scale(FIGURE_SCALE, FIGURE_SCALE, FIGURE_SCALE);
     this.cubeMat = new THREE.MeshStandardMaterial({ color: 0xfbfbf6, roughness: 0.6 });
+    keep(this.mat); keep(this.cubeGeo); keep(this.cubeMat);                // shared by every stagehand / heckler / cube
     const c = stage.markers.stageCenter.position;
     this.center = new THREE.Vector3(c[0], c[1], c[2]);
   }
@@ -103,7 +105,7 @@ export class Npcs {
       ];
     }
     const g = new THREE.Group();
-    for (const [geo, mat] of this.eclairParts) g.add(new THREE.Mesh(geo, mat));
+    for (const [geo, mat] of this.eclairParts) g.add(new THREE.Mesh(keep(geo), keep(mat)));
     return g;
   }
 

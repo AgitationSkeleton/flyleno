@@ -10,6 +10,7 @@
 // thrown tomatoes and pipes hit it, and it offers the same interface as js/body.js (PhysicsLeno).
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { keep } from './dispose.js';
 
 const S = 1.0;                                  // body scale (thorax ~0.55 m wide)
 const DT = 1 / 120;
@@ -62,7 +63,7 @@ export class FlyLeno {
     this.posture = { eat: 0, rub: 0 }; this.postureTarget = { eat: 0, rub: 0 };
     this.heading = 0; this.yawRate = 0; this.speed = 0;
     this.vel = new THREE.Vector3();
-    this.flying = false; this.flyT = 0; this.power = 0; this.quietT = 0;
+    this.flying = false; this.flyT = 0; this.power = 0; this.quietT = 0; this.knockT = 0; this.tumble = null;
     this.phase = 0; this.t = 0;
     this.gesture = null;
     this.state = { root: new THREE.Vector3(), heading: 0, upright: 1, fallen: false, headPos: new THREE.Vector3(), mouthPos: new THREE.Vector3(), buttPos: new THREE.Vector3(), yawRate: 0 };
@@ -85,6 +86,7 @@ export class FlyLeno {
     // head: Leno's, on a short neck, plus antennae with feathery aristae
     headGltf ||= new GLTFLoader().loadAsync(headUrl);
     const gltf = await headGltf;
+    keep(gltf.scene);                                  // every Fly-Leno (and fly hatchling) clones the same head
     this.head = new THREE.Group();
     this.head.position.set(0, 1.08 * S, 0.42 * S);
     const hm = gltf.scene.clone(true); hm.scale.setScalar(1.9); hm.position.set(0, -0.05, 0);
@@ -219,7 +221,20 @@ export class FlyLeno {
   mouth() { return this.state.mouthPos.clone(); }
   butt() { return this.state.buttPos.clone(); }
   headDown() { return this.forward().multiplyScalar(0.7).add(new THREE.Vector3(0, -0.7, 0)).normalize(); }
-  applyImpulse(_name, v) { this.vel.addScaledVector(v, 1 / 60); }            // ~60 kg
+  /** a knock (N·s, ~60 kg body): real hits throw him into a short uncontrolled tumble (no walking or flight
+   *  control cancelling the push); gentle nudges just shove him */
+  applyImpulse(_name, v) {
+    this.vel.addScaledVector(v, 1 / 60);
+    const mag = v.length();
+    if (mag > 40 || v.y > 4) {
+      this.knockT = Math.max(this.knockT || 0, Math.min(1.2, 0.2 + mag / 400));
+      if (!this.flying) { this.flying = true; this.flyT = 0; }
+      if (mag > 150 && !this.tumble) {
+        const axis = new THREE.Vector3(v.z, 0, -v.x).normalize();
+        if (axis.lengthSq() > 0.5) this.tumble = { axis, t: 0, dur: 0.55 + Math.random() * 0.3, turns: Math.random() < 0.5 ? 1 : -1 };
+      }
+    }
+  }
   /** a predator holds the thorax at p (world), or lets go (null) */
   hold(p) { this.heldAt = p ? p.clone() : null; if (!p) this.flying = true; }
   setMouth(v) { for (const [o, i] of this.morphs) o.morphTargetInfluences[i] = v; }
@@ -248,7 +263,7 @@ export class FlyLeno {
   }
 
   place(p, yaw = 0) {
-    this.pos.copy(p); this.heading = yaw; this.vel.set(0, 0, 0); this.bodyY = 0; this.flying = false;
+    this.pos.copy(p); this.heading = yaw; this.vel.set(0, 0, 0); this.bodyY = 0; this.flying = false; this.knockT = 0; this.tumble = null;
     this.kbody.setTranslation({ x: p.x, y: p.y + 0.05, z: p.z }, true);
     for (const l of this.legs) l.planted = false;
     this.syncState();
@@ -284,7 +299,13 @@ export class FlyLeno {
     this.heading += this.yawRate * dt;
     const fwd = this.forward();
     let desired;
-    if (this.flying) {
+    if (this.flying && this.knockT > 0) {
+      // knocked: ballistic, just gravity and air drag, until he gets his wings back
+      this.knockT -= dt; this.flyT += dt;
+      this.vel.y -= 9.8 * dt;
+      this.vel.multiplyScalar(1 - Math.min(1, dt * 0.6));
+      desired = this.vel.clone().multiplyScalar(dt);
+    } else if (this.flying) {
       this.flyT += dt;
       // lift ~ wing power (glides down slowly without it); forward thrust from the walking command or cruising
       const climb = (Math.max(this.power, c.startle * 0.8) - 0.3) * 5;
@@ -299,7 +320,9 @@ export class FlyLeno {
     } else {
       const sp = (c.forward - c.backward) * 3.0 * (1 - this.posture.eat * 0.8) * (1 - this.posture.rub * 0.7);
       this.speed += (sp - this.speed) * Math.min(1, dt * 6);
-      this.vel.x *= 1 - Math.min(1, dt * 4); this.vel.z *= 1 - Math.min(1, dt * 4);     // knock-backs decay
+      const skid = this.knockT > 0 ? 1.5 : 4;                                   // knock-backs decay (slide after a hit)
+      this.vel.x *= 1 - Math.min(1, dt * skid); this.vel.z *= 1 - Math.min(1, dt * skid);
+      if (this.knockT > 0) this.knockT -= dt;
       this.vel.y = Math.min(0, this.vel.y - 9.8 * dt);
       desired = fwd.clone().multiplyScalar(this.speed * dt).add(this.vel.clone().multiplyScalar(dt));
     }
@@ -316,7 +339,10 @@ export class FlyLeno {
     const next = { x: t.x + m.x, y: t.y + m.y, z: t.z + m.z };
     this.kbody.setNextKinematicTranslation(next);
     const grounded = this.ctrl.computedGrounded();
-    if (this.flying && grounded && this.vel.y <= 0 && this.flyT > 0.6) { this.flying = false; this.vel.set(0, 0, 0); }
+    if (this.flying && grounded && this.vel.y <= 0 && this.flyT > (this.knockT > 0 ? 0.15 : 0.6)) {
+      this.flying = false;
+      if (this.knockT > 0) this.vel.y = 0; else this.vel.set(0, 0, 0);           // a knocked landing keeps sliding
+    }
     if (this.flying && this.quietT > 1.2 && grounded) this.flying = false;
     const q = new THREE.Quaternion().setFromAxisAngle(UP, this.heading);
     this.kbody.setNextKinematicRotation({ x: q.x, y: q.y, z: q.z, w: q.w });
@@ -327,6 +353,12 @@ export class FlyLeno {
     this.root.position.set(bt.x, bt.y, bt.z);
     if (grounded && !this.flying) this.vel.y = 0;
     this.root.quaternion.copy(q);
+    if (this.tumble) {                                                           // tumbling head over heels after a big hit
+      const T = this.tumble; T.t += dt;
+      const u = Math.min(1, T.t / T.dur);
+      this.root.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(T.axis, T.turns * Math.PI * 2 * (u * (2 - u))));
+      if (u >= 1) this.tumble = null;
+    }
     this.pose(dt, grounded);
     const hp = this.head.getWorldPosition(new THREE.Vector3());
     this.hbody.setNextKinematicTranslation({ x: hp.x, y: hp.y + 0.15, z: hp.z });

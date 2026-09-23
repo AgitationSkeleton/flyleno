@@ -1,6 +1,7 @@
 // Food in the world: sugar cubes (brought by the stagehand) and tomato pulp (thrown tomatoes that burst
 // on the floor). Leno can taste and eat them like a fly: see js/instincts.js.
 import * as THREE from 'three';
+import { keep, disposeObject } from './dispose.js';
 
 export class Food {
   constructor(scene) {
@@ -8,11 +9,13 @@ export class Food {
     this.items = [];
     this.pulpGeo = new THREE.IcosahedronGeometry(0.16, 1);
     this.pulpMat = new THREE.MeshStandardMaterial({ color: 0xb3180f, roughness: 0.8 });
+    keep(this.pulpGeo); keep(this.pulpMat);
   }
 
   addSugar(pos, mesh) {
     if (mesh) { mesh.position.copy(pos); mesh.rotation.set(0, Math.random() * 6, 0); this.scene.add(mesh); }
     this.items.push({ kind: 'sugar', pos: pos.clone(), amount: 1, mesh, sweet: 1 });
+    this.capSnacks();
   }
 
   addTomato(pos) {
@@ -27,6 +30,7 @@ export class Food {
   addEclair(pos, mesh) {
     if (mesh) { mesh.position.copy(pos); mesh.rotation.set(0, Math.random() * 6, 0); this.scene.add(mesh); }
     this.items.push({ kind: 'éclair', pos: pos.clone(), amount: 1, mesh, sweet: 0.9, rotten: true });
+    this.capSnacks();
   }
 
   /** a power-up mushroom: irresistible (sought even when not hungry); returns the item so its position can follow the mesh */
@@ -65,8 +69,14 @@ export class Food {
     return false;
   }
 
+  /** uneaten snacks don't pile up forever: keep the newest few */
+  capSnacks(max = 6) {
+    let snacks;
+    while ((snacks = this.items.filter((i) => i.kind === 'sugar' || i.kind === 'éclair')).length > max) this.remove(snacks[0]);
+  }
+
   remove(item) {
-    if (item.mesh) this.scene.remove(item.mesh);
+    if (item.mesh) disposeObject(item.mesh);
     this.items.splice(this.items.indexOf(item), 1);
   }
 

@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { propLOD } from './lod.js';
+import { keep, disposeObject } from './dispose.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
@@ -62,6 +63,7 @@ async function spiderModel() {
   // Leno's head at the front
   headGltf ||= new GLTFLoader().loadAsync('assets/grey_leno_head.glb');
   const gltf = await headGltf;
+  keep(gltf.scene);                                   // clones share the head's geometry and materials
   const head = gltf.scene.clone(true); head.scale.setScalar(1.7); head.position.set(0, 0.02, 0.42);
   body.add(head);
   const morphs = [];
@@ -92,7 +94,7 @@ export class SpiderLeno {
     return true;
   }
 
-  clear() { if (this.active) { this.scene.remove(this.active.root, this.active.thread); this.active = null; } }
+  clear() { if (this.active) { disposeObject(this.active.root); disposeObject(this.active.thread); this.active = null; } }
 
   /** body centre and grab point */
   pos() { return this.active?.root.position.clone(); }
@@ -248,7 +250,7 @@ export class Swatter {
 
   clear() {
     const A = this.active; if (!A) return;
-    this.scene.remove(A.g); for (const b of A.bolts) this.scene.remove(b.line);
+    disposeObject(A.g); for (const b of A.bolts) disposeObject(b.line);
     this.flash.intensity = 0; this.active = null;
   }
 
@@ -323,7 +325,7 @@ export class Swatter {
       const p = b.line.geometry.attributes.position;
       for (let i = 1; i < p.count - 1; i++) p.setXYZ(i, b.base[i].x + (Math.random() - 0.5) * 0.25, b.base[i].y + (Math.random() - 0.5) * 0.25, b.base[i].z + (Math.random() - 0.5) * 0.25);
       p.needsUpdate = true; b.line.visible = Math.random() < 0.8;
-      if (b.life <= 0) this.scene.remove(b.line);
+      if (b.life <= 0) disposeObject(b.line);
     }
     A.bolts = A.bolts.filter((b) => b.life > 0);
     this.flash.intensity = A.bolts.length ? 30 + Math.random() * 40 : 0;

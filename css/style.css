@@ -175,3 +175,7 @@ button.mini { margin-left: auto; font-size: 11px; }
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 520px) {
   #app { grid-template-rows: 100vh auto; grid-template-rows: 100svh auto; }
 }
+
+/* sidebar panels that are scrolled out of view skip layout and painting (keeps phones from running out of
+   graphics memory on the long stacked sidebar) */
+#sidebar .panel { content-visibility: auto; contain-intrinsic-size: auto 240px; }

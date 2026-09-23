@@ -4,6 +4,7 @@
 // wanders about in fly-like bouts, keeps loosely near its parent and chirps in a sped-up Leno voice.
 // Hatchlings run on simple autonomous behaviour; only the host is driven by the fly brain.
 import * as THREE from 'three';
+import { keep, disposeObject } from './dispose.js';
 import { Leno } from './leno.js';
 import { FlyLeno } from './flybody.js';
 
@@ -27,6 +28,7 @@ function eggGeometry() {
 export class Brood {
   constructor({ scene, stage, lenoScene, audio, onEvent }) {
     Object.assign(this, { scene, stage, lenoScene, audio, onEvent });
+    keep(lenoScene);                                  // humanoid hatchlings are skinned clones sharing its geometry
     this.chance = 0.05;
     this.eggs = []; this.young = [];
     this.ray = new THREE.Raycaster();
@@ -69,7 +71,7 @@ export class Brood {
   }
 
   async hatch(egg) {
-    this.scene.remove(egg.mesh);
+    disposeObject(egg.mesh);
     this.onEvent?.('hatch');
     if (this.young.length >= MAX_YOUNG) return;
     const fly = Math.random() < 0.5;
@@ -87,7 +89,8 @@ export class Brood {
     // chirp: a Leno mutter, sped up
     const m = this.audio.bank?.leno?.mutters;
     if (m?.length) this.audio.playClip(m[(Math.random() * m.length) | 0], { rate: 1.7 + Math.random() * 0.3, gain: 0.6 });
-    this.young.push({ kind: fly ? 'fly' : 'leno', body, home: egg.pos.clone(), parent: egg.parent, target: null, wait: 0.5, t: 0, chirpT: 3 + Math.random() * 8 });
+    this.young.push({ kind: fly ? 'fly' : 'leno', body, home: egg.pos.clone(), parent: egg.parent, target: null, wait: 0.5, t: 0, chirpT: 3 + Math.random() * 8,
+      life: 180 + Math.random() * 120 });
   }
 
   update(dt, host) {
@@ -100,6 +103,11 @@ export class Brood {
       if (e.t >= e.hatchAt) { this.eggs.splice(this.eggs.indexOf(e), 1); this.hatch(e); }
     }
     for (const y of this.young) this.think(dt, y, host);
+    // grown up and gone: after a few minutes a hatchling leaves the show (and is freed)
+    for (const y of [...this.young]) {
+      y.life -= dt;
+      if (y.life <= 0) { disposeObject(y.body.root); this.young.splice(this.young.indexOf(y), 1); this.onEvent?.('leave'); }
+    }
   }
 
   think(dt, y, host) {
@@ -137,8 +145,8 @@ export class Brood {
   step(dt, y) { if (y.kind === 'fly') y.body.updateMini(dt); else y.body.update(dt); }
 
   clear() {
-    for (const e of this.eggs) this.scene.remove(e.mesh);
-    for (const y of this.young) this.scene.remove(y.kind === 'fly' ? y.body.root : y.body.root);
+    for (const e of this.eggs) disposeObject(e.mesh);
+    for (const y of this.young) disposeObject(y.body.root);
     this.eggs = []; this.young = []; this.surface = null;
   }
 }

@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { propLOD } from './lod.js';
+import { disposeObject } from './dispose.js';
 
 const S = 1.4;
 
@@ -45,8 +46,6 @@ function carModel() {
   const wheels = [[0.78, 1.3], [-0.78, 1.3], [0.78, -1.15], [-0.78, -1.15]].map(([x, z]) => {
     const w = new THREE.Mesh(wheelGeo, mat); w.position.set(x, 0.36, z); g.add(w); return w;
   });
-  const beams = new THREE.SpotLight(0xfff0c8, 60, 18, 0.5, 0.6, 1.5);
-  beams.position.set(0, 0.85, 2.0); beams.target.position.set(0, 0, 8); g.add(beams, beams.target);
   g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   g.scale.setScalar(S);
   return { g, wheels };
@@ -57,6 +56,9 @@ export class Car {
     Object.assign(this, { scene, stage, sfx, onEvent });
     this.active = null;
     this.ray = new THREE.Raycaster();
+    // headlights: one light that stays in the scene (switched off between visits) so the light count never changes
+    this.beams = new THREE.SpotLight(0xfff0c8, 0, 18, 0.5, 0.6, 1.5);
+    scene.add(this.beams, this.beams.target);
     const c = stage.markers.stageCenter.position;
     this.center = new THREE.Vector3(c[0], c[1], c[2]);
   }
@@ -76,13 +78,17 @@ export class Car {
     const start = this.center.clone().add(new THREE.Vector3(side * 16, 0, 2));
     m.g.position.copy(start); m.g.position.y = this.groundAt(start);
     this.scene.add(m.g); propLOD.track(m.g);
+    this.beams.position.set(0, 0.85, 2.0); this.beams.target.position.set(0, 0, 8);
+    m.g.add(this.beams, this.beams.target); this.beams.intensity = 60;
     this.active = { ...m, dir: -side, R, ang: null, lapLeft: laps * Math.PI * 2, speed: 0, phase: 'in', exit: start, honkT: 0, engine: this.sfx.engine() };
     this.onEvent?.('enter');
   }
 
   clear() {
     if (!this.active) return;
-    this.active.engine.stop(); this.scene.remove(this.active.g); this.active = null;
+    this.active.engine.stop();
+    this.beams.intensity = 0; this.scene.add(this.beams, this.beams.target);          // back to the scene, off
+    disposeObject(this.active.g); this.active = null;
   }
 
   /** front of the car (for looming) */
