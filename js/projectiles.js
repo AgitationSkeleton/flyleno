@@ -26,6 +26,39 @@ export class Projectiles {
 
   get ready() { return !!(this.host?.rag && this.host?.RAPIER); }
 
+  /** a studio camera or a stage light falls from the rig at `from` (THREE.Vector3) */
+  drop(kind, from) {
+    if (!this.ready) return null;
+    const R = this.host.RAPIER, world = this.host.world;
+    const body = world.createRigidBody(R.RigidBodyDesc.dynamic().setTranslation(from.x, from.y, from.z).setCcdEnabled(true)
+      .setAngvel({ x: (Math.random() - 0.5) * 3, y: (Math.random() - 0.5) * 2, z: (Math.random() - 0.5) * 3 }));
+    const dark = new THREE.MeshStandardMaterial({ color: 0x1c1c20, metalness: 0.6, roughness: 0.4 });
+    const g = new THREE.Group();
+    let collider;
+    if (kind === 'camera') {
+      // a studio TV camera: body, lens hood, viewfinder, pan handles
+      g.add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.45, 0.8), new THREE.MeshStandardMaterial({ color: 0x3a3d44, metalness: 0.4, roughness: 0.5 })));
+      const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.2, 0.35, 16).rotateX(Math.PI / 2), dark); lens.position.z = 0.55; g.add(lens);
+      const glass = new THREE.Mesh(new THREE.CircleGeometry(0.15, 16), new THREE.MeshStandardMaterial({ color: 0x223355, metalness: 0.9, roughness: 0.05 }));
+      glass.position.z = 0.73; g.add(glass);
+      const vf = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.22, 0.25), dark); vf.position.set(0, 0.33, -0.2); g.add(vf);
+      for (const x of [-0.3, 0.3]) { const h = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.6, 6).rotateX(Math.PI / 2), dark); h.position.set(x, -0.1, -0.6); g.add(h); }
+      const tally = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 6), new THREE.MeshStandardMaterial({ color: 0x440000, emissive: 0xff2020, emissiveIntensity: 2 }));
+      tally.position.set(0, 0.26, 0.3); g.add(tally);
+      collider = R.ColliderDesc.cuboid(0.26, 0.24, 0.5).setMass(14);
+    } else {
+      // a stage light: can with a hot lens, yoke
+      g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.26, 0.6, 14).rotateX(Math.PI / 2), dark));
+      const lensM = new THREE.Mesh(new THREE.CircleGeometry(0.2, 16), new THREE.MeshStandardMaterial({ color: 0xfff4d0, emissive: 0xffe6a0, emissiveIntensity: 3 }));
+      lensM.position.z = 0.31; g.add(lensM);
+      const yoke = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.025, 6, 16, Math.PI).rotateZ(Math.PI), dark); g.add(yoke);
+      collider = R.ColliderDesc.cylinder(0.3, 0.26).setRotation({ x: Math.SQRT1_2, y: 0, z: 0, w: Math.SQRT1_2 }).setMass(9);
+    }
+    world.createCollider(collider.setRestitution(0.3).setFriction(0.6).setCollisionGroups(groups(G_GROUND, 0xffff)), body);
+    g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+    return this.add({ kind, body, mesh: g, v: new THREE.Vector3() });
+  }
+
   /** throw `kind` ('tomato' | 'pipe') from `from` (THREE.Vector3) at Leno's head/chest */
   throw(kind, from) {
     if (!this.ready) return null;
@@ -61,7 +94,8 @@ export class Projectiles {
   add(item) {
     item.mesh.castShadow = true;
     item.prevVel = item.v.clone();
-    item.age = 0; item.clangs = 0; item.splatted = false; item.warned = false;
+    item.age = item.kind === 'camera' || item.kind === 'light' ? -15 : 0;     // rig pieces lie around a bit longer
+    item.clangs = 0; item.splatted = false; item.warned = false;
     this.scene.add(item.mesh);
     this.items.push(item);
     while (this.items.length > MAX_ITEMS) this.remove(this.items[0]);
@@ -103,12 +137,12 @@ export class Projectiles {
       const speed = it.prevVel.length();
       if (dv > 2.5 && speed > 2) {
         const near = this.nearestLenoBody(it.mesh.position);
-        const hitLeno = near.dist < (it.kind === 'pipe' ? 0.8 : 0.55);
+        const hitLeno = near.dist < (it.kind === 'tomato' ? 0.55 : it.kind === 'pipe' ? 0.8 : 0.95);
         if (it.kind === 'tomato' && !it.splatted) {
           it.splatted = true;
           this.splat(it, hitLeno ? near.name : null);
           this.onImpact?.(it, { hitLeno, bodyName: near.name, speed });
-        } else if (it.kind === 'pipe' && it.clangs < 4) {
+        } else if (it.kind !== 'tomato' && it.clangs < 4) {
           it.clangs++;
           this.onImpact?.(it, { hitLeno, bodyName: near.name, speed });
         }

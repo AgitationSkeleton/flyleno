@@ -158,6 +158,19 @@ export class ShowSfx {
     return { stop: () => { alive = false; out.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.2); } };
   }
 
+  /** steady rain: returns { set(level 0..1), stop() } */
+  rain() {
+    if (!this.ctx) return { set() {}, stop() {} };
+    const ctx = this.ctx, out = this.out(0.0001), n = this.noise();
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2400; bp.Q.value = 0.6;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 7000;
+    n.connect(bp).connect(lp).connect(out); n.start(ctx.currentTime, Math.random());
+    return {
+      set: (lv) => out.gain.setTargetAtTime(Math.max(0.0001, 0.22 * lv), ctx.currentTime, 0.3),
+      stop: () => { out.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.5); n.stop(ctx.currentTime + 3); },
+    };
+  }
+
   claps(t, n = 1, gain = 0.5, dest = null) {
     const ctx = this.ctx, out = dest || this.out(gain);
     for (let k = 0; k < n; k++) for (let v = 0; v < 12; v++) {
@@ -276,6 +289,75 @@ export class ShowSfx {
       const og = ctx.createGain(); o.connect(og).connect(out); this.env(og.gain, t, 0.005, 0.35, dur - 0.1, 0.08);
       n.start(t, Math.random()); n.stop(t + dur + 0.05); o.start(t); o.stop(t + dur + 0.05);
       return dur;
+    }
+    if (kind === 'trumpet') {                                 // the last trumpet: a long brass call, then a choir swells
+      const notes = [[392, 0, 0.9], [523, 0.95, 0.5], [659, 1.5, 0.5], [784, 2.05, 2.6]];
+      for (const [f, dt, d] of notes) for (const det of [1, 1.004, 0.997]) {
+        const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f * det;
+        const vib = ctx.createOscillator(); vib.frequency.value = 5.5; const vg = ctx.createGain(); vg.gain.value = f * 0.008;
+        vib.connect(vg).connect(o.frequency);
+        const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 2;
+        lp.frequency.setValueAtTime(600, t + dt); lp.frequency.linearRampToValueAtTime(3200, t + dt + 0.15);
+        const g = ctx.createGain(); o.connect(lp).connect(g).connect(out);
+        this.env(g.gain, t + dt, 0.06, 0.09, d, 0.35);
+        o.start(t + dt); vib.start(t + dt); o.stop(t + dt + d + 0.5); vib.stop(t + dt + d + 0.5);
+      }
+      for (const f of [196, 247, 294, 392, 494]) {           // "aah"
+        const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f;
+        const b1 = ctx.createBiquadFilter(); b1.type = 'bandpass'; b1.frequency.value = 800; b1.Q.value = 3;
+        const b2 = ctx.createBiquadFilter(); b2.type = 'bandpass'; b2.frequency.value = 1200; b2.Q.value = 4;
+        const g = ctx.createGain(); o.connect(b1).connect(g); o.connect(b2).connect(g); g.connect(out);
+        this.env(g.gain, t + 1.4, 1.2, 0.06, 3.5, 2); o.start(t + 1.4); o.stop(t + 8.3);
+      }
+      return 8;
+    }
+    if (kind === 'cry') {                                     // a baby: "waah"
+      const dur = rand(0.6, 1.1), o = ctx.createOscillator(); o.type = 'sawtooth';
+      o.frequency.setValueAtTime(rand(380, 460), t); o.frequency.linearRampToValueAtTime(rand(520, 620), t + dur * 0.35);
+      o.frequency.linearRampToValueAtTime(rand(330, 400), t + dur);
+      const b1 = ctx.createBiquadFilter(); b1.type = 'bandpass'; b1.Q.value = 5;
+      b1.frequency.setValueAtTime(700, t); b1.frequency.linearRampToValueAtTime(1300, t + dur * 0.3);
+      const g = ctx.createGain(); o.connect(b1).connect(g).connect(out); this.env(g.gain, t, 0.08, 0.5, dur - 0.2, 0.12);
+      o.start(t); o.stop(t + dur + 0.05);
+      return dur;
+    }
+    if (kind === 'powerup') {                                 // rising arpeggio
+      [0, 4, 7, 12, 16, 19, 24, 28].forEach((semi, i) => {
+        const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = 330 * Math.pow(2, semi / 12);
+        const g = ctx.createGain(); o.connect(g).connect(out); const st = t + i * 0.06;
+        this.env(g.gain, st, 0.005, 0.12, 0.04, 0.03); o.start(st); o.stop(st + 0.1);
+      });
+      return 0.6;
+    }
+    if (kind === 'thunder') {
+      const n = this.noise(), lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 180;
+      const g = ctx.createGain(); n.connect(lp).connect(g).connect(out);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(1.4, t + 0.05);
+      for (let k = 1; k < 8; k++) g.gain.setValueAtTime(rand(0.4, 1.3), t + k * 0.18);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 2.8);
+      n.start(t, Math.random()); n.stop(t + 2.9);
+      return 2.8;
+    }
+    if (kind === 'crash') {                                   // glass and metal
+      for (let k = 0; k < 18; k++) {
+        const st = t + rand(0, 0.35), o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = rand(2500, 7000);
+        const g = ctx.createGain(); o.connect(g).connect(out); this.env(g.gain, st, 0.002, 0.12, 0.01, rand(0.05, 0.25));
+        o.start(st); o.stop(st + 0.3);
+      }
+      const n = this.noise(), hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 3000;
+      const g = ctx.createGain(); n.connect(hp).connect(g).connect(out); this.env(g.gain, t, 0.002, 0.5, 0.05, 0.4);
+      n.start(t); n.stop(t + 0.5);
+      return 0.6;
+    }
+    if (kind === 'creak') {                                   // a rig letting go
+      const o = ctx.createOscillator(); o.type = 'sawtooth';
+      o.frequency.setValueAtTime(90, t); o.frequency.linearRampToValueAtTime(140, t + 0.5);
+      const am = ctx.createGain(); const lfo = ctx.createOscillator(); lfo.frequency.value = 30; const lg = ctx.createGain(); lg.gain.value = 0.5;
+      lfo.connect(lg).connect(am.gain);
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 6;
+      o.connect(bp).connect(am).connect(out); this.env(out.gain, t, 0.05, gain * 0.6, 0.4, 0.1);
+      o.start(t); lfo.start(t); o.stop(t + 0.6); lfo.stop(t + 0.6);
+      return 0.6;
     }
     if (kind === 'pop') {
       const n = this.noise(), bp = ctx.createBiquadFilter(); bp.type = 'lowpass'; bp.frequency.value = 2500;

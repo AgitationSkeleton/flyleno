@@ -101,6 +101,31 @@ are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when bare
   - Hits, grabs and zaps drive mechanosensory neurons and punishment dopamine. Zaps also drive the
     antennal JO.
 
+**Happenings** (`js/happenings.js`, engineered; random, off with `?quiet`):
+- **The Rapture** (rare, every ~10–20 minutes): a trumpet sounds and a light column comes down.
+  - **Ascension:** every seated audience member (not Leno) rises spinning into the light and is gone.
+  - **Babies:** the seats fill with baby cultists (small, big-headed, standing on their seats, crying).
+    They grow back into their adult selves over about 100 seconds.
+  - **Effects:** the light reaches the fly's eyes, and the crowd reacts less while it is young.
+- **Rain cloud:** a personal storm cloud follows Leno and rains on him.
+  - **Rain:** water on the body and antennae (mechanosensory and JO → grooming), plus punishment dopamine
+    every 2 s while he's under it.
+  - **Lightning:** strikes toward him with thunder and a flash on the eyes.
+  - **Leaving:** it drifts off after 35–50 s.
+- **Vine mushroom:** a tomato-red power-up mushroom in the Vinesauce style (leafy crown, curly vine, eyes on the stem).
+  - It falls from the ceiling and slides about the stage.
+  - Leno goes for it even when not hungry. Eating it gives a big 3.5 s dopamine reward, a power-up
+    sound and cheers.
+- **Rig failure:** studio cameras and stage lights break loose from the ceiling. They are physics objects:
+  - Falling toward him drives LC4 looming. The light's glass shatters.
+  - A hit is touch plus strong punishment dopamine, and the audience gasps.
+- **Mini aliens** (every ~4–8 minutes): 24–40 little grey aliens march in, surround Leno and kick him in the shins.
+  - A kick knocks the leg and him around, with touch and mild punishment.
+  - Sounds: while they're active, `TOES.mp3` and `mimimi.mp3` play at random from the crowd of them.
+    Every kick that lands plays `go_alert2.wav`. All three are in `assets/audio/sfx/minialien/`, which is
+    local-only like the rest of the sound bank.
+  - They scatter after 30–40 s.
+
 **Falls:** Leno stays in whatever pose he lands in; nothing snaps him upright. After ~4 s on the
 floor, the puppet strings help him up gradually, physically. He is put back on stage only if he has
 left the set. Dangling in a predator's grip, or eating on all fours, doesn't count as a fall.

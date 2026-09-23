@@ -30,7 +30,7 @@ export class Cultists {
     ];
     this.mesh = this.levels[0].body; this.heads = this.levels[0].head;
     this.eye = null;                         // camera position for LOD (set by the app); null = all near
-    for (const s of this.seats) s.lod = 0;
+    for (const s of this.seats) { s.lod = 0; s.age = 1; s.rise = 0; s.spin = 0; s.gone = false; }
     this.target = null;                      // THREE.Vector3 the heads look at (Leno's head)
     for (const s of this.seats) { s.hy = 0; s.hp = 0; }
     this._hm = new THREE.Matrix4(); this._hq = new THREE.Quaternion(); this._neck = NECK.clone().multiplyScalar(SCALE);
@@ -65,7 +65,7 @@ export class Cultists {
     const { _m, _q, _e, _s } = this;
     const counts = [0, 0, 0];
     this.seats.forEach((s, i) => {
-      if (this.hidden.has(i)) return;                              // up and walking (e.g. a heckler)
+      if (this.hidden.has(i) || s.gone) return;                    // up and walking (a heckler), or raptured
       // level of detail from the camera distance, with hysteresis so seats don't flicker between levels
       if (this.eye) {
         const d = s.p.distanceTo(this.eye);
@@ -85,17 +85,21 @@ export class Cultists {
       }
       y += 0.008 * Math.sin(this.t * 1.3 + s.phase);                                                   // breathing
       y += s.stand * 0.45 * SCALE;                                                                    // standing to throw
-      _e.set(pitch, s.yaw, roll, 'YXZ');
+      y += s.rise;                                                                                    // ascending (the Rapture)
+      // age 0 (newborn) .. 1 (adult): babies are small with big heads, standing up on their seats and bouncing
+      const bs = 0.5 + 0.5 * s.age, hs = 0.82 + 0.18 * s.age, young = 1 - s.age;
+      y += young * (0.55 + 0.08 * Math.abs(Math.sin(this.t * 6 + s.phase)));
+      _e.set(pitch, s.yaw + s.spin, roll, 'YXZ');
       _q.setFromEuler(_e);
       const base = new THREE.Vector3(s.p.x, s.p.y + this.seatHeight * SCALE + y, s.p.z);
-      const sc = _s;
+      const sc = _s.set(bs, bs, bs);
       _m.compose(base, _q, sc);
       L.body.setMatrixAt(slot, _m);
       if (!L.head) return;                                          // far: head merged into the body, fixed
       // head: turn toward Leno (relative to the body), limited like a neck, smoothed
       let ty = 0, tp = 0;
       if (this.target) {
-        const neckW = this._neck.clone().applyQuaternion(_q).add(base);
+        const neckW = this._neck.clone().multiplyScalar(bs).applyQuaternion(_q).add(base);
         const d = this.target.clone().sub(neckW);
         let yaw = Math.atan2(d.x, d.z) - s.yaw;
         yaw = Math.atan2(Math.sin(yaw), Math.cos(yaw));
@@ -106,7 +110,7 @@ export class Cultists {
       s.hy += (ty - s.hy) * k; s.hp += (tp - s.hp) * k;
       this._hq.setFromEuler(_e.set(s.hp, s.hy, 0, 'YXZ'));
       const hq = _q.clone().multiply(this._hq);
-      this._hm.compose(this._neck.clone().applyQuaternion(_q).add(base), hq, sc);
+      this._hm.compose(this._neck.clone().multiplyScalar(bs).applyQuaternion(_q).add(base), hq, _s.set(hs, hs, hs));
       L.head.setMatrixAt(slot, this._hm);
     });
     this.levels.forEach((L, k) => {

@@ -29,6 +29,7 @@ import { EntityColliders } from './colliders.js';
 import { ShowSfx } from './showsfx.js';
 import { Show, SEGMENTS } from './show.js';
 import { Predators } from './predators.js';
+import { Happenings } from './happenings.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 // YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
@@ -232,7 +233,10 @@ const leftOrRight = () => {
 const audience = new Audience(audio, reinforce, {
   onReact: (e) => {
     const verb = { cheer: 'cheers', laugh: 'laughs', applause: 'applauds', boo: 'boos', gasp: 'gasps' }[e.kind] || e.kind;
-    const what = { speak: 'babbling', stroll: 'stroll', startle: 'flinch', groom: 'grooming', tomatoHit: 'tomato hit', pipeHit: 'pipe hit', eat: 'meal', burp: 'burp', fall: 'fall' }[e.act] || e.act;
+    const what = { speak: 'babbling', stroll: 'stroll', startle: 'flinch', groom: 'grooming', tomatoHit: 'tomato hit', pipeHit: 'pipe hit', eat: 'meal', burp: 'burp', fall: 'fall',
+      eatPoop: 'goose-dropping snack', lay: 'egg', hatch: 'hatching', goose: 'goose', frogTongue: "frog's tongue", frogSpit: 'spit-out', frogBite: 'ankle bite',
+      frogKicked: 'frog getting kicked out', backflip: 'backflip', backflipFail: 'missing backflip', spiderDrop: 'spider dropping him', swatHit: 'swat', zap: 'zap',
+      alienKick: 'shin kick', rigHit: 'falling rig', powerUp: 'power-up' }[e.act] || e.act;
     sidebar.ticker(`Audience ${verb} at the ${what}`);
     cultists.react(e.kind, e.intensity);
     // an unhappy crowd throws things
@@ -247,6 +251,17 @@ const projectiles = host !== leno ? new Projectiles(scene, host, {
   onImpact: (it, { hitLeno, speed }) => {
     const p = it.mesh.position.clone().project(camera), pan = Math.max(-1, Math.min(1, p.x));
     const gain = Math.min(1.2, 0.3 + speed / 12);
+    if (it.kind === 'camera' || it.kind === 'light') {
+      // a rig piece: clang, and the light's glass breaks on the first impact
+      audio.sfx('pipe', { pan, gain: gain * 0.8 });
+      if (it.kind === 'light' && it.clangs === 1) showSfx.sting('crash', { gain: 0.7 });
+      if (hitLeno && !it.hitLeno) {
+        it.hitLeno = true;
+        pulse('rigTouch', 'ambientTouch', 100, 0.6); reinforce(-0.9, 1.2); crowdDo('gasp', 1); audience.react('rigHit');
+        sidebar.ticker(`A falling ${it.kind === 'camera' ? 'camera' : 'stage light'} hits Leno!`);
+      }
+      return;
+    }
     if (it.kind === 'pipe') audio.sfx('pipe', { pan, gain }); else audio.sfx('splat', { pan, gain });
     if (!hitLeno) return;
     if (it.kind === 'tomato') {
@@ -351,7 +366,12 @@ const instincts = new Instincts({
     }
     if (type === 'ate') {
       sidebar.ticker(item.kind === 'poop' ? 'Fly-Leno happily slurps up the goose droppings' : `Leno finished the ${item.kind}`);
-      audience.react(item.kind === 'poop' ? 'eatPoop' : 'eat');
+      audience.react(item.kind === 'poop' ? 'eatPoop' : item.kind === 'mushroom' ? 'powerUp' : 'eat');
+      if (item.kind === 'mushroom') {
+        // power-up: a big, long dopamine reward
+        reinforce(1, 3.5); showSfx.sting('powerup', { gain: 0.6 }); crowdDo('cheer', 1);
+        sidebar.ticker('Leno eats the mushroom: POWER UP!');
+      }
       if (item.rotten) {
         // "Oh, excuse me, it's the rotten eclair again": drive the pharyngeal motor neurons; the model's own
         // retch/vomit readout (js/behavior.js) takes it from there
@@ -495,6 +515,36 @@ const predators = new Predators({
   pulse, reinforce, crowd: crowdDo, react: (act) => audience.react(act), ticker: (t) => sidebar.ticker(t),
 });
 
+// ------------------------------------------------------------------ happenings: Rapture, rain cloud, mushroom, rig, aliens
+const groundRay = new THREE.Raycaster();
+function groundY(p) {
+  groundRay.set(new THREE.Vector3(p.x, p.y + 3, p.z), new THREE.Vector3(0, -1, 0)); groundRay.far = 40;
+  const hit = groundRay.intersectObjects(stage.ground, false)[0];
+  return hit ? hit.point.y : null;
+}
+const panOf = (p) => Math.max(-1, Math.min(1, p.clone().project(camera).x));
+const happenings = new Happenings({
+  scene, sfx: showSfx, cultists, food, center: show.center, stageRadius: physHost?.stageRadius ?? 7.3,
+  ceilY: ceiling ? new THREE.Box3().setFromObject(ceiling).min.y - 0.4 : hostPos.y + 16,
+  groundAt: groundY, hostPos: () => hostAt().clone(),
+  hostHead: () => (host.state?.headPos ?? hostAt().clone().add(new THREE.Vector3(0, 2.3, 0))).clone(),
+  shins: () => {
+    if (host === flyHost) return [flyHost.root.position.clone().add(new THREE.Vector3(0, 0.3, 0))];
+    if (host.rag?.bodies.calf_l) return ['calf_l', 'calf_r'].map((n) => { const t = host.rag.bodies[n].translation(); return new THREE.Vector3(t.x, t.y, t.z); });
+    return [hostAt().clone().add(new THREE.Vector3(0, 0.4, 0))];
+  },
+  kick: (i, dir) => {
+    // a kick in the shins: knocks the leg (and him) around
+    if (host === flyHost) flyHost.applyImpulse('thorax', dir.clone().multiplyScalar(30));
+    else if (host.rag) { host.rag.applyImpulse(i ? 'calf_r' : 'calf_l', dir.clone().multiplyScalar(45)); host.rag.applyImpulse('pelvis', dir.clone().setY(0).multiplyScalar(18)); }
+    pulse('alienKick', 'ambientTouch', 60, 0.3); reinforce(-0.15, 0.4); audience.react('alienKick');
+  },
+  dropRig: (kind, p) => projectiles?.drop(kind, p),
+  playSfx: (file, opts) => { if (audio.ctx) audio.playClip({ file }, opts); },
+  pan: panOf, setCrowdChance: (x) => (audience.chance = x),
+  stimAlias, pulse, reinforce, ticker: (t) => sidebar.ticker(t),
+});
+
 $('eggChance').oninput = (e) => { brood.chance = +e.target.value / 100; $('eggChanceNum').textContent = e.target.value + '%'; };
 
 // ?quiet: start with the show director (autopilot) and the fly's initiative off
@@ -503,6 +553,7 @@ if (params.has('quiet')) {
   mind.initiative = false; $('initiative').checked = false;
   goose.enabled = false;
   predators.enabled = false;
+  happenings.enabled = false;
   syncShowEnabled();
 }
 
@@ -712,7 +763,7 @@ function resetShow() {
   else if (host.rag) { host.rag.place(host.home, 0); host.gesture = null; host.fallenFor = 0; host.getUp = 0; }
   else leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
   mind.mood = 0; behavior.nausea = 0; behavior.transcript.length = 0;
-  brood.clear(); goose.clear(); show.clear(); predators.clear(); convulseT = 0;
+  brood.clear(); goose.clear(); show.clear(); predators.clear(); happenings.clear(); convulseT = 0;
   food.clear(); for (const n of npcs.list) n.remove(); npcs.list.length = 0; cultists.hidden.clear(); instincts.hunger = 0.4;
   sidebar.ticker('Show reset');
 }
@@ -735,6 +786,7 @@ renderer.setAnimationLoop(() => {
   director.hold = show.active;
   show.update(dt);
   predators.update(dt, true);                        // random visits, like the goose
+  happenings.update(dt, true);
   if (convulseT > 0) {                               // after a zap: twitching
     convulseT -= dt;
     const r = () => (Math.random() - 0.5) * 2;
@@ -806,6 +858,6 @@ renderer.setAnimationLoop(() => {
 });
 
 window.flyleno = {
-  scene, camera, controls, leno, stageScreens, brood, goose, show, showSfx, predators, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
+  scene, camera, controls, leno, stageScreens, brood, goose, show, showSfx, predators, happenings, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
   get motor() { return lastMotor; },
 };

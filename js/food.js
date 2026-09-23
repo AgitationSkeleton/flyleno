@@ -29,6 +29,13 @@ export class Food {
     this.items.push({ kind: 'éclair', pos: pos.clone(), amount: 1, mesh, sweet: 0.9, rotten: true });
   }
 
+  /** a power-up mushroom: irresistible (sought even when not hungry); returns the item so its position can follow the mesh */
+  addMushroom(pos, mesh) {
+    const item = { kind: 'mushroom', pos: pos.clone(), amount: 0.6, mesh, sweet: 1, eager: true, base: mesh.scale.x, grow: true };
+    this.items.push(item);
+    return item;
+  }
+
   /** goose droppings: only Fly-Leno is interested */
   addPoop(pos, mesh) {
     mesh.position.copy(pos); this.scene.add(mesh);
@@ -51,6 +58,7 @@ export class Food {
     item.amount -= amount;
     const s = Math.max(0.05, item.amount);
     if (item.mesh && item.kind === 'poop') item.mesh.scale.setScalar(item.base * (0.3 + 0.7 * s / 0.35));
+    else if (item.mesh && item.kind === 'mushroom') item.mesh.scale.setScalar(item.base * (0.35 + 0.65 * s / 0.6));
     else if (item.mesh && item.rotten) item.mesh.scale.setScalar(0.35 + 0.65 * s);
     else if (item.mesh) item.mesh.scale.setScalar(item.kind === 'sugar' ? Math.cbrt(s) : 1).multiply(item.kind === 'tomato' ? new THREE.Vector3(1.1 * s + 0.2, 0.35, 1.1 * s + 0.2) : new THREE.Vector3(1, 1, 1));
     if (item.amount <= 0) { this.remove(item); return true; }
