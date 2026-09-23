@@ -169,8 +169,10 @@ distance from the viewing camera, with 10% hysteresis so seats don't flicker:
   - seats: 516 → 36 → 24 fabric triangles; toilets: coarse lathe and boxes; truss: just the four chords far away;
     light cans: 8 instead of 20 segments.
 - **One-off props:** the frog, car, goose, stagehand/heckler, spider, glove, mushroom, bandstand, balloons, UFO
-  and the mini aliens swap each mesh to an automatically simplified copy (three.js `SimplifyModifier`, ~30% of
-  the vertices) when it is small on screen.
+  and the mini aliens swap each mesh to automatically simplified copies (three.js `SimplifyModifier`) as they get
+  small on screen: full, then medium (~60% of the vertices), then far (~25%).
+  - The goose keeps 80% and 45%, because its round body crumples otherwise.
+  - The frog's eyes are their own mesh and are never simplified.
 - **Effect:** about 30–45% fewer triangles from the default cameras.
 
 **Hecklers:** a heckler charges the stage, then either rants with both arms raised or pelts Leno with

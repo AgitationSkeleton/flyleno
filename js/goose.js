@@ -79,7 +79,7 @@ export class Goose {
     const start = this.center.clone().add(new THREE.Vector3(side * 12, 0, -2 + Math.random() * 6));
     start.y = this.groundAt(start);
     m.g.position.copy(start);
-    this.scene.add(m.g); propLOD.track(m.g);
+    this.scene.add(m.g); propLOD.track(m.g, { mid: 0.8, far: 0.45 });   // a gentle simplification: the round body crumples otherwise
     const stops = Array.from({ length: 4 + ((Math.random() * 4) | 0) }, () => {
       const a = Math.random() * 6.28, r = 1 + Math.random() * 6;
       return this.center.clone().add(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r + 1.5));

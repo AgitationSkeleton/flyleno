@@ -41,12 +41,15 @@ function frogModel() {
   head.add(new THREE.Mesh(mergeGeometries([
     col(new THREE.IcosahedronGeometry(0.2, 1).scale(1.25, 0.6, 1.05).translate(0, 0.02, 0.04), GREEN),
     col(new THREE.BoxGeometry(0.4, 0.012, 0.012).translate(0, -0.035, 0.2), PUPIL),                                      // mouth line
-    ...[-1, 1].flatMap((s) => [
-      col(new THREE.SphereGeometry(0.075, 8, 6).translate(0.13 * s, 0.1, 0.05), GREEN),
-      col(new THREE.SphereGeometry(0.06, 8, 6).translate(0.135 * s, 0.115, 0.08), EYE),
-      col(new THREE.SphereGeometry(0.028, 6, 4).scale(1, 1.5, 0.6).translate(0.14 * s, 0.12, 0.135), PUPIL),
-    ]),
+    ...[-1, 1].map((s) => col(new THREE.SphereGeometry(0.075, 8, 6).translate(0.13 * s, 0.1, 0.05), GREEN)),         // eye bumps
   ]), mat));
+  // the eyes are their own mesh and are never simplified (small, but they make him a frog at any distance)
+  const eyes = new THREE.Mesh(mergeGeometries([-1, 1].flatMap((s) => [
+    col(new THREE.SphereGeometry(0.06, 8, 6).translate(0.135 * s, 0.115, 0.08), EYE),
+    col(new THREE.SphereGeometry(0.028, 6, 4).scale(1, 1.5, 0.6).translate(0.14 * s, 0.12, 0.135), PUPIL),
+  ])), mat);
+  eyes.userData.noLOD = true;
+  head.add(eyes);
   const sac = new THREE.Mesh(col(new THREE.SphereGeometry(0.1, 8, 6), BELLY), mat);
   sac.position.set(0, -0.1, 0.13); head.add(sac);
   // the tongue: a pink strip along +Z from the mouth, scaled to reach its target, with a sticky tip
@@ -82,7 +85,7 @@ export class Frog {
     if (this.active) return;
     const m = frogModel(), side = Math.random() < 0.5 ? -1 : 1;
     const start = this.center.clone().add(new THREE.Vector3(side * 12, 0, 1)); start.y = this.groundAt(start);
-    m.g.position.copy(start); this.scene.add(m.g); propLOD.track(m.g);
+    m.g.position.copy(start); this.scene.add(m.g); propLOD.track(m.g, { mid: 0.7, far: 0.35 });
     this.getHost = getHost;
     this.active = { ...m, state: 'enter', t: 0, until: dur, hop: null, croakT: 3, tongueT: 5 + Math.random() * 4, exit: start.clone(), strike: null, caught: false };
     this.onEvent?.('enter');

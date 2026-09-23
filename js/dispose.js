@@ -3,7 +3,7 @@
 // predators, falling rig pieces, splats...) must be disposed when they go, or memory grows all show long.
 // Resources shared between many objects (the tomato geometry, Leno's head model, ...) are marked with keep()
 // and are never freed. (Disposing a shared one by mistake is harmless: three.js re-uploads it on next use.)
-import { lowOf } from './lod.js';
+import { lowsOf } from './lod.js';
 
 const MAPS = ['map', 'alphaMap', 'emissiveMap', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'bumpMap', 'lightMap'];
 
@@ -33,8 +33,7 @@ export function disposeObject(root) {
   });
   for (const g of geos) {
     if (g.userData.keep) continue;
-    const low = lowOf(g);
-    if (low && !low.userData.keep) low.dispose();
+    for (const low of lowsOf(g)) if (!low.userData.keep) low.dispose();
     g.dispose();
   }
   for (const m of mats) {

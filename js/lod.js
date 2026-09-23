@@ -4,9 +4,10 @@
 //                  of a few InstancedMeshes (full / mid / far geometry) by its distance from the camera,
 //                  re-bucketed whenever the camera has moved.
 //   PropLOD      - one-off props (the frog, the car, the goose, NPCs, predators, the UFO, balloons...): each of
-//                  their meshes swaps to an automatically simplified copy of its geometry once it is small on
-//                  screen (projected size), and back when it's close again. Skinned and morphing meshes (Leno's
-//                  head) keep their full geometry.
+//                  their meshes swaps to automatically simplified copies of its geometry as it gets small on screen
+//                  (projected size): full -> mid (~60% of the vertices) -> far (~25%), and back when it's close
+//                  again. Skinned and morphing meshes (Leno's head) and meshes flagged userData.noLOD (small but
+//                  telling details, like the frog's eyes) keep their full geometry.
 import * as THREE from 'three';
 import { SimplifyModifier } from 'three/addons/modifiers/SimplifyModifier.js';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -71,16 +72,19 @@ export class InstancedLOD {
 
 // ------------------------------------------------------------------------------------------------ props
 const simplifier = new SimplifyModifier();
-const lowCache = new WeakMap();                          // full geometry -> simplified copy (shared by clones)
+const lowCache = new WeakMap();                          // full geometry -> Map(keep -> simplified copy)
+const MID = 0.05, FAR = 0.02;                            // projected sizes (~angular radius) where the levels switch
 
 function triangles(g) { return (g.index ? g.index.count : g.attributes.position.count) / 3; }
 
-/** the cached simplified copy of `geo`, if one was made */
-export function lowOf(geo) { return lowCache.get(geo) || null; }
+/** every cached simplified copy of `geo` */
+export function lowsOf(geo) { return [...(lowCache.get(geo)?.values() ?? [])].filter(Boolean); }
 
 /** a simplified copy keeping ~`keep` of the vertices (normals recomputed; flat-shaded materials ignore them) */
 export function simplified(geo, keep = 0.3) {
-  if (lowCache.has(geo)) return lowCache.get(geo);
+  let byKeep = lowCache.get(geo);
+  if (!byKeep) lowCache.set(geo, (byKeep = new Map()));
+  if (byKeep.has(keep)) return byKeep.get(keep);
   let low = null;
   try {
     let g = geo.clone();
@@ -92,7 +96,7 @@ export function simplified(geo, keep = 0.3) {
     low.computeVertexNormals();
     if (triangles(low) >= triangles(geo) * 0.9) low = null;   // not worth it
   } catch (e) { low = null; }
-  lowCache.set(geo, low);
+  byKeep.set(keep, low);
   return low;
 }
 
@@ -101,18 +105,18 @@ export class PropLOD {
 
   /**
    * Track every eligible mesh under `root`. opts.center(): world position to measure from (instanced meshes);
-   * opts.keep: fraction of vertices to keep in the far version; opts.minTris: skip meshes smaller than this.
+   * opts.mid / opts.far: fraction of vertices kept at medium / far distance; opts.minTris: skip meshes smaller than this.
    */
-  track(root, { keep = 0.3, minTris = 120, center = null, size = null } = {}) {
+  track(root, { mid = 0.6, far = 0.25, minTris = 120, center = null, size = null } = {}) {
     root.traverse((o) => {
       if (!o.isMesh || o.isSkinnedMesh || o.userData.noLOD) return;
       const g = o.geometry;
       if (!g?.attributes.position || Object.keys(g.morphAttributes || {}).length || triangles(g) < minTris) return;
-      const low = simplified(g, keep);
-      if (!low) return;
+      const m = simplified(g, mid), f = simplified(g, far) ?? m;
+      if (!m && !f) return;
       if (!g.boundingSphere) g.computeBoundingSphere();
-      o.userData.lodFull = g;                                // so disposal frees the full geometry even while the low one shows
-      this.items.push({ mesh: o, root, full: g, low, far: false, center, size });
+      o.userData.lodFull = g;                                // so disposal frees the full geometry even while a low one shows
+      this.items.push({ mesh: o, root, levels: [g, m ?? g, f ?? m ?? g], level: 0, center, size });
     });
     return root;
   }
@@ -130,13 +134,17 @@ export class PropLOD {
       if (!o.isScene) return false;
       if (it.center) p.copy(it.center()); else it.mesh.getWorldPosition(p);
       it.mesh.getWorldScale(s);
-      const r = (it.size ?? it.full.boundingSphere.radius) * Math.max(s.x, s.y, s.z);
+      const r = (it.size ?? it.levels[0].boundingSphere.radius) * Math.max(s.x, s.y, s.z);
       const size = r / Math.max(0.1, p.distanceTo(eye));      // ~ angular radius
-      if (!it.far && size < 0.035 * (1 - HYST)) it.far = true;
-      else if (it.far && size > 0.035 * (1 + HYST)) it.far = false;
-      const want = it.far ? it.low : it.full;
+      let l = it.level;                                       // 0 full, 1 mid, 2 far (with hysteresis)
+      if (l === 0 && size < MID * (1 - HYST)) l = 1;
+      if (l === 1 && size > MID * (1 + HYST)) l = 0;
+      if (l === 1 && size < FAR * (1 - HYST)) l = 2;
+      if (l === 2 && size > FAR * (1 + HYST)) l = 1;
+      it.level = l;
+      const want = it.levels[l];
       if (it.mesh.geometry !== want) it.mesh.geometry = want;
-      if (it.far) far++;
+      if (l === 2) far++;
       return true;
     });
     this.stats = { far, near: this.items.length - far };
