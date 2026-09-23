@@ -25,6 +25,7 @@ import { FlyLeno } from './flybody.js';
 import { StageScreens, parseYouTubeId } from './screens.js';
 import { Brood } from './brood.js';
 import { Goose } from './goose.js';
+import { EntityColliders } from './colliders.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 // YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
@@ -365,6 +366,7 @@ const brood = new Brood({
     if (type === 'hatch') { sidebar.ticker('An egg hatches!'); audience.react('hatch'); }
   },
 });
+const entityCols = physHost ? new EntityColliders(physHost.RAPIER, physHost.world) : null;
 const goose = new Goose({
   scene, stage, food, audio,
   onEvent: (type) => {
@@ -410,7 +412,7 @@ if (physHost) {
   $('bSupport').oninput = (e) => (physHost.support = +e.target.value);
   $('bVnc').oninput = (e) => (physHost.vncWeight = +e.target.value);
   $('bDirect').oninput = (e) => (physHost.directWeight = +e.target.value);
-  $('bStage').onchange = (e) => (physHost.keepOnStage = e.target.checked);
+  $('bStage').onchange = (e) => { physHost.keepOnStage = e.target.checked; if (flyHost) flyHost.keepOnStage = e.target.checked; };
 }
 
 // ------------------------------------------------------------------ body form: Leno <-> Fly-Leno
@@ -421,6 +423,7 @@ async function setForm(form) {
   if (form === 'fly') {
     if (host === flyHost) return;
     if (!flyHost) { sidebar.ticker('Growing wings…'); flyHost = (await new FlyLeno(scene).load()).attach(physHost, stage); }
+    flyHost.keepOnStage = physHost.keepOnStage;
     for (const b of Object.values(physHost.rag.bodies)) b.setEnabled(false);
     for (const b of Object.values(flyHost.rag.bodies)) b.setEnabled(true);
     leno.root.visible = false; flyHost.setVisible(true);
@@ -605,6 +608,13 @@ renderer.setAnimationLoop(() => {
   npcs.update(dt);
   brood.update(dt, host);
   goose.update(dt, true);                            // visits at random, on its own schedule
+  // moving entities are solid too (stagehand, heckler, goose, hatchlings)
+  if (entityCols) {
+    const ents = npcs.list.map((n, i) => ({ key: n, pos: n.fig.position, radius: 0.45, height: 2.5 }));
+    if (goose.active) ents.push({ key: goose.active, pos: goose.active.g.position, radius: 0.35, height: 1.1 });
+    for (const y of brood.young) ents.push({ key: y, pos: y.kind === 'fly' ? y.body.pos : y.body.root.position, radius: y.kind === 'fly' ? 0.3 : 0.22, height: y.kind === 'fly' ? 0.5 : 0.85 });
+    entityCols.sync(ents);
+  }
   looming(dt);
   host.update(dt);
   // lip-sync: mouth follows the loudness of Leno's own sounds (fast open, slower close); feeding opens it too

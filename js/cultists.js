@@ -76,8 +76,8 @@ export class Cultists {
         const d = this.target.clone().sub(neckW);
         let yaw = Math.atan2(d.x, d.z) - s.yaw;
         yaw = Math.atan2(Math.sin(yaw), Math.cos(yaw));
-        ty = THREE.MathUtils.clamp(yaw, -1.3, 1.3);
-        tp = THREE.MathUtils.clamp(-Math.atan2(d.y, Math.hypot(d.x, d.z)), -0.6, 0.6);
+        ty = THREE.MathUtils.clamp(yaw, -0.9, 0.9);                              // neck-like limits, so the head stays
+        tp = THREE.MathUtils.clamp(-Math.atan2(d.y, Math.hypot(d.x, d.z)), -0.35, 0.35);   // seated in its collar
       }
       const k = Math.min(1, dt * (3 + (i % 5)));                  // not everyone turns at the same speed
       s.hy += (ty - s.hy) * k; s.hp += (tp - s.hp) * k;

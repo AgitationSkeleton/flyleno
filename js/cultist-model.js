@@ -46,8 +46,6 @@ export function headGeometry(P) {
   // the hood's rim folds (a flattened torus around the face opening)
   const rim = new THREE.TorusGeometry(0.15, 0.022, 5, 14, Math.PI * 1.55).rotateZ(-Math.PI * 0.275).scale(1, 1.22, 1).translate(0, 0.12, 0.155);
   parts.push(colored(rim, P.hood));
-  // drape from the back of the hood down to the shoulders
-  parts.push(colored(new THREE.CylinderGeometry(0.19, 0.27, 0.2, 10, 1, true).translate(0, -0.03, -0.03), P.hood));
   // white theatre mask, recessed inside the cowl
   parts.push(colored(new THREE.SphereGeometry(0.115, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.62).rotateX(Math.PI / 2)
     .scale(0.95, 1.32, 0.55).translate(0, 0.11, 0.095), P.mask));
@@ -76,6 +74,8 @@ export function bodyGeometry(P, seated) {
   const parts = [];
   parts.push(colored(new THREE.CylinderGeometry(0.17, 0.3, 0.62, 9, 1).translate(0, 0.31, -0.02), P.robe));        // torso
   parts.push(colored(new THREE.CylinderGeometry(0.2, 0.31, 0.16, 9, 1).translate(0, 0.6, -0.01), P.trim));        // sloped mantle over the shoulders
+  // the hood's drape belongs to the torso (it must not swing with the head): a collar the head turns inside
+  parts.push(colored(new THREE.CylinderGeometry(0.17, 0.26, 0.2, 10, 1, true).translate(0, NECK.y - 0.04, -0.02), P.hood));
   if (seated) {
     parts.push(colored(new THREE.BoxGeometry(0.46, 0.14, 0.42).translate(0, 0.02, 0.2), P.robe));                  // lap
     parts.push(colored(new THREE.CylinderGeometry(0.22, 0.28, 0.45, 9, 1).translate(0, -0.2, 0.36), P.hood));      // robe to floor

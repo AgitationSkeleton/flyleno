@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { initPhysics, RagdollLeno, MUSCLE_NAMES } from './ragdoll.js';
 import { VNC } from './vnc.js';
+import { addSetColliders } from './colliders.js';
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
@@ -88,27 +89,10 @@ export class PhysicsLeno {
         .setTranslation(mid.x, (top + bottom) / 2, mid.z).setRotation({ x: q.x, y: q.y, z: q.z, w: q.w })
         .setFriction(0.8).setCollisionGroups(G));
     }
-    // room walls around the floor
-    const box = new THREE.Box3();
-    for (const m of stage.ground) box.expandByObject(m);
-    const c = box.getCenter(new THREE.Vector3()), sz = box.getSize(new THREE.Vector3());
-    const H = 12, T = 1;
-    for (const [x, z, hx, hz] of [[c.x - sz.x / 2 - T, c.z, T, sz.z / 2 + T], [c.x + sz.x / 2 + T, c.z, T, sz.z / 2 + T],
-      [c.x, c.z - sz.z / 2 - T, sz.x / 2 + T, T], [c.x, c.z + sz.z / 2 + T, sz.x / 2 + T, T]]) {
-      world.createCollider(R.ColliderDesc.cuboid(hx, H, hz).setTranslation(x, box.min.y + H, z).setCollisionGroups(G));
-    }
-    this.worldBox = box;
-    // screens, backdrop and ceiling as solid surfaces (trimesh from their world-space triangles)
-    const solid = [];
-    stage.root?.traverse((o) => { if (o.isMesh && /^(BackdropScreen|SideScreensUpper|SideScreensLower|Ceiling)$/.test(o.name)) solid.push(o); });
-    for (const m of solid) {
-      m.updateMatrixWorld(true);
-      const g = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry;
-      const pos = g.attributes.position, V = new Float32Array(pos.count * 3), I = new Uint32Array(pos.count);
-      const v = new THREE.Vector3();
-      for (let i = 0; i < pos.count; i++) { v.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld); V.set([v.x, v.y, v.z], i * 3); I[i] = i; }
-      world.createCollider(R.ColliderDesc.trimesh(V, I).setCollisionGroups(G));
-    }
+    // the whole set (walls, curtains, risers, props, letters, truss, toilets, screens, ceiling) + room bounds
+    const res = addSetColliders(R, world, stage);
+    this.worldBox = res.room;
+    console.log(`[flyleno] set colliders: ${res.tris | 0} triangles, ${res.boxes} boxes`);
   }
 
   groundAt(p) {

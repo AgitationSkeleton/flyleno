@@ -184,7 +184,8 @@ export class FlyLeno {
   attach(physicsHost, stage) {
     const R = this.RAPIER = physicsHost.RAPIER;
     this.world = physicsHost.world;
-    this.stageCenter = physicsHost.stageCenter;
+    this.stageCenter = physicsHost.stageCenter; this.stageRadius = physicsHost.stageRadius;
+    this.keepOnStage = physicsHost.keepOnStage;
     this.home = physicsHost.home.clone();
     // kinematic body origin = ground under the fly; a small ball at the feet moves with the character
     // controller, the body capsule (thorax + abdomen) is what thrown things hit
@@ -264,6 +265,17 @@ export class FlyLeno {
     if (!this.flying && (c.startle > 0.6 || this.power > 0.35) && this.posture.eat < 0.3) {
       this.flying = true; this.flyT = 0;
       if (c.startle > 0.6) this.vel.y = 6;           // escape jump
+    }
+    // keep-on-stage reflex (same idea as the ragdoll's): turn back at the platform rim; in flight stay over it, low
+    if (this.keepOnStage && this.stageCenter) {
+      const t0 = this.kbody.translation();
+      const toC = this.stageCenter.clone().sub(new THREE.Vector3(t0.x, 0, t0.z)).setY(0);
+      const dist = toC.length(), limit = this.stageRadius * 0.78, f = this.forward();
+      const side = f.z * toC.x - f.x * toC.z;
+      if (dist > limit - 1 && f.dot(toC) < 0) { c.turn = Math.sign(side || 1); c.forward *= 0.3; }
+      else if (dist > limit - 1) c.backward = 0;
+      if (dist > limit) { toC.normalize(); this.vel.x += toC.x * (dist - limit + 0.5) * 6 * dt; this.vel.z += toC.z * (dist - limit + 0.5) * 6 * dt; if (!this.flying) { this.vel.x = toC.x * 1.5; this.vel.z = toC.z * 1.5; } }
+      if (this.flying && t0.y > this.stageCenter.y + 4) this.vel.y = Math.min(this.vel.y, -0.5);
     }
     const turnRate = this.flying ? 1.8 : 2.6;
     this.yawRate += (c.turn * turnRate - this.yawRate) * Math.min(1, dt * 8);
