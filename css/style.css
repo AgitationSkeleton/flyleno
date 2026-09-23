@@ -23,7 +23,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 .hud-title { font: 800 30px/1 "Arial Black", Impact, sans-serif; color: var(--accent); letter-spacing: 1px; }
 .hud-title span { color: var(--text); font-weight: 400; font-style: italic; }
 .hud-sub { color: #bbb; margin-top: 2px; }
-#cams { position: absolute; bottom: 14px; left: 18px; display: flex; gap: 6px; align-items: center; }
+#cams { position: absolute; bottom: 14px; left: 18px; right: 240px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }   /* stops short of the volume pill; wraps upward if narrow */
 #cams button, .controls button { background: #000a; color: var(--text); border: 1px solid var(--line);
   border-radius: 6px; padding: 5px 10px; cursor: pointer; font: inherit; }
 #cams button.on { border-color: var(--accent); color: #fff; background: #e0263a44; }
@@ -154,6 +154,10 @@ button.mini { margin-left: auto; font-size: 11px; }
 /* narrow screens (phones, small tablets): keep the viewport's overlay controls from overlapping */
 @media (max-width: 760px) {
   #app { grid-template-rows: 62vh auto; grid-template-rows: 62svh auto; }
+}
+/* the overlay controls adapt to the 3D view's own width (a phone, or a narrow desktop window beside the sidebar) */
+#viewport { container-type: inline-size; container-name: view; }
+@container view (max-width: 760px) {
   #hud { top: 8px; left: 10px; gap: 2px; }
   .hud-title { font-size: 20px; }
   .hud-sub { display: none; }
@@ -179,3 +183,7 @@ button.mini { margin-left: auto; font-size: 11px; }
 /* sidebar panels that are scrolled out of view skip layout and painting (keeps phones from running out of
    graphics memory on the long stacked sidebar) */
 #sidebar .panel { content-visibility: auto; contain-intrinsic-size: auto 240px; }
+
+/* first-person view caption (under the title) */
+#eyeNote { font: 11px/1.3 system-ui, sans-serif; color: #d6f5ea; text-shadow: 0 1px 2px #000; max-width: min(360px, 55vw); }
+#eyeNote:empty { display: none; }

@@ -147,6 +147,7 @@ export class FlyLeno {
     });
     // no proboscis mesh: the mouth for feeding/vomiting is Leno's lip line
     this.mouthLocal = surface(0, -0.08).add(new THREE.Vector3(0, 0, 0.03));
+    this.eyeLocal = surface(0, 0.035).add(new THREE.Vector3(0, 0, -0.045));       // between the eyes, just inside the face
     // wings (at rest folded back over the abdomen) and halteres
     const wmat = new THREE.MeshStandardMaterial({ map: wingTexture(), transparent: true, side: THREE.DoubleSide, depthWrite: false, roughness: 0.2, metalness: 0.1 });
     this.wings = [-1, 1].map((s) => {
@@ -238,6 +239,13 @@ export class FlyLeno {
   /** a predator holds the thorax at p (world), or lets go (null) */
   hold(p) { this.heldAt = p ? p.clone() : null; if (!p) this.flying = true; }
   setMouth(v) { for (const [o, i] of this.morphs) o.morphTargetInfluences[i] = v; }
+  /** first-person eye pose: { pos, quat } (the head looks along its local +Z) */
+  eyePose(pos = new THREE.Vector3(), quat = new THREE.Quaternion()) {
+    this.head.updateWorldMatrix(true, false);
+    pos.copy(this.eyeLocal).applyMatrix4(this.head.matrixWorld);
+    this.head.getWorldQuaternion(quat);
+    return { pos, quat };
+  }
 
   /** hatchling mode: move on the ground meshes without physics */
   placeMini(p, yaw = 0) { this.pos = p.clone(); this.heading = yaw; this.vel = new THREE.Vector3(); this.altitude = 0; this.root.position.copy(p); for (const l of this.legs) l.planted = false; }

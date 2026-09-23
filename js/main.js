@@ -33,6 +33,7 @@ import { Happenings } from './happenings.js';
 import { propLOD } from './lod.js';
 import { disposeObject } from './dispose.js';
 import { NesGlitch } from './glitch.js';
+import { FlyEyeView, humanFov } from './eyeview.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 // YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
@@ -148,13 +149,46 @@ const cams = {
   },
 };
 let camMode = 'audience';
+// first-person views from Leno's head: 'eyes' (human field of view) and 'flyeyes' (the fly's compound eyes)
+const EYE_MODES = new Set(['eyes', 'flyeyes']);
+const eyeMode = () => EYE_MODES.has(camMode);
+const flyEye = new FlyEyeView(96);
+const eyeRaw = { pos: new THREE.Vector3(), quat: new THREE.Quaternion() };
+const eyeS = { pos: new THREE.Vector3(), quat: new THREE.Quaternion(), init: false };
+const CAM_FLIP = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);   // cameras look along -Z
+/** the host's eye position and head orientation (the head looks along its local +Z) */
+function eyePose() {
+  if (host === flyHost) return flyHost.eyePose(eyeRaw.pos, eyeRaw.quat);
+  if (host.rag) return host.rag.eyePose(eyeRaw.pos, eyeRaw.quat);
+  const hb = leno.model.getObjectByName('head');                      // kinematic puppet fallback
+  hb?.getWorldPosition(eyeRaw.pos);
+  eyeRaw.pos.addScaledVector(host.forward(), 0.1).y += 0.05;
+  eyeRaw.quat.setFromUnitVectors(new THREE.Vector3(0, 0, 1), host.forward());
+  return eyeRaw;
+}
+// the fly sees out of its own head: humanoid Leno is one double-sided skinned mesh, so for the eye view he is drawn
+// single-sided (from inside the head its surfaces face away and aren't drawn; his shoulders and body still are);
+// Fly-Leno's head (with the antennae) is simply hidden while its eyes render
+const lenoSkin = leno.model.getObjectByProperty('isSkinnedMesh', true);
+const lenoMat = lenoSkin?.material, lenoMatFront = lenoMat?.clone();
+if (lenoMatFront) lenoMatFront.side = THREE.FrontSide;
+function hideHead(on) {
+  if (host === flyHost) flyHost.head.visible = !on;
+  else if (lenoSkin && lenoMatFront) lenoSkin.material = on ? lenoMatFront : lenoMat;
+}
 // Follow / Close-up keep tracking Leno when you orbit or zoom: the camera then rides along rigidly with its target
 // (and turns with Leno's heading in Close-up) instead of snapping back. Clicking the mode again resets the view.
 let camUser = false, camYaw = 0;
 const hostYaw = () => { const f = host.forward(); return Math.atan2(f.x, f.z); };
 const tracking = () => camMode === 'follow' || camMode === 'close';
 function setCam(mode) {
+  const wasEye = eyeMode();
   camMode = mode; camUser = false;
+  controls.enabled = !eyeMode();
+  if (eyeMode()) { camera.near = 0.02; eyeS.init = false; }
+  else if (wasEye) { camera.near = 0.1; camera.fov = 45; camera.updateProjectionMatrix(); if (mode === 'free') controls.target.copy(camera.position).add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(4)); }
+  $('eyeNote').textContent = mode === 'eyes' ? "Leno's eyes: a human's ~110° field of view"
+    : mode === 'flyeyes' ? "the fly's eyes: ~320° panorama, 5° facets, weak in red" : '';
   document.querySelectorAll('#cams button').forEach((b) => b.classList.toggle('on', b.dataset.cam === mode));
   if (cams[mode]) { const c = cams[mode](); camera.position.copy(c.pos); controls.target.copy(c.target); }
 }
@@ -922,7 +956,17 @@ renderer.setAnimationLoop(() => {
     $('hearLowBar').style.width = (100 * h.low / hearing.maxRate).toFixed(0) + '%'; $('hearLowNum').textContent = h.low.toFixed(0);
     $('hearHighBar').style.width = (100 * h.high / hearing.maxRate).toFixed(0) + '%'; $('hearHighNum').textContent = h.high.toFixed(0);
   }
-  if (tracking()) {
+  if (eyeMode()) {
+    // first person: ride the head (smoothed a little, so the ragdoll's wobble doesn't shake the view)
+    const E = eyePose();
+    if (!eyeS.init) { eyeS.pos.copy(E.pos); eyeS.quat.copy(E.quat); eyeS.init = true; }
+    eyeS.pos.lerp(E.pos, 1 - Math.exp(-rawDt * 25));
+    eyeS.quat.slerp(E.quat, 1 - Math.exp(-rawDt * 12));
+    camera.position.copy(eyeS.pos);
+    camera.quaternion.copy(eyeS.quat).multiply(CAM_FLIP);
+    const fov = camMode === 'eyes' ? humanFov(camera.aspect) : 45;
+    if (Math.abs(camera.fov - fov) > 0.01) { camera.fov = fov; camera.updateProjectionMatrix(); }
+  } else if (tracking()) {
     const c = cams[camMode]();
     if (!camUser) {
       camera.position.lerp(c.pos, 1 - Math.exp(-rawDt * 3));
@@ -938,11 +982,13 @@ renderer.setAnimationLoop(() => {
       }
     }
   }
-  controls.update();
+  if (!eyeMode()) controls.update();
   for (const l of stageLODs) l.update(camera.position);
   propLOD.update(camera, rawDt);
   liveCams?.update(rawDt);
-  renderer.render(scene, camera);
+  if (camMode === 'flyeyes') { hideHead(true); flyEye.render(renderer, scene, eyeS.pos, eyeS.quat, camera.aspect); hideHead(false); }
+  else if (camMode === 'eyes') { hideHead(true); renderer.render(scene, camera); hideHead(false); }
+  else renderer.render(scene, camera);
   const gk = glitch.update(rawDt);
   stimAlias('glitchL', 'eyeL', 40 * gk);                // the fly sees the corrupted picture too
   stimAlias('glitchR', 'eyeR', 40 * gk);

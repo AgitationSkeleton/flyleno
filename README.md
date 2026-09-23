@@ -70,6 +70,15 @@ the connectome, labelled as such in the sidebar).
 | spontaneous actions | action selector ("initiative"): softmax over values learned from dopamine | engineered, driven by neural dopamine |
 | Fly-Leno flight | DNg02/DNp13 wing power; giant-fiber escape take-off | neural |
 
+**First-person cameras** (Eyes / Fly eyes buttons, `js/eyeview.js`), for both Leno and Fly-Leno:
+- **Eyes:** from between Leno's eyes, with a human's ~110° field of view.
+- **Fly eyes:** what the fly's compound eyes take in: a ~320° panorama (a blind wedge straight behind), resolved
+  into hexagonal facets of ~5° (Drosophila has ~780 ommatidia per eye), and weak in red, so the red set looks
+  dark. Rendered from a small cube map at the eye.
+- **The head:** the camera sits inside the head. Humanoid Leno is drawn single-sided for the eye view (his head's
+  surfaces face away from the camera and aren't drawn, his body still is); Fly-Leno's head and antennae are
+  hidden for it. The live cams still show them.
+
 **Stage screens** (viewport buttons: 📹 Cams / ▶ YouTube / 🟩 Green; YouTube link box in the sidebar):
 - **Cams:** live cameras following Leno.
 - **YouTube:** any YouTube video on the big backdrop screen. The real iframe is placed in 3D behind a

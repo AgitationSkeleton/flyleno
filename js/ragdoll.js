@@ -269,6 +269,8 @@ export class RagdollLeno {
     // marker offsets (body local)
     this.mouthLocal = head.clone().add(new THREE.Vector3(0, -0.035 * s, 0.12 * s)).sub(this.bindCenter.head);
     this.headLocal = head.clone().add(new THREE.Vector3(0, 0.07 * s, 0.03 * s)).sub(this.bindCenter.head);
+    // between the eyes, a little inside the face (first-person camera)
+    this.eyeLocal = head.clone().add(new THREE.Vector3(0, 0.04 * s, 0.075 * s)).sub(this.bindCenter.head);
     this.buttLocal = new THREE.Vector3(pelvis.x, pelvis.y - 0.13 * s, pelvis.z - 0.13 * s).sub(this.bindCenter.pelvis);
     this.pelvisBindY = this.bindCenter.pelvis.y;
 
@@ -525,6 +527,13 @@ export class RagdollLeno {
   applyImpulse(bodyName, vec) {
     const b = this.bodies[bodyName];
     if (b) b.applyImpulse({ x: vec.x, y: vec.y, z: vec.z }, true);
+  }
+
+  /** first-person eye pose: { pos, quat } (the head body's frame looks along its local +Z) */
+  eyePose(pos = new THREE.Vector3(), quat = new THREE.Quaternion()) {
+    this.bodyPoint('head', this.eyeLocal, pos);
+    const r = this.bodies.head.rotation(); quat.set(r.x, r.y, r.z, r.w);
+    return { pos, quat };
   }
 
   applyTorqueImpulse(bodyName, vec) {
