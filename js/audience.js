@@ -35,6 +35,7 @@ const TABLE = {
   alienKick:  [0.30, 0.90, 0.20, 0.10, 0.30],
   rigHit:     [0.05, 0.30, 0.02, 0.20, 1.00],
   powerUp:    [1.00, 0.30, 0.90, 0.02, 0.20],
+  roseHit:    [1.00, 0.20, 1.00, 0.02, 0.20],
 };
 const KINDS = ['cheer', 'laugh', 'applause', 'boo', 'gasp'];
 const VALENCE = { cheer: 1, laugh: 0.7, applause: 1, boo: -1, gasp: -0.5 };
@@ -59,6 +60,7 @@ export class Audience {
 
   /** Something happened on stage. Returns the reaction (or null). */
   react(act, detail = {}) {
+    if (this.away) return null;                    // nobody in the seats (the Rapture)
     let w = TABLE[act];
     if (!w || this.cool > 0) return null;
     if (act === 'speak' && detail.lesson?.complete) w = TABLE.word;

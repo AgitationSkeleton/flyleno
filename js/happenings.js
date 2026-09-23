@@ -65,8 +65,16 @@ export class Rapture {
       }
       if (this.t > 1.6 && !this.said) { this.said = true; ctx.ticker('The audience is enraptured, taken up into the light'); }
       if (gone === seats.length && this.t > 7) {
+        // the house is empty for a while: no one to cheer, boo or throw anything
+        this.phase = 'empty'; this.t = 0; this.emptyFor = rand(30, 45);
+        ctx.setAudienceAway(true);
+        ctx.ticker('The seats are empty. Silence.');
+      }
+    } else if (this.phase === 'empty') {
+      if (this.t > this.emptyFor) {
         this.phase = 'grow'; this.t = 0; this.cryT = 1;
         for (const s of seats) { s.gone = false; s.rise = 0; s.spin = 0; s.age = 0; s.growRate = 1 / (GROW_SECONDS * rand(0.8, 1.25)); }
+        ctx.setAudienceAway(false);
         ctx.ticker('…and every seat is filled with a baby cultist');
         ctx.sfx.sting('pop', { gain: 0.5 });
       }
@@ -91,6 +99,7 @@ export class Rapture {
   }
 
   clear() {
+    if (this.phase === 'empty' || this.phase === 'ascend') this.ctx.setAudienceAway(false);
     this.phase = null; this.level = 0; this.beam.visible = false; this.glow.intensity = 0;
     for (const s of this.ctx.cultists.seats) { s.gone = false; s.rise = 0; s.spin = 0; s.age = 1; }
     this.ctx.setCrowdChance(0.55);
@@ -444,7 +453,8 @@ export class Happenings {
     this.mushroom = new VineMushroom(ctx);
     this.aliens = new MiniAliens(ctx);
     this.enabled = true;
-    this.timers = { rapture: rand(420, 900), rain: rand(150, 330), mushroom: rand(90, 220), rig: rand(100, 280), aliens: rand(200, 420) };
+    this.timers = { rapture: rand(420, 900), rain: rand(150, 330), mushroom: rand(90, 220), rig: rand(100, 280), aliens: rand(200, 420),
+      storm: rand(120, 300), roseStorm: rand(200, 450), rose: rand(40, 120), ovation: rand(100, 260) };
   }
 
   /** a camera or light (or two, or three) breaks loose from the rig */
@@ -460,6 +470,17 @@ export class Happenings {
     }
   }
 
+  /** a barrage from the audience: `kind` 'mixed' (tomatoes and pipes) or 'rose'; n throws over `dur` seconds */
+  storm(kind = 'mixed', n = 14 + ((Math.random() * 16) | 0), dur = rand(5, 9)) {
+    const ctx = this.ctx;
+    if (ctx.audienceAway()) return false;
+    ctx.ticker(kind === 'rose' ? 'Roses rain down from the audience!' : 'The audience unleashes a storm of tomatoes and pipes!');
+    for (let k = 0; k < n; k++) {
+      setTimeout(() => ctx.throwItem(kind === 'rose' ? 'rose' : Math.random() < 0.72 ? 'tomato' : 'pipe'), Math.random() * dur * 1000);
+    }
+    return true;
+  }
+
   update(dt, on) {
     if (!dt) return;
     const T = this.timers;
@@ -471,6 +492,10 @@ export class Happenings {
       else if (T.aliens <= 0) { T.aliens = rand(240, 480); if (!big) this.aliens.start(); }
       if (T.mushroom <= 0) { T.mushroom = rand(120, 300); this.mushroom.start(); }
       if (T.rig <= 0) { T.rig = rand(120, 320); this.rigFall(); }
+      if (T.storm <= 0) { T.storm = rand(180, 420); this.storm('mixed'); }
+      if (T.roseStorm <= 0) { T.roseStorm = rand(260, 560); this.storm('rose', 10 + ((Math.random() * 12) | 0)); }
+      if (T.rose <= 0) { T.rose = rand(45, 140); if (!this.ctx.audienceAway()) this.ctx.throwItem('rose'); }
+      if (T.ovation <= 0) { T.ovation = rand(150, 360); this.ctx.ovation(rand(7, 12)); }
     }
     this.rapture.update(dt); this.rain.update(dt); this.mushroom.update(dt); this.aliens.update(dt);
   }

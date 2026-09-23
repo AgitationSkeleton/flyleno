@@ -204,7 +204,7 @@ function setAmbience(x) { stimRate('ambientTaste', 5 * x); stimRate('ambientTouc
 const getLeno = () => ({ pos: hostAt().clone() });
 const director = new Director((k, on) => sidebar?.setAuto(k, on), (text) => sidebar?.ticker(text), {
   snack: () => { if (npcs.busy) return false; npcs.deliverSnack(getLeno, Math.random() < 0.25 ? 'eclair' : 'sugar'); return true; },
-  heckler: () => { if (npcs.busy) return false; npcs.heckle(getLeno); return true; },
+  heckler: () => { if (npcs.busy || audienceAway) return false; npcs.heckle(getLeno); return true; },
 });
 const mind = new Mind((k, on) => sidebar?.setAuto(k, on));
 sidebar = new Sidebar({
@@ -239,7 +239,7 @@ const audience = new Audience(audio, reinforce, {
     const what = { speak: 'babbling', stroll: 'stroll', startle: 'flinch', groom: 'grooming', tomatoHit: 'tomato hit', pipeHit: 'pipe hit', eat: 'meal', burp: 'burp', fall: 'fall',
       eatPoop: 'goose-dropping snack', lay: 'egg', hatch: 'hatching', goose: 'goose', frogTongue: "frog's tongue", frogSpit: 'spit-out', frogBite: 'ankle bite',
       frogKicked: 'frog getting kicked out', backflip: 'backflip', backflipFail: 'missing backflip', spiderDrop: 'spider dropping him', swatHit: 'swat', zap: 'zap',
-      alienKick: 'shin kick', rigHit: 'falling rig', powerUp: 'power-up' }[e.act] || e.act;
+      alienKick: 'shin kick', rigHit: 'falling rig', powerUp: 'power-up', roseHit: 'rose' }[e.act] || e.act;
     sidebar.ticker(`Audience ${verb} at the ${what}`);
     cultists.react(e.kind, e.intensity);
     // an unhappy crowd throws things
@@ -254,6 +254,16 @@ const projectiles = host !== leno ? new Projectiles(scene, host, {
   onImpact: (it, { hitLeno, speed }) => {
     const p = it.mesh.position.clone().project(camera), pan = Math.max(-1, Math.min(1, p.x));
     const gain = Math.min(1.2, 0.3 + speed / 12);
+    if (it.kind === 'rose') {
+      // a rose: a soft landing, and on him a compliment (reward)
+      showSfx.sting('thwack', { gain: 0.1 });
+      if (hitLeno && !it.hitLeno) {
+        it.hitLeno = true;
+        pulse('roseTouch', 'ambientTouch', 20, 0.3); reinforce(0.6, 1.2); audience.react('roseHit');
+        sidebar.ticker('A rose lands on Leno');
+      }
+      return;
+    }
     if (it.kind === 'camera' || it.kind === 'light') {
       // a rig piece: clang, and the light's glass breaks on the first impact
       audio.sfx('pipe', { pan, gain: gain * 0.8 });
@@ -279,12 +289,15 @@ const projectiles = host !== leno ? new Projectiles(scene, host, {
   },
 }) : null;
 if (projectiles) projectiles.ground = stage.ground;          // where missed tomatoes end up
+let audienceAway = false;                         // the seats are empty (after the Rapture): no reactions, no throws
 function throwThing(kind) {
   if (!projectiles) { sidebar.ticker('Throwing needs the physics body (not ?body=kinematic)'); return; }
+  if (audienceAway) { sidebar.ticker('Nobody is in the seats to throw anything'); return; }
   projectiles.throw(kind, cultists.standRandom());
 }
 $('throwTomato').onclick = () => throwThing('tomato');
 $('throwPipe').onclick = () => throwThing('pipe');
+$('throwRose').onclick = () => throwThing('rose');
 const behavior = new Behavior(meta, audio, {
   onEvent: (type, d) => {
     if (type === 'vomit') { host.trigger('vomit'); setTimeout(() => fx.vomit(() => host.mouth(), () => host.headDown(), 1.1), 500); }
@@ -433,6 +446,7 @@ const showSfx = new ShowSfx(audio);
 var showReady = false;              // (var: the autopilot callback can run before the show exists)
 const CROWD_VAL = { cheer: 1, laugh: 0.7, applause: 1, boo: -1, gasp: -0.5 };
 function crowdDo(kind, intensity = 1) {
+  if (audienceAway) return;
   // scripted crowd moments (not contingent on what Leno does): heard by the fly, and a dopamine signal
   const d = audio.crowd(kind, { gain: 0.5 + 0.5 * intensity });
   cultists.react(kind, intensity);
@@ -519,6 +533,15 @@ const predators = new Predators({
 });
 
 // ------------------------------------------------------------------ happenings: Rapture, rain cloud, mushroom, rig, aliens
+/** a standing ovation: everyone up, sustained applause and cheers, a long reward */
+function standingOvation(dur = 9) {
+  if (audienceAway) return false;
+  cultists.ovation = dur;
+  sidebar.ticker('A standing ovation!');
+  for (let t = 0; t < dur - 1; t += 2.2) setTimeout(() => { if (!audienceAway) { audio.crowd('applause', { gain: 1 }); if (Math.random() < 0.6) audio.crowd('cheer', { gain: 0.8 }); } }, t * 1000);
+  reinforce(0.8, Math.min(dur, 8));
+  return true;
+}
 const groundRay = new THREE.Raycaster();
 function groundY(p) {
   groundRay.set(new THREE.Vector3(p.x, p.y + 3, p.z), new THREE.Vector3(0, -1, 0)); groundRay.far = 40;
@@ -550,6 +573,10 @@ const happenings = new Happenings({
   dropRig: (kind, p) => projectiles?.drop(kind, p),
   playSfx: (file, opts) => { if (audio.ctx) audio.playClip({ file }, opts); },
   pan: panOf, setCrowdChance: (x) => (audience.chance = x),
+  setAudienceAway: (v) => { audienceAway = v; audience.away = v; },
+  audienceAway: () => audienceAway,
+  throwItem: (kind) => throwThing(kind),
+  ovation: (dur) => standingOvation(dur),
   stimAlias, pulse, reinforce, ticker: (t) => sidebar.ticker(t),
 });
 
@@ -771,7 +798,7 @@ function resetShow() {
   else if (host.rag) { host.rag.place(host.home, 0); host.gesture = null; host.fallenFor = 0; host.getUp = 0; }
   else leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
   mind.mood = 0; behavior.nausea = 0; behavior.transcript.length = 0;
-  brood.clear(); goose.clear(); show.clear(); predators.clear(); happenings.clear(); convulseT = 0;
+  brood.clear(); goose.clear(); show.clear(); predators.clear(); happenings.clear(); convulseT = 0; cultists.ovation = 0;
   food.clear(); for (const n of npcs.list) n.remove(); npcs.list.length = 0; cultists.hidden.clear(); instincts.hunger = 0.4;
   sidebar.ticker('Show reset');
 }

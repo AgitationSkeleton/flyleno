@@ -2,6 +2,7 @@
 // knock his body parts around. Impacts are detected from sudden velocity changes; a hit on Leno is an
 // impact within reach of one of his bodies.
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const G_GROUND = 1;   // must match js/ragdoll.js: projectiles join the "ground" group so ragdoll parts collide with them
 const groups = (member, filter) => ((member & 0xffff) << 16) | (filter & 0xffff);
@@ -59,7 +60,27 @@ export class Projectiles {
     return this.add({ kind, body, mesh: g, v: new THREE.Vector3() });
   }
 
-  /** throw `kind` ('tomato' | 'pipe') from `from` (THREE.Vector3) at Leno's head/chest */
+  /** a long-stemmed red rose */
+  roseMesh() {
+    if (!this.roseParts) {
+      const green = new THREE.MeshStandardMaterial({ color: 0x2f7d2a, roughness: 0.6 }), red = new THREE.MeshStandardMaterial({ color: 0xb0101c, roughness: 0.5 });
+      const bloom = [];
+      for (let k = 0; k < 7; k++) {                     // cupped petals around a bud
+        const a = k / 7 * Math.PI * 2, r = k < 3 ? 0.02 : 0.04;
+        bloom.push(new THREE.SphereGeometry(0.035, 6, 4).scale(1, 1.3, 0.45).rotateX(-0.35).rotateY(-a).translate(Math.sin(a) * r, 0.24 + (k < 3 ? 0.02 : 0), Math.cos(a) * r));
+      }
+      this.roseParts = [
+        [new THREE.CylinderGeometry(0.007, 0.009, 0.45, 5), green],
+        [new THREE.SphereGeometry(0.03, 5, 3).scale(1.8, 0.25, 0.9).translate(0.03, -0.02, 0), green],
+        [mergeGeometries(bloom.map((g) => g.toNonIndexed())), red],
+      ];
+    }
+    const g = new THREE.Group();
+    for (const [geo, mat] of this.roseParts) g.add(new THREE.Mesh(geo, mat));
+    return g;
+  }
+
+  /** throw `kind` ('tomato' | 'pipe' | 'rose') from `from` (THREE.Vector3) at Leno's head/chest */
   throw(kind, from) {
     if (!this.ready) return null;
     const R = this.host.RAPIER, world = this.host.world;
@@ -67,7 +88,7 @@ export class Projectiles {
     const target = (Math.random() < 0.6 ? st.headPos : st.root.clone().add(new THREE.Vector3(0, 1.3, 0))).clone();
     // ballistic aim with a chosen flight time; lead the target a little
     const d = target.clone().sub(from);
-    const T = THREE.MathUtils.clamp(d.length() / (kind === 'pipe' ? 13 : 16), 0.45, 1.6);
+    const T = THREE.MathUtils.clamp(d.length() / (kind === 'pipe' ? 13 : kind === 'rose' ? 12 : 16), 0.45, 1.8);
     const g = -9.81;
     const v = new THREE.Vector3(d.x / T, (d.y - 0.5 * g * T * T) / T, d.z / T);
     v.x += (Math.random() - 0.5) * 0.8; v.z += (Math.random() - 0.5) * 0.8;   // human inaccuracy
@@ -82,6 +103,13 @@ export class Projectiles {
         .setCollisionGroups(groups(G_GROUND, 0xffff)), body);
       mesh = new THREE.Mesh(this.pipeGeo, this.pipeMat);
       return this.add({ kind, body, collider, mesh, v });
+    }
+    if (kind === 'rose') {
+      bodyDesc.setAngvel({ x: (Math.random() - 0.5) * 8, y: (Math.random() - 0.5) * 4, z: (Math.random() - 0.5) * 8 });
+      const body = world.createRigidBody(bodyDesc);
+      collider = world.createCollider(R.ColliderDesc.capsule(0.2, 0.03).setMass(0.05).setRestitution(0.1).setFriction(0.8)
+        .setCollisionGroups(groups(G_GROUND, 0xffff)), body);
+      return this.add({ kind, body, collider, mesh: this.roseMesh(), v });
     }
     const body = world.createRigidBody(bodyDesc);
     collider = world.createCollider(R.ColliderDesc.ball(0.11).setMass(0.2).setRestitution(0.05).setFriction(0.9)
@@ -137,12 +165,12 @@ export class Projectiles {
       const speed = it.prevVel.length();
       if (dv > 2.5 && speed > 2) {
         const near = this.nearestLenoBody(it.mesh.position);
-        const hitLeno = near.dist < (it.kind === 'tomato' ? 0.55 : it.kind === 'pipe' ? 0.8 : 0.95);
+        const hitLeno = near.dist < (it.kind === 'tomato' || it.kind === 'rose' ? 0.6 : it.kind === 'pipe' ? 0.8 : 0.95);
         if (it.kind === 'tomato' && !it.splatted) {
           it.splatted = true;
           this.splat(it, hitLeno ? near.name : null);
           this.onImpact?.(it, { hitLeno, bodyName: near.name, speed });
-        } else if (it.kind !== 'tomato' && it.clangs < 4) {
+        } else if (it.kind !== 'tomato' && it.clangs < (it.kind === 'rose' ? 1 : 4)) {
           it.clangs++;
           this.onImpact?.(it, { hitLeno, bodyName: near.name, speed });
         }

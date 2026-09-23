@@ -62,6 +62,11 @@ export class Cultists {
     this.t += dt;
     const m = this.mood;
     m.level = Math.max(0, m.level - dt * 0.35);
+    if (this.ovation > 0) {                                      // standing ovation: everyone up, clapping
+      this.ovation -= dt;
+      for (const s of this.seats) s.stand = 1;
+      if (m.level < 0.8) this.react('applause', 1);
+    }
     const { _m, _q, _e, _s } = this;
     const counts = [0, 0, 0];
     this.seats.forEach((s, i) => {

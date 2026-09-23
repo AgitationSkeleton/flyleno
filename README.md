@@ -104,6 +104,7 @@ are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when bare
 **Happenings** (`js/happenings.js`, engineered; random, off with `?quiet`):
 - **The Rapture** (rare, every ~10–20 minutes): a trumpet sounds and a light column comes down.
   - **Ascension:** every seated audience member (not Leno) rises spinning into the light and is gone.
+  - **Empty house:** then the seats stay empty for 30–45 s. Nobody reacts, cheers, boos, throws or heckles.
   - **Babies:** the seats fill with baby cultists (small, big-headed, standing on their seats, crying).
     They grow back into their adult selves over about 100 seconds.
   - **Effects:** the light reaches the fly's eyes, and the crowd reacts less while it is young.
@@ -119,6 +120,11 @@ are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when bare
 - **Rig failure:** studio cameras and stage lights break loose from the ceiling. They are physics objects:
   - Falling toward him drives LC4 looming. The light's glass shatters.
   - A hit is touch plus strong punishment dopamine, and the audience gasps.
+- **Throwing storms:** now and then the audience unleashes a barrage of 14–30 tomatoes and pipes over a few
+  seconds.
+- **Roses:** single roses are thrown now and then (also the 🌹 button), and sometimes a whole rose storm.
+  A rose that lands on Leno is a compliment: a little touch and reward dopamine, and cheers.
+- **Standing ovation:** the whole audience stands and applauds for 7–12 s, with a long reward.
 - **Mini aliens** (every ~4–8 minutes): 24–40 little grey aliens march in, surround Leno and kick him in the shins.
   - A kick knocks the leg and him around, with touch and mild punishment.
   - Sounds: while they're active, `TOES.mp3` and `mimimi.mp3` play at random from the crowd of them.
