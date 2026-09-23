@@ -68,6 +68,7 @@ export class StageScreens {
   async setMode(mode, videoId) {
     if (!this.available) return;
     if (videoId) this.videoId = videoId;
+    if (this.card) this.clearCard(false);
     this.mode = mode;
     this.big.material = mode === 'green' ? this.greenMat : mode === 'video' ? this.holeMat : this.camMats.big;
     this.sides.forEach((m, i) => (m.material = mode === 'green' ? this.greenMat : this.camMats.sides[i]));
@@ -101,9 +102,34 @@ export class StageScreens {
 
   title() { return this.player?.getVideoData?.().title || ''; }
 
+  /** put a show card (js/cards.js) on every screen for `secs` seconds, then go back to the current mode */
+  showCard(card, secs = 8) {
+    if (!this.available) return;
+    this.clearCard(false);
+    const tex = new THREE.CanvasTexture(card.canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const mat = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false });
+    this.card = { card, tex, mat, t: 0, until: secs };
+    this.big.material = mat; this.sides.forEach((m) => (m.material = mat));
+    this.cssObj.visible = false;
+    if (this.mode === 'video') this.player?.pauseVideo?.();
+    this.prev = null;
+  }
+
+  clearCard(restore = true) {
+    if (!this.card) return;
+    this.card.tex.dispose(); this.card.mat.dispose();
+    this.card = null;
+    if (restore) this.setMode(this.mode);
+  }
+
   update(dt) {
     if (!this.available) return;
-    if (this.mode === 'video') {
+    if (this.card) {
+      const c = this.card; c.t += dt; c.card.draw(c.t); c.tex.needsUpdate = true;
+      if (c.t >= c.until) this.clearCard();
+    }
+    if (this.mode === 'video' && !this.card) {
       this.big.updateMatrixWorld(true);
       this.big.getWorldPosition(this.cssObj.position);
       this.big.getWorldQuaternion(this.cssObj.quaternion);
@@ -118,6 +144,7 @@ export class StageScreens {
   // ---- the fly's view of the screen -------------------------------------------------------------------
   sample() {
     const ctx = this.ctx;
+    if (this.card) { ctx.drawImage(this.card.card.canvas, 0, 0, W, H); return true; }
     if (this.mode === 'green') { ctx.fillStyle = '#00ff00'; ctx.fillRect(0, 0, W, H); return true; }
     if (this.mode === 'cams') {
       // what the show cam shows, rendered small into a plain (non-multisampled) target and read back

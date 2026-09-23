@@ -138,3 +138,15 @@ button.mini { margin-left: auto; font-size: 11px; }
 #hud, #cams, #throws, #form, #volume, #loading { z-index: 2; }
 
 .ico { width: 15px; height: 15px; vertical-align: -3px; }
+
+/* the show: ON AIR line, cue cards, rundown */
+#onair { margin-top: 4px; font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: .06em; color: #ff4d5e; text-shadow: 0 1px 2px #000; }
+#cue { position: absolute; left: 50%; bottom: 64px; transform: translate(-50%, 8px); max-width: min(720px, 80%); padding: 10px 16px;
+  background: #fbf8ef; color: #111; font: 600 17px/1.35 Georgia, serif; border-radius: 3px; box-shadow: 0 6px 18px #0009;
+  opacity: 0; pointer-events: none; transition: opacity .35s, transform .35s; text-align: center; z-index: 5; }
+#cue.on { opacity: .94; transform: translate(-50%, 0); }
+.rundown { margin: 6px 0 6px 18px; padding: 0; font-size: 12px; color: var(--muted); }
+.rundown li.now { color: #ff4d5e; font-weight: 600; }
+.rundown li.done { text-decoration: line-through; opacity: .6; }
+.segments { display: flex; flex-wrap: wrap; gap: 4px; }
+.segments button { font-size: 11px; }

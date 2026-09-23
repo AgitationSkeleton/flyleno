@@ -23,6 +23,12 @@ const TABLE = {
   eatPoop:    [0.10, 0.60, 0.05, 0.60, 0.90],
   hatch:      [0.80, 0.50, 0.70, 0.05, 0.30],
   burp:       [0.20, 0.80, 0.15, 0.20, 0.10],
+  frogTongue: [0.10, 0.70, 0.05, 0.10, 0.80],
+  frogSpit:   [0.40, 0.90, 0.30, 0.05, 0.40],
+  frogBite:   [0.60, 0.80, 0.40, 0.30, 0.50],
+  frogKicked: [0.80, 0.40, 0.70, 0.30, 0.10],
+  backflip:   [1.00, 0.30, 0.90, 0.02, 0.40],
+  backflipFail: [0.02, 0.40, 0.02, 0.90, 0.10],
 };
 const KINDS = ['cheer', 'laugh', 'applause', 'boo', 'gasp'];
 const VALENCE = { cheer: 1, laugh: 0.7, applause: 1, boo: -1, gasp: -0.5 };

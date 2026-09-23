@@ -22,7 +22,9 @@
       <div id="hud">
         <div class="hud-title">TUURD <span>Talk</span></div>
         <div class="hud-sub">Tonight's host: Grey Leno, piloted by <em>Drosophila melanogaster</em></div>
+        <div id="onair"></div>
       </div>
+      <div id="cue" title="cue card: what the host is supposed to say (the fly can't read)"></div>
       <div id="cams">
         <button data-cam="audience" class="on">Audience</button>
         <button data-cam="wide">Wide</button>
@@ -105,6 +107,13 @@
       </section>
 
       <section class="panel">
+        <h2>Tonight's show <small>segments from Vinny's Grey Leno appearances</small></h2>
+        <label class="chk"><input type="checkbox" id="optRundown" checked> run the rundown <small class="status">(with autopilot)</small></label>
+        <ol id="rundown" class="rundown"></ol>
+        <div id="segments" class="segments"></div>
+      </section>
+
+      <section class="panel">
         <h2>Show events <small>click to stimulate the fly</small></h2>
         <div id="stimuli"></div>
       </section>
@@ -140,6 +149,8 @@
         <label class="chk"><input type="checkbox" id="optAdapt"> spike-frequency adaptation <small class="status">(off = pure Shiu model; can run away)</small></label>
         <label class="chk"><input type="checkbox" id="optPlastic" checked> dopamine plasticity on articulator synapses</label>
         <div class="row"><button id="resetLearn" class="mini">forget learning</button></div>
+        <label class="chk" title="&quot;The worms in my brain only eat the cells I don't need.&quot; An engineered lesion, not biology: worms slowly silence neurons that have been quiet and aren't sensory or motor."><input type="checkbox" id="optWorms"> brain worms <small class="status">(eat the cells he doesn't need)</small></label>
+        <div class="row status"><span id="wormsInfo">0 cells eaten</span><button id="wormsHeal" class="mini">heal</button></div>
         <label class="rowlbl">stage ambience (taste/touch noise) <input id="ambience" type="range" min="0" max="3" step="0.1" value="1"></label>
         <label class="rowlbl">hearing gain <input id="hearGain" type="range" min="0" max="2" step="0.05" value="1"></label>
         <label class="rowlbl">sound volume <input id="sfxVol" type="range" min="0" max="1" step="0.05" value="0.9"></label>

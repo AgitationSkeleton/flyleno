@@ -527,6 +527,11 @@ export class RagdollLeno {
     if (b) b.applyImpulse({ x: vec.x, y: vec.y, z: vec.z }, true);
   }
 
+  applyTorqueImpulse(bodyName, vec) {
+    const b = this.bodies[bodyName];
+    if (b) b.applyTorqueImpulse({ x: vec.x, y: vec.y, z: vec.z }, true);
+  }
+
   /** Optional wireframe view of the collision shapes (add the returned group to the scene). */
   makeDebugGroup() {
     const g = new THREE.Group();

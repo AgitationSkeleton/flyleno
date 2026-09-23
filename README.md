@@ -89,7 +89,46 @@ are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when bare
 **Eating posture:** humanoid Leno gets down on all fours to eat. The puppet strings lower him, lean
 him forward over his hands and tip his pelvis. Fly-Leno lowers its head to the food.
 
-`?quiet` starts the page with autopilot, initiative and goose visits off.
+`?quiet` starts the page with autopilot, initiative, goose visits and the show rundown off.
+
+**The Grey Leno Show** (`js/show.js`, engineered): with autopilot on, the show runs in episodes.
+- **Structure:** each episode opens with the greeting, runs five segments drawn at random, and ends
+  with the sign-off. The segments come from Vinny's Grey Leno appearances: the 2022 Nightmare Puppeteer
+  show, the later VR, public-access and VHS episodes, and the candidacy speech.
+- **Controls:** the "Tonight's show" panel lists the rundown and has a button for every segment. A
+  segment holds the director's random events while it runs.
+- **Cue cards:** the host's lines appear on cue cards at the bottom of the view. The fly can't read
+  them, so Leno says whatever his articulator neurons produce.
+
+| Segment | What happens | What the fly gets |
+|---|---|---|
+| Opening | "Hey everybody and welcome to the Grey Leno Show!" title card; "Today we have a show." gets applause for nothing; a "GREY LE-NO" chant | sound (JO), screen picture (R1-6), reward dopamine from the crowd |
+| Guest: Mr. Frog | a frog hops to the guest spot, answers every question with "Good. Good. Good." (croaks), and flicks his tongue at the host. He can catch and spit out Fly-Leno. He leaves when Leno bites his ankles (mouth open right next to him), shouts him off ("Up yours! You're out of here, Mr. Frog"), or his time is up | croaks (JO); tongue = looming (LC4) + hit (mechanosensory, punishment); the crowd reacts |
+| Sunday drive | a vintage roadster laps the stage, brakes and honks "a-oo-gah" when Leno is in the way ("do you drive a car?") | engine rumble (JO-B), floor vibration (mechanosensory), headlights approaching (LC4) |
+| Take it away, Johnny! | a spotlight swings to the empty band stool; the music drops out, crickets; "Where's Johnny?"; rimshot | sudden silence, crickets (JO-A), spotlight on the eyes |
+| A word from our sponsor | GRONK sponsor card (strobing), then "Buy Grey Leno NFTs" | strong visual flicker (R1-6) |
+| Technical difficulties | screens full of static; "Dave, can you fix the static?" | visual noise (R1-6), hiss (JO-A) |
+| Call-in | phone rings, a garbled caller asks e.g. "Why do you puke so much?"; the answer is on a cue card | ring and voice (JO) |
+| Space scabies telethon | telethon card with a donation counter ("three out of four Martians have the same problem") | itching: bursts on the mechanosensory and antennal JO neurons (→ grooming) |
+| Grey Leno dance party | disco lights and strobe, a synthesised beat; "my body is moving on its own": fictive left/right turning drives on the beat | beat (JO), strobe (R1-6), DNa01/02 fictive drives |
+| Vote Leno | campaign card, confetti and balloon drop, "LE-NO!" chant; "Folks, I can do a backflip": the backflip happens only if the giant fibre fires within 9 s, otherwise no backflip and boos | confetti landing on him (JO + touch, like dust → grooming); cheers or boos (dopamine) |
+| The rotten éclair | a stagehand brings an éclair. It's sweet (sugar neurons) and bitter (bitter neurons); after eating it the pharyngeal motor neurons are driven, so the model's own retch/vomit readout usually brings it back up ("it's the rotten éclair again") | taste, then punishment dopamine |
+| Sign-off | "…drive your car home safe, I'm gonna get my UFO": a flying saucer comes down, its tractor beam lifts Leno a few metres, then it flies off | UFO hum (JO), beam light (R1-6), looming saucer (LC4) |
+
+The director's random stagehand also brings the rotten éclair instead of a sugar cube one time in four.
+
+**Brain worms** (Brain settings, off by default, engineered): "The worms in my brain only eat the cells
+I don't need, like policies" (candidacy speech).
+- **Eating:** worms silence about 150 neurons per second. They only take neurons that are not sensory,
+  motor or readout neurons and have been quiet for at least 0.5 s. An eaten neuron never fires and
+  ignores its inputs.
+- **Neural map:** eaten cells turn dark red, and pink worms crawl to each new meal.
+- **Limits:** they stop at 35% of the brain. Eaten cells stay eaten through a brain reset until you
+  press "heal".
+
+**Spontaneous runaway:** with adaptation off (the default pure Shiu model), the network ignites into
+its self-sustained ~900k spikes/s state every so often, even at idle. The runaway guard resets it
+after 2.5 s, shown as a commercial break during the show.
 
 **Eggs and hatchlings** (`js/brood.js`, engineered):
 - **Laying:** each time Leno reaches a new surface (floor, a platform step, the platform top, or a
@@ -106,7 +145,10 @@ him forward over his hands and tip his pelvis. Fly-Leno lowers its head to the f
   onsets adding bursts. With "pipe tab audio" (tab capture, which shows the browser's sharing bar) that
   includes the real waveform of the YouTube music; otherwise the page's own sounds plus a
   volume-based estimate of the music.
-- **Looming:** approaching hecklers and thrown objects drive LC4 looming neurons (expansion rate).
+- **Looming:** approaching hecklers, thrown objects, Mr. Frog's tongue, the roadster and the arriving
+  UFO drive LC4 looming neurons (expansion rate of their angular size).
+- **Light:** the follow spot, disco strobe and tractor beam falling on Leno add drive to the R1-6
+  photoreceptors of both eyes, on top of what the stage screens show.
 - **Touch and taste:** tomato hits drive bitter taste and mechanosensory neurons, pipe hits drive
   mechanosensory neurons plus punishment dopamine, and occasional "dust" on the antennae drives JO.
 - **Ambience:** low-rate noise on taste and touch neurons.

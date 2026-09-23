@@ -26,6 +26,8 @@ import { StageScreens, parseYouTubeId } from './screens.js';
 import { Brood } from './brood.js';
 import { Goose } from './goose.js';
 import { EntityColliders } from './colliders.js';
+import { ShowSfx } from './showsfx.js';
+import { Show, SEGMENTS } from './show.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 // YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
@@ -196,7 +198,7 @@ function setAmbience(x) { stimRate('ambientTaste', 5 * x); stimRate('ambientTouc
 
 const getLeno = () => ({ pos: hostAt().clone() });
 const director = new Director((k, on) => sidebar?.setAuto(k, on), (text) => sidebar?.ticker(text), {
-  snack: () => { if (npcs.busy) return false; npcs.deliverSnack(getLeno); return true; },
+  snack: () => { if (npcs.busy) return false; npcs.deliverSnack(getLeno, Math.random() < 0.25 ? 'eclair' : 'sugar'); return true; },
   heckler: () => { if (npcs.busy) return false; npcs.heckle(getLeno); return true; },
 });
 const mind = new Mind((k, on) => sidebar?.setAuto(k, on));
@@ -206,7 +208,7 @@ sidebar = new Sidebar({
   onPause: (p) => setPaused(p),
   onReset: () => resetShow(),
   onSpeed: (v) => worker.postMessage({ type: 'speed', value: v }),
-  onAutopilot: (on) => { director.enabled = on; if (!on) director.stopAll(); },
+  onAutopilot: (on) => { director.enabled = on; if (!on) director.stopAll(); if (showReady) syncShowEnabled(); },
 });
 
 // ------------------------------------------------------------------ audio, music, hearing
@@ -313,6 +315,16 @@ worker.postMessage({ type: 'plasticity', params: { enabled: true } });
 $('optAdapt').onchange = (e) => worker.postMessage({ type: 'adaptation', params: { on: e.target.checked } });
 $('optPlastic').onchange = (e) => worker.postMessage({ type: 'plasticity', params: { enabled: e.target.checked } });
 $('resetLearn').onclick = () => worker.postMessage({ type: 'plasticity', resetWeights: true });
+// brain worms: "my cabinet members" (engineered lesion, off by default)
+$('optWorms').checked = false;
+function setWorms(on) {
+  $('optWorms').checked = on;
+  worker.postMessage({ type: 'worms', rate: on ? 150 : 0 });
+  neuromap.setWorms(on);
+  if (on) sidebar.ticker('Brain worms: "they whisper secrets to me and tell me all kinds of crazy stuff"');
+}
+$('optWorms').onchange = (e) => setWorms(e.target.checked);
+$('wormsHeal').onclick = () => worker.postMessage({ type: 'worms', heal: true });
 $('ambience').oninput = (e) => setAmbience(+e.target.value);
 $('hearGain').oninput = (e) => (hearing.gain = +e.target.value);
 $('sfxVol').oninput = (e) => audio.setVolume(+e.target.value * masterVol);
@@ -331,11 +343,20 @@ const instincts = new Instincts({
   onEvent: (type, item) => {
     const pan = leftOrRight();
     if (type === 'eatStart') sidebar.ticker(`Leno extends his "proboscis" to the ${item.kind}`);
-    if (type === 'bite') { audio.sfx('splat', { pan, gain: 0.25 }); if (Math.random() < 0.3) audio.mutter('hmm', { pan, gain: 0.5 }); }
+    if (type === 'bite') {
+      audio.sfx('splat', { pan, gain: 0.25 }); if (Math.random() < 0.3) audio.mutter('hmm', { pan, gain: 0.5 });
+      if (item.rotten) pulse('eclairBitter', 'tomato', 60, 0.5);          // it has gone off: bitter receptors too
+    }
     if (type === 'ate') {
       sidebar.ticker(item.kind === 'poop' ? 'Fly-Leno happily slurps up the goose droppings' : `Leno finished the ${item.kind}`);
       audience.react(item.kind === 'poop' ? 'eatPoop' : 'eat');
-      if (Math.random() < 0.45) setTimeout(() => { audio.sfx('burp', { pan: leftOrRight() }); audience.react('burp'); }, 900);
+      if (item.rotten) {
+        // "Oh, excuse me, it's the rotten eclair again": drive the pharyngeal motor neurons; the model's own
+        // retch/vomit readout (js/behavior.js) takes it from there
+        behavior.nausea = Math.max(behavior.nausea, 0.7);
+        setTimeout(() => { pulse('eclairRetch', 'retchDrive', 45, 2.5); cue("Oh, excuse me, it's the rotten éclair again."); }, 2500);
+        reinforce(-0.4, 1.5);
+      } else if (Math.random() < 0.45) setTimeout(() => { audio.sfx('burp', { pan: leftOrRight() }); audience.react('burp'); }, 900);
     }
   },
 });
@@ -382,6 +403,60 @@ const goose = new Goose({
     if (type === 'leave') sidebar.ticker('The goose waddles off');
   },
 });
+// ------------------------------------------------------------------ the Grey Leno Show: segments, guests, props
+const showSfx = new ShowSfx(audio);
+var showReady = false;              // (var: the autopilot callback can run before the show exists)
+const CROWD_VAL = { cheer: 1, laugh: 0.7, applause: 1, boo: -1, gasp: -0.5 };
+function crowdDo(kind, intensity = 1) {
+  // scripted crowd moments (not contingent on what Leno does): heard by the fly, and a dopamine signal
+  const d = audio.crowd(kind, { gain: 0.5 + 0.5 * intensity });
+  cultists.react(kind, intensity);
+  Promise.resolve(d).then((x) => reinforce(0.6 * CROWD_VAL[kind] * intensity, Math.max(0.6, Math.min(3, x || 1.5))));
+}
+let cueTimer = null;
+function cue(text) {
+  const el = $('cue');
+  el.textContent = text; el.classList.add('on');
+  clearTimeout(cueTimer); cueTimer = setTimeout(() => el.classList.remove('on'), 5200);
+  sidebar.ticker(`Cue card: "${text}"`);
+}
+function pushHost(v) {
+  if (host === flyHost) flyHost.applyImpulse('pelvis', v);
+  else host.rag?.applyImpulse('pelvis', v);
+}
+function backflip() {
+  if (host === flyHost) { flyHost.applyImpulse('pelvis', new THREE.Vector3(0, 520, 0)); return; }
+  if (!host.rag) return;
+  const axis = host.forward().cross(new THREE.Vector3(0, 1, 0));        // head goes back
+  host.rag.applyImpulse('pelvis', new THREE.Vector3(0, 700, 0));
+  host.rag.applyTorqueImpulse('chest', axis.clone().multiplyScalar(28));
+  host.rag.applyTorqueImpulse('pelvis', axis.clone().multiplyScalar(22));
+}
+const show = new Show({
+  scene, stage, audio, sfx: showSfx, screens: stageScreens?.available ? stageScreens : null,
+  getHost: () => host, isFly: () => host === flyHost,
+  hostPos: () => hostAt().clone(), hostHead: () => (host.state?.headPos ?? hostAt().clone().add(new THREE.Vector3(0, 2.3, 0))).clone(),
+  impulse: pushHost, backflip, stimAlias, pulse, reinforce,
+  setStim: (k, on) => sidebar.setAuto(k, on),
+  crowd: crowdDo, react: (act) => audience.react(act), ticker: (t) => sidebar.ticker(t), cue,
+  motor: () => lastMotor?.command, duckMusic: (f) => music.setMaster(masterVol * f),
+  voice: () => behavior.voiceEMA, mouthOpen: () => (behavior.eating ? 1 : mouth),
+  deliverSnack: (kind) => { if (npcs.busy) return false; npcs.deliverSnack(getLeno, kind); return true; },
+  onChange: () => updateShowUI(),
+});
+function updateShowUI() {
+  const cur = show.cur?.key;
+  $('onair').textContent = cur ? `● ON AIR · episode ${show.episode} · ${SEGMENTS[cur].title}` : show.enabled ? `● ON AIR · episode ${Math.max(1, show.episode)}` : '';
+  $('rundown').innerHTML = show.rundown.map((k, i) => `<li class="${k === cur ? 'now' : i < show.idx ? 'done' : ''}">${SEGMENTS[k].title}</li>`).join('');
+}
+$('segments').innerHTML = Object.entries(SEGMENTS).map(([k, v]) => `<button class="mini" data-seg="${k}">${v.title.replace(/"/g, '')}</button>`).join('');
+$('segments').querySelectorAll('button').forEach((b) => (b.onclick = () => show.run(b.dataset.seg)));
+$('optRundown').checked = true;
+function syncShowEnabled() { show.enabled = director.enabled && $('optRundown').checked; updateShowUI(); }
+$('optRundown').onchange = syncShowEnabled;
+showReady = true;
+syncShowEnabled();
+
 $('eggChance').oninput = (e) => { brood.chance = +e.target.value / 100; $('eggChanceNum').textContent = e.target.value + '%'; };
 
 // ?quiet: start with the show director (autopilot) and the fly's initiative off
@@ -389,6 +464,7 @@ if (params.has('quiet')) {
   director.enabled = false; $('autopilot').checked = false;
   mind.initiative = false; $('initiative').checked = false;
   goose.enabled = false;
+  syncShowEnabled();
 }
 
 for (const [id, k] of [['iSacc', 'saccades'], ['iBout', 'bouts'], ['iTaxis', 'taxis'], ['iDust', 'dust']]) $(id).onchange = (e) => (instincts.enabled[k] = e.target.checked);
@@ -398,13 +474,10 @@ function looming(dt) {
   if (!dt) return;
   const head = host.state?.headPos ?? hostAt().clone().add(new THREE.Vector3(0, 2.3, 0));
   let best = 0;
-  const heads = npcs.approaching();
-  heads.forEach((p, i) => {
-    const theta = 2 * Math.atan(0.6 / Math.max(0.3, p.distanceTo(head)));
-    const prev = loomPrev?.[i] ?? theta;
-    best = Math.max(best, (theta - prev) / dt);
-  });
-  loomPrev = heads.map((p) => 2 * Math.atan(0.6 / Math.max(0.3, p.distanceTo(head))));
+  const objs = [...npcs.approaching().map((p) => ({ p, r: 0.6 })), ...show.loomers()];
+  const thetas = objs.map(({ p, r }) => 2 * Math.atan(r / Math.max(0.3, p.distanceTo(head))));
+  if (loomPrev?.length === thetas.length) thetas.forEach((th, i) => (best = Math.max(best, (th - loomPrev[i]) / dt)));
+  loomPrev = thetas;
   stimAlias('loomNpc', 'heckler', Math.min(200, Math.max(0, best) * 900));
 }
 
@@ -491,6 +564,7 @@ function updateMindUI(t) {
 // ------------------------------------------------------------------ worker messages
 let lastMotor = null, runawayMs = 0, lastTickWall = 0;
 const neuromap = new NeuroMap($('neuromap'));
+let wormsTotal = 0;
 neuromap.load().catch((e) => console.warn('neural map unavailable', e));
 $('mapRotate').checked = true; neuromap.autoRotate = true;            // rotates by default
 $('mapRotate').onchange = (e) => (neuromap.autoRotate = e.target.checked);
@@ -522,6 +596,8 @@ worker.onmessage = ({ data }) => {
       }
       window.flyleno.lastTick = data;
       if (data.spikes) neuromap.addSpikes(data.spikes);
+      if (data.eaten?.length) neuromap.markEaten(data.eaten);
+      if (data.eatenTotal !== wormsTotal) { wormsTotal = data.eatenTotal; $('wormsInfo').textContent = `${wormsTotal.toLocaleString()} cells eaten`; }
       lastMotor = decodeMotor(data.rates, data.winMs);
       if (host.setPools) host.setPools(data.muscles);
       host.setRates?.(data.rates);
@@ -532,6 +608,7 @@ worker.onmessage = ({ data }) => {
       updateMindUI(data);
       break;
     }
+    case 'healed': neuromap.heal(); wormsTotal = 0; $('wormsInfo').textContent = '0 cells eaten'; sidebar.ticker('Brain worms evicted: all cells restored'); break;
     case 'error': sidebar.status('error: ' + data.message, 'warn'); setLoading('Brain error: ' + data.message); break;
   }
 };
@@ -596,7 +673,7 @@ function resetShow() {
   else if (host.rag) { host.rag.place(host.home, 0); host.gesture = null; host.fallenFor = 0; }
   else leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
   mind.mood = 0; behavior.nausea = 0; behavior.transcript.length = 0;
-  brood.clear(); goose.clear();
+  brood.clear(); goose.clear(); show.clear();
   food.clear(); for (const n of npcs.list) n.remove(); npcs.list.length = 0; cultists.hidden.clear(); instincts.hunger = 0.4;
   sidebar.ticker('Show reset');
 }
@@ -616,12 +693,15 @@ renderer.setAnimationLoop(() => {
     behavior.eating = instincts.eating;
   }
   npcs.update(dt);
+  director.hold = show.active;
+  show.update(dt);
   brood.update(dt, host);
   goose.update(dt, true);                            // visits at random, on its own schedule
   // moving entities are solid too (stagehand, heckler, goose, hatchlings)
   if (entityCols) {
     const ents = npcs.list.map((n, i) => ({ key: n, pos: n.fig.position, radius: 0.45, height: 2.5 }));
     if (goose.active) ents.push({ key: goose.active, pos: goose.active.g.position, radius: 0.35, height: 1.1 });
+    ents.push(...show.colliders());
     for (const y of brood.young) ents.push({ key: y, pos: y.kind === 'fly' ? y.body.pos : y.body.root.position, radius: y.kind === 'fly' ? 0.3 : 0.22, height: y.kind === 'fly' ? 0.5 : 0.85 });
     entityCols.sync(ents);
   }
@@ -679,6 +759,6 @@ renderer.setAnimationLoop(() => {
 });
 
 window.flyleno = {
-  scene, camera, controls, leno, stageScreens, brood, goose, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
+  scene, camera, controls, leno, stageScreens, brood, goose, show, showSfx, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
   get motor() { return lastMotor; },
 };

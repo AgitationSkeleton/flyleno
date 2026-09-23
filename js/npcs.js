@@ -91,12 +91,27 @@ export class Npcs {
 
   get busy() { return this.list.length > 0; }
 
-  /** stagehand brings a sugar cube and sets it on the floor in front of Leno */
-  deliverSnack(getLeno) {
+  /** a rotten éclair: choux pastry, chocolate glaze, a patch of mould */
+  eclairMesh() {
+    if (!this.eclairParts) {
+      const S = FIGURE_SCALE;
+      this.eclairParts = [
+        [new THREE.CapsuleGeometry(0.045, 0.16, 4, 8).rotateZ(Math.PI / 2).scale(S, S, S), new THREE.MeshStandardMaterial({ color: 0xd9a55b, roughness: 0.8 })],
+        [new THREE.CapsuleGeometry(0.047, 0.15, 4, 8).rotateZ(Math.PI / 2).scale(S, 0.55 * S, S).translate(0, 0.02 * S, 0), new THREE.MeshStandardMaterial({ color: 0x3b2314, roughness: 0.3 })],
+        [new THREE.SphereGeometry(0.025, 6, 4).scale(S, 0.4 * S, S).translate(0.04 * S, 0.045 * S, 0.01 * S), new THREE.MeshStandardMaterial({ color: 0x7c9a3a, roughness: 1 })],
+      ];
+    }
+    const g = new THREE.Group();
+    for (const [geo, mat] of this.eclairParts) g.add(new THREE.Mesh(geo, mat));
+    return g;
+  }
+
+  /** stagehand brings a sugar cube (or the rotten éclair) and sets it on the floor in front of Leno */
+  deliverSnack(getLeno, kind = 'sugar') {
     const side = Math.random() < 0.5 ? -1 : 1;
     const wing = this.center.clone().add(new THREE.Vector3(side * 11, 0, -4));
     const n = new Npc(this, PALETTES.stagehand).at(wing);
-    const cube = new THREE.Mesh(this.cubeGeo, this.cubeMat);
+    const cube = kind === 'eclair' ? this.eclairMesh() : new THREE.Mesh(this.cubeGeo, this.cubeMat);
     n.fig.armL.add(cube); cube.position.copy(n.fig.handOffset).add(new THREE.Vector3(0, -0.08, 0.06));
     n.carrying = true;
     const drop = () => {
@@ -111,16 +126,16 @@ export class Npcs {
         then: () => {
           const p = new THREE.Vector3(); cube.getWorldPosition(p);
           n.fig.armL.remove(cube); n.carrying = false;
-          p.y = (this.groundAt(p) ?? p.y) + 0.075 * FIGURE_SCALE;
-          this.food.addSugar(p, cube);
-          this.onEvent?.('A stagehand sets down a sugar cube');
+          p.y = (this.groundAt(p) ?? p.y) + (kind === 'eclair' ? 0.05 : 0.075) * FIGURE_SCALE;
+          if (kind === 'eclair') { this.food.addEclair(p, cube); this.onEvent?.('A stagehand sets down an éclair. It smells a little off.'); }
+          else { this.food.addSugar(p, cube); this.onEvent?.('A stagehand sets down a sugar cube'); }
         } },
       { type: 'pose', dur: 0.6, pose: (f) => { f.armR.rotation.z = -0.4; f.armR.rotation.x = -1.4; } },     // a little wave
       { type: 'walk', to: wing, within: 0.5 },
       { type: 'pose', dur: 0.1, then: () => n.remove() },
     );
     this.list.push(n);
-    this.onEvent?.('A stagehand walks on with a sugar cube');
+    this.onEvent?.(kind === 'eclair' ? 'A stagehand walks on with an éclair' : 'A stagehand walks on with a sugar cube');
   }
 
   /** a red-robed audience member storms toward Leno, shakes a fist and yells, then goes back to their seat */

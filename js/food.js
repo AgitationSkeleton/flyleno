@@ -23,6 +23,12 @@ export class Food {
     while (this.items.filter((i) => i.kind === 'tomato').length > 12) this.remove(this.items.find((i) => i.kind === 'tomato'));
   }
 
+  /** the rotten éclair: sweet, but it doesn't stay down ("it's the rotten éclair again") */
+  addEclair(pos, mesh) {
+    if (mesh) { mesh.position.copy(pos); mesh.rotation.set(0, Math.random() * 6, 0); this.scene.add(mesh); }
+    this.items.push({ kind: 'éclair', pos: pos.clone(), amount: 1, mesh, sweet: 0.9, rotten: true });
+  }
+
   /** goose droppings: only Fly-Leno is interested */
   addPoop(pos, mesh) {
     mesh.position.copy(pos); this.scene.add(mesh);
@@ -45,6 +51,7 @@ export class Food {
     item.amount -= amount;
     const s = Math.max(0.05, item.amount);
     if (item.mesh && item.kind === 'poop') item.mesh.scale.setScalar(item.base * (0.3 + 0.7 * s / 0.35));
+    else if (item.mesh && item.rotten) item.mesh.scale.setScalar(0.35 + 0.65 * s);
     else if (item.mesh) item.mesh.scale.setScalar(item.kind === 'sugar' ? Math.cbrt(s) : 1).multiply(item.kind === 'tomato' ? new THREE.Vector3(1.1 * s + 0.2, 0.35, 1.1 * s + 0.2) : new THREE.Vector3(1, 1, 1));
     if (item.amount <= 0) { this.remove(item); return true; }
     return false;

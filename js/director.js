@@ -26,7 +26,7 @@ export class Director {
       if (this.t >= a.until) { a.keys.forEach((k) => this.setStim(k, false)); a.done = true; }
     }
     this.active = this.active.filter((a) => !a.done);
-    if (!this.enabled || this.t < this.next) return;
+    if (!this.enabled || this.hold || this.t < this.next) return;       // hold: a show segment is running
     const total = EVENTS.reduce((s, e) => s + e.weight, 0);
     let r = Math.random() * total, ev = EVENTS[0];
     for (const e of EVENTS) { if ((r -= e.weight) <= 0) { ev = e; break; } }

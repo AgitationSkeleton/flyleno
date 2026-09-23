@@ -46,6 +46,24 @@ let lastDA = 0, dwAccum = 0;
 // input from igniting the model's self-sustained runaway state. a(t) = aSpike * exp(-(t - tSpike)/tau).
 const ADAPT = { on: false, dA: 1.0, tau: 150 };   // off by default (pure Shiu model); toggle in Brain settings
 let aSpike;
+// "Brain worms" (a Grey Leno Show gag: "the worms in my brain only eat the cells I don't need"): an optional,
+// engineered lesion that silences neurons which have been quiet for a while and are not sensory, motor or
+// readout neurons. An eaten neuron never fires and ignores its inputs; eaten cells survive a brain reset until healed.
+const EATEN = 2147483000;                 // refUntil value that marks an eaten neuron
+const WORMS = { rate: 0, maxFrac: 0.35 }; // neurons eaten per simulated second; cap as a fraction of N
+let eatenList = [], eatenNew = [], wormDebt = 0;
+function wormsEat(winMs) {
+  if (WORMS.rate <= 0 || eatenList.length >= WORMS.maxFrac * N) return;
+  wormDebt += WORMS.rate * winMs / 1000;
+  const quiet = step - Math.round(500 / dt);
+  for (let tries = 0; wormDebt >= 1 && tries < 4000; tries++) {
+    const i = (Math.random() * N) | 0;
+    if (refUntil[i] === EATEN || isActive[i] || groupOf[i] >= 0 || muscleOf[i] >= 0 || readoutPos[i] >= 0 || lastSpike[i] > quiet) continue;
+    refUntil[i] = EATEN; v[i] = P.v0; g[i] = 0;
+    eatenList.push(i); eatenNew.push(i); wormDebt--;
+  }
+  if (wormDebt > 50) wormDebt = 50;
+}
 // every spike's neuron index in the current report window (for the neural map), capped
 let spikeBuf = new Int32Array(1 << 16), spikeLen = 0;
 const SPIKE_CAP = 1 << 19;
@@ -326,6 +344,7 @@ function simStep() {
     const end = rowPtr[pre + 1];
     for (let e = rowPtr[pre]; e < end; e++) {
       const post = targets[e];
+      if (refUntil[post] === EATEN) continue;
       const w = (isPlasticPost !== null && isPlasticPost[post]) ? plW[plMap.get(e)] : weights[e] * wSyn;
       if (!isActive[post]) {
         advance(post);
@@ -349,6 +368,7 @@ function simStep() {
     else { const L = Math.exp(-lam); let q = Math.random(); while (q > L) { k++; q *= Math.random(); } }
     for (let c = 0; c < k; c++) {
       const i = s.indices[(Math.random() * n) | 0];
+      if (refUntil[i] === EATEN) continue;
       if (!isActive[i]) advance(i);
       v[i] = P.vReset; g[i] = 0; emit(i, slot);
     }
@@ -408,6 +428,8 @@ function report(now) {
   }
   const classes = Array.from(classCounts); classCounts.fill(0);
   applyDopamine(winMs, rates['m:pam'] || 0, rates['m:ppl1'] || 0);
+  wormsEat(winMs);
+  const eaten = Int32Array.from(eatenNew); eatenNew.length = 0;
   const muscles = {};
   for (let k = 0; k < muscleKeys.length; k++) { muscles[muscleKeys[k]] = (muscleCounts[k] / muscleSizes[k]) / (winMs / 1000); muscleCounts[k] = 0; }
   const readout = readoutCounts ? Float32Array.from(readoutCounts) : null;
@@ -418,7 +440,8 @@ function report(now) {
     t: step * dt / 1000, realtime: winMs / (wallAcc || 1), spikesPerSec: windowSpikes / (winMs / 1000),
     active: activeCount, rates, classes, raster: ev, winMs, muscles, readout, spikes,
     dopamine: lastDA, plasticity: dwAccum, plasticEdges: plEdge ? plEdge.length : 0,
-  }, [ev.buffer, spikes.buffer]);
+    eaten, eatenTotal: eatenList.length,
+  }, [ev.buffer, spikes.buffer, eaten.buffer]);
   dwAccum = 0;
   windowSpikes = 0; wallAcc = 0; stepsAcc = 0; lastReport = now; dynBudget = DYN_EVENTS_PER_REPORT;
 }
@@ -427,6 +450,7 @@ function reset() {
   v.fill(P.v0); g.fill(0); tLast.fill(0); refUntil.fill(0); isActive.fill(0); activeCount = 0;
   ringLen.fill(0); step = 0; totalSpikes = 0; lastSpike.fill(-1e9); aSpike.fill(0);
   if (plEdge) { plElig.fill(0); plEligT.fill(0); }   // learned weights survive a reset
+  for (const i of eatenList) refUntil[i] = EATEN;     // so do the brain worms' meals (until healed)
 }
 
 onmessage = async ({ data }) => {
@@ -468,6 +492,14 @@ onmessage = async ({ data }) => {
       case 'pause': running = false; clearTimeout(loopTimer); break;
       case 'speed': speed = data.value; break;
       case 'reset': reset(); break;
+      case 'worms':
+        if (data.rate !== undefined) WORMS.rate = data.rate;
+        if (data.heal) {
+          for (const i of eatenList) { refUntil[i] = 0; tLast[i] = step; v[i] = P.v0; g[i] = 0; }
+          eatenList = []; eatenNew = []; wormDebt = 0;
+          send('healed');
+        }
+        break;
     }
   } catch (err) {
     send('error', { message: err.message || String(err) });
