@@ -80,6 +80,7 @@
         <div class="row" style="margin:6px 0 2px"><span class="status">Deciding:</span> <b id="mindNow" class="status">—</b>
           <label class="chk" style="margin-left:auto"><input type="checkbox" id="initiative" checked> initiative</label></div>
         <div class="row status" style="margin:2px 0 4px"><span>Instinct:</span> <b id="instinctNow">—</b></div>
+        <div class="row status" style="margin:0 0 4px"><span>Brood:</span> <b id="broodNow">—</b></div>
         <div id="qvals"></div>
         <div class="row status" style="margin-top:6px"><span>synaptic learning: <b id="learnNum">0</b> mV/s on <span id="learnEdges">–</span> synapses</span></div>
       </section>
@@ -147,6 +148,7 @@
         <label class="chk"><input type="checkbox" id="iBout" checked> walk in bouts</label>
         <label class="chk"><input type="checkbox" id="iTaxis" checked> seek food when hungry</label>
         <label class="chk"><input type="checkbox" id="iDust" checked> dust on antennae (→ grooming)</label>
+        <label class="rowlbl">egg chance per new surface <span><input id="eggChance" type="range" min="0" max="100" step="1" value="5"> <b id="eggChanceNum" class="status">5%</b></span></label>
         <div id="bodyControls"></div>
       </section>
 

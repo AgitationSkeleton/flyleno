@@ -9,6 +9,7 @@
 //   feed      0..1   lean in & "talk"      (fly: proboscis extension MN9)
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 // The TUURD set is built at roughly 1.4x human scale (seat pitch 0.77 m); match Leno to it.
 export const HOST_SCALE = 1.35;
@@ -26,7 +27,10 @@ const _v2 = new THREE.Vector3();
 const _fwd = new THREE.Vector3();
 
 export class Leno {
-  constructor() {
+  /** opts.scale: model scale (host 1.35; hatchlings smaller); opts.minY: ground must be above this (stage) */
+  constructor(opts = {}) {
+    this.scale = opts.scale ?? HOST_SCALE;
+    this.minY = opts.minY ?? STAGE_MIN_Y;
     this.root = new THREE.Group();
     this.root.name = 'GreyLenoHost';
     this.motor = { forward: 0, backward: 0, turn: 0, startle: 0, groom: 0, feed: 0 };
@@ -44,8 +48,15 @@ export class Leno {
 
   async load(url = 'assets/grey_leno.glb', onProgress) {
     const gltf = await new GLTFLoader().loadAsync(url, (e) => onProgress?.('leno', e));
-    this.model = gltf.scene;
-    this.model.scale.setScalar(HOST_SCALE);
+    return this.setModel(gltf.scene);
+  }
+
+  /** use an already loaded Leno scene (cloned, so several Lenos can share one download) */
+  fromScene(scene) { return this.setModel(cloneSkinned(scene)); }
+
+  setModel(scene) {
+    this.model = scene;
+    this.model.scale.setScalar(this.scale);
     this.model.traverse((o) => {
       if (o.isSkinnedMesh) { o.frustumCulled = false; o.castShadow = true; }
       if (o.isBone) o.userData.rest = o.quaternion.clone();
@@ -132,16 +143,16 @@ export class Leno {
   setPosture(p) { this.posture = p; }
 
   /** One-shot body gestures triggered by behaviour: 'retch' | 'vomit' | 'fart'. */
-  trigger(kind) { this.gesture = { kind, t: 0, dur: { retch: 0.9, vomit: 1.6, fart: 0.8 }[kind] || 1 }; }
+  trigger(kind) { this.gesture = { kind, t: 0, dur: { retch: 0.9, vomit: 1.6, fart: 0.8, lay: 1.4 }[kind] || 1 }; }
 
   /** World positions/directions for effects. */
   mouth() {
     const h = this.bones.head.getWorldPosition(new THREE.Vector3());
-    return h.addScaledVector(this.forward(), 0.25 * HOST_SCALE).add(new THREE.Vector3(0, -0.05, 0));
+    return h.addScaledVector(this.forward(), 0.25 * this.scale).add(new THREE.Vector3(0, -0.05, 0));
   }
   butt() {
     const p = this.bones.pelvis.getWorldPosition(new THREE.Vector3());
-    return p.addScaledVector(this.forward(), -0.2 * HOST_SCALE);
+    return p.addScaledVector(this.forward(), -0.2 * this.scale);
   }
   forward() { return new THREE.Vector3(0, 0, 1).applyQuaternion(this.root.quaternion); }
   headDown() {
@@ -157,14 +168,14 @@ export class Leno {
     const s = this.s;
 
     // ---- locomotion on the stage
-    const targetSpeed = (s.forward - s.backward) * WALK_SPEED;
+    const targetSpeed = (s.forward - s.backward) * WALK_SPEED * (this.scale / HOST_SCALE);
     this.speed += (targetSpeed - this.speed) * k;
     this.yawRate += (s.turn * TURN_RATE - this.yawRate) * k;
     this.root.rotateY(this.yawRate * dt);
     const fwd = _fwd.set(0, 0, 1).applyQuaternion(this.root.quaternion);
     const next = this.root.position.clone().addScaledVector(fwd, this.speed * dt);
     const gy = this.groundHeight(next);
-    if (gy !== null && gy > STAGE_MIN_Y) {
+    if (gy !== null && gy > this.minY) {
       this.root.position.x = next.x; this.root.position.z = next.z;
       this.root.position.y += (gy - this.root.position.y) * Math.min(1, dt * 12);
       this.blocked = false;
@@ -195,7 +206,7 @@ export class Leno {
     for (const b of this.allBones) b.quaternion.copy(b.userData.rest);
     this.model.updateMatrixWorld(true);
 
-    const gait = Math.min(1, Math.abs(this.speed) / WALK_SPEED + Math.abs(this.yawRate) / TURN_RATE * 0.5);
+    const gait = Math.min(1, Math.abs(this.speed) / (WALK_SPEED * this.scale / HOST_SCALE) + Math.abs(this.yawRate) / TURN_RATE * 0.5);
     this.phase += dt * (2 + 5 * gait) * Math.sign(this.speed || 1);
     const sw = Math.sin(this.phase) * gait;
     const breathe = Math.sin(this.time * 1.7) * 0.02;
@@ -254,7 +265,7 @@ export class Leno {
           this.rot(B['upperarm_' + side], X, -0.7 * env);
           this.rot(B['lowerarm_' + side], X, -1.3 * env);
         }
-      } else if (G.kind === 'fart') {
+      } else if (G.kind === 'fart' || G.kind === 'lay') {
         this.rot(B.spine1, X, 0.3 * env);                  // lean forward, stick it out
         this.rot(B.neck, Y, 0.9 * env);                    // look over the shoulder
         this.rot(B.thigh_l, X, -0.25 * env); this.rot(B.thigh_r, X, -0.25 * env);

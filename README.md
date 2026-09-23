@@ -78,6 +78,16 @@ weighted by whether the screen is in Leno's field of view, drive 400 sampled R1-
 eye. For a YouTube video that needs "pipe tab audio", whose tab capture also carries the picture;
 browsers don't expose iframe pixels otherwise. The video's sound reaches the fly's ears the same way.
 
+**Eggs and hatchlings** (`js/brood.js`, engineered):
+- **Laying:** each time Leno reaches a new surface (floor, a platform step, the platform top, or a
+  landing after flight) there is a 5% chance he squats and lays a Drosophila-style egg: white, with two
+  respiratory filaments. The chance is adjustable in Brain settings.
+- **Hatching:** after 12–22 s the egg wobbles and hatches into a mini Leno, randomly humanoid or
+  fly-form.
+- **Hatchlings:** they wander in fly-like bouts near where they hatched, return toward their parent
+  when it is far away, chirp in a sped-up Leno voice, and fly-form ones flutter. Up to 16 hatchlings.
+- **Brain:** hatchlings run on simple autonomous behaviour; only the host is driven by the fly brain.
+
 **Senses:**
 - **Hearing:** in-world sound drives the fly's auditory JO-B (low band) and JO-A (high band) neurons, with
   onsets adding bursts. With "pipe tab audio" (tab capture, which shows the browser's sharing bar) that
@@ -126,7 +136,7 @@ Additions (each can be toggled in Brain settings):
   | LC4 | giant fiber ~110 Hz |
   | JO | aDN1 grooming ~25 Hz |
 
-- **Runaway guard:** if activity stays above 150k spikes/s for 2.5 s, the brain is reset. Without
+- **Runaway guard:** if activity stays above 150k spikes/s for 2.5 s of real time, the brain is reset. Without
   adaptation runaways are more frequent, so expect more of these resets. With
   autopilot on, this is announced as a "commercial break".
 - **Dopamine-gated plasticity:** see "Learning" above.

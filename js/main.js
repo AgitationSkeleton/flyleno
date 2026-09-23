@@ -23,6 +23,8 @@ import { Npcs } from './npcs.js';
 import { Instincts } from './instincts.js';
 import { FlyLeno } from './flybody.js';
 import { StageScreens, parseYouTubeId } from './screens.js';
+import { Brood } from './brood.js';
+import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 // YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
 if (location.hostname === '127.0.0.1') { location.replace(location.href.replace('//127.0.0.1', '//localhost')); await new Promise(() => {}); }
@@ -85,6 +87,7 @@ try {
     'repository; build them locally with the export tools (see README). ' + err.message);
   throw err;
 }
+const lenoPristine = cloneSkinned(leno.model);     // untouched copy for hatchlings (the host's bones get posed)
 scene.add(leno.root);
 leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
 const hostPos = leno.root.position.clone();
@@ -353,6 +356,16 @@ if (stageScreens.available) {
   $('screenTitle').textContent = 'screen modes need the original stage';
 }
 
+// ------------------------------------------------------------------ eggs & hatchlings
+const brood = new Brood({
+  scene, stage, lenoScene: lenoPristine, audio,
+  onEvent: (type) => {
+    if (type === 'lay') { sidebar.ticker('Leno lays an egg!'); audience.react('lay'); }
+    if (type === 'hatch') { sidebar.ticker('An egg hatches!'); audience.react('hatch'); }
+  },
+});
+$('eggChance').oninput = (e) => { brood.chance = +e.target.value / 100; $('eggChanceNum').textContent = e.target.value + '%'; };
+
 for (const [id, k] of [['iSacc', 'saccades'], ['iBout', 'bouts'], ['iTaxis', 'taxis'], ['iDust', 'dust']]) $(id).onchange = (e) => (instincts.enabled[k] = e.target.checked);
 let loomPrev = null;
 function looming(dt) {
@@ -431,6 +444,7 @@ const biBar = (bar, num, v) => {
 function updateMindUI(t) {
   biBar($('daBar'), $('daNum'), mind.da);
   biBar($('moodBar'), $('moodNum'), mind.mood);
+  $('broodNow').textContent = `${brood.eggs.length} egg${brood.eggs.length === 1 ? '' : 's'}, ${brood.young.length} hatchling${brood.young.length === 1 ? '' : 's'} (${brood.young.filter((y) => y.kind === 'fly').length} fly-form)`;
   $('instinctNow').textContent = instincts.status || (instincts.hunger > 0.25 ? `hungry (${(instincts.hunger * 100) | 0}%)` : 'content');
   $('mindNow').textContent = mind.current ? mind.current.action : mind.initiative ? 'waiting…' : 'off';
   for (const a of ACTIONS) {
@@ -449,7 +463,7 @@ function updateMindUI(t) {
 }
 
 // ------------------------------------------------------------------ worker messages
-let lastMotor = null, runawayMs = 0;
+let lastMotor = null, runawayMs = 0, lastTickWall = 0;
 const neuromap = new NeuroMap($('neuromap'));
 neuromap.load().catch((e) => console.warn('neural map unavailable', e));
 $('mapRotate').checked = true; neuromap.autoRotate = true;            // rotates by default
@@ -472,7 +486,9 @@ worker.onmessage = ({ data }) => {
     case 'tick': {
       // Self-sustained runaway (the Shiu model can ignite it, e.g. Or56a): >250k spikes/s for 3 s -> reset.
       // (with adaptation the runaway state plateaus ~200-250k spikes/s; normal activity stays under ~100k)
-      runawayMs = data.spikesPerSec > 150e3 ? runawayMs + data.winMs : 0;
+      // count real (wall-clock) time: in runaway the sim slows to a crawl, so simulated time would take minutes
+      const nowW = performance.now(), wallMs = Math.min(1000, nowW - (lastTickWall || nowW)); lastTickWall = nowW;
+      runawayMs = data.spikesPerSec > 150e3 ? runawayMs + wallMs : 0;
       if (runawayMs > 2500) {
         runawayMs = 0;
         if (director.enabled) director.commercialBreak(() => worker.postMessage({ type: 'reset' }));
@@ -552,6 +568,7 @@ function resetShow() {
   else if (host.rag) { host.rag.place(host.home, 0); host.gesture = null; host.fallenFor = 0; }
   else leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
   mind.mood = 0; behavior.nausea = 0; behavior.transcript.length = 0;
+  brood.clear();
   food.clear(); for (const n of npcs.list) n.remove(); npcs.list.length = 0; cultists.hidden.clear(); instincts.hunger = 0.4;
   sidebar.ticker('Show reset');
 }
@@ -571,6 +588,7 @@ renderer.setAnimationLoop(() => {
     behavior.eating = instincts.eating;
   }
   npcs.update(dt);
+  brood.update(dt, host);
   looming(dt);
   host.update(dt);
   // lip-sync: mouth follows the loudness of Leno's own sounds (fast open, slower close); feeding opens it too
@@ -614,6 +632,6 @@ renderer.setAnimationLoop(() => {
 });
 
 window.flyleno = {
-  scene, camera, controls, leno, stageScreens, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
+  scene, camera, controls, leno, stageScreens, brood, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
   get motor() { return lastMotor; },
 };

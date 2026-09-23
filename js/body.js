@@ -16,6 +16,7 @@ const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const GESTURES = {
   retch: { spine_pitch_flex: 0.9, neck_pitch_flex: 0.5, shoulder_l_pitch_flex: 0.5, shoulder_r_pitch_flex: 0.5, elbow_l_pitch_flex: 0.9, elbow_r_pitch_flex: 0.9, knee_l_pitch_flex: 0.3, knee_r_pitch_flex: 0.3 },
   vomit: { spine_pitch_flex: 1, neck_pitch_flex: 0.8, shoulder_l_pitch_flex: 0.3, shoulder_r_pitch_flex: 0.3, elbow_l_pitch_flex: 0.6, elbow_r_pitch_flex: 0.6, knee_l_pitch_flex: 0.4, knee_r_pitch_flex: 0.4 },
+  lay: { spine_pitch_flex: 0.6, hip_l_pitch_flex: 0.5, hip_r_pitch_flex: 0.5, knee_l_pitch_flex: 0.8, knee_r_pitch_flex: 0.8, neck_pitch_flex: 0.4 },
   fart: { spine_pitch_flex: 0.5, hip_l_pitch_flex: 0.35, hip_r_pitch_flex: 0.35, knee_l_pitch_flex: 0.5, knee_r_pitch_flex: 0.5, neck_yaw_flex: 0.8 },
 };
 
@@ -120,7 +121,7 @@ export class PhysicsLeno {
   setMotor(cmd) { Object.assign(this.cmd, cmd); }
   setPools(rates) { this.poolRates = rates || {}; }
   setPosture(p) { Object.assign(this.postureTarget, p); }
-  trigger(kind) { this.gesture = { kind, t: 0, dur: { retch: 0.9, vomit: 1.6, fart: 0.8 }[kind] || 1 }; }
+  trigger(kind) { this.gesture = { kind, t: 0, dur: { retch: 0.9, vomit: 1.6, fart: 0.8, lay: 1.4 }[kind] || 1 }; }
   get position() { return this.state.root; }
   forward() { return new THREE.Vector3(Math.sin(this.state.heading), 0, Math.cos(this.state.heading)); }
   mouth() { return this.state.mouthPos.clone(); }

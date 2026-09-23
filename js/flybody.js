@@ -48,9 +48,14 @@ function wingTexture() {
   return t;
 }
 
+let headGltf = null;                            // the head model is downloaded once and cloned
+
 export class FlyLeno {
-  constructor(scene) {
+  /** opts.scale: overall size (1 = host; hatchlings smaller); opts.mini: no physics (ground by ray cast on opts.ground) */
+  constructor(scene, opts = {}) {
     this.scene = scene;
+    this.k = opts.scale ?? 1; this.mini = !!opts.mini; this.groundMeshes = opts.ground || [];
+    this.ray = new THREE.Raycaster();
     this.root = new THREE.Group(); this.root.name = 'FlyLeno';
     this.cmd = { forward: 0, backward: 0, turn: 0, startle: 0, groom: 0, feed: 0 };
     this.rates = {};
@@ -78,10 +83,11 @@ export class FlyLeno {
     this.abdomen = abdomen;
     this.body.add(thorax, scutum, abdomen);
     // head: Leno's, on a short neck, plus antennae with feathery aristae
-    const gltf = await new GLTFLoader().loadAsync(headUrl);
+    headGltf ||= new GLTFLoader().loadAsync(headUrl);
+    const gltf = await headGltf;
     this.head = new THREE.Group();
     this.head.position.set(0, 1.08 * S, 0.42 * S);
-    const hm = gltf.scene; hm.scale.setScalar(1.9); hm.position.set(0, -0.05, 0);
+    const hm = gltf.scene.clone(true); hm.scale.setScalar(1.9); hm.position.set(0, -0.05, 0);
     this.head.add(hm);
     this.morphs = [];
     hm.traverse((o) => { if (o.isMesh) { o.castShadow = true; const i = o.morphTargetDictionary?.MouthOpen; if (i !== undefined) this.morphs.push([o, i]); } });
@@ -169,6 +175,7 @@ export class FlyLeno {
       this.legs.push(leg);
     }
     this.root.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+    this.root.scale.setScalar(this.k);
     this.scene.add(this.root);
     return this;
   }
@@ -206,13 +213,36 @@ export class FlyLeno {
   setPools() {}
   setRates(r) { this.rates = r || {}; }
   setPosture(p) { Object.assign(this.postureTarget, p); }
-  trigger(kind) { this.gesture = { kind, t: 0, dur: { retch: 0.9, vomit: 1.6, fart: 0.8 }[kind] || 1 }; }
+  trigger(kind) { this.gesture = { kind, t: 0, dur: { retch: 0.9, vomit: 1.6, fart: 0.8, lay: 1.4 }[kind] || 1 }; }
   forward() { return new THREE.Vector3(Math.sin(this.heading), 0, Math.cos(this.heading)); }
   mouth() { return this.state.mouthPos.clone(); }
   butt() { return this.state.buttPos.clone(); }
   headDown() { return this.forward().multiplyScalar(0.7).add(new THREE.Vector3(0, -0.7, 0)).normalize(); }
   applyImpulse(_name, v) { this.vel.addScaledVector(v, 1 / 60); }            // ~60 kg
   setMouth(v) { for (const [o, i] of this.morphs) o.morphTargetInfluences[i] = v; }
+
+  /** hatchling mode: move on the ground meshes without physics */
+  placeMini(p, yaw = 0) { this.pos = p.clone(); this.heading = yaw; this.vel = new THREE.Vector3(); this.altitude = 0; this.root.position.copy(p); for (const l of this.legs) l.planted = false; }
+
+  updateMini(dt) {
+    this.t += dt;
+    const c = this.cmd;
+    for (const k in this.posture) this.posture[k] += ((this.postureTarget[k] || 0) - this.posture[k]) * Math.min(1, dt * 4);
+    this.yawRate += (c.turn * 2.6 - this.yawRate) * Math.min(1, dt * 8);
+    this.heading += this.yawRate * dt;
+    const fwd = this.forward();
+    const sp = (c.forward - c.backward) * 3.0 * this.k;
+    this.speed += (sp - this.speed) * Math.min(1, dt * 6);
+    const next = this.pos.clone().addScaledVector(fwd, this.speed * dt);
+    const gy = this.groundBelow(next.clone().setY(next.y + 1));
+    if (gy > next.y - 1.2 * this.k * 3) { this.pos.set(next.x, gy, next.z); }        // don't walk off tall drops
+    else this.heading += Math.PI * 0.6;
+    // flutter: short hops into the air
+    this.altitude = this.flying ? Math.min(this.altitude + dt * 2.5, 1.5) : Math.max(0, this.altitude - dt * 2);
+    this.root.position.set(this.pos.x, this.pos.y + this.altitude, this.pos.z);
+    this.root.quaternion.setFromAxisAngle(UP, this.heading);
+    this.pose(dt, !this.flying);
+  }
 
   place(p, yaw = 0) {
     this.pos.copy(p); this.heading = yaw; this.vel.set(0, 0, 0); this.bodyY = 0; this.flying = false;
@@ -284,6 +314,11 @@ export class FlyLeno {
   }
 
   groundBelow(p) {
+    if (this.mini) {
+      this.ray.set(new THREE.Vector3(p.x, p.y + 2, p.z), new THREE.Vector3(0, -1, 0)); this.ray.far = 30;
+      const hit = this.ray.intersectObjects(this.groundMeshes, false)[0];
+      return hit ? hit.point.y : p.y - 2;
+    }
     const ray = new this.RAPIER.Ray({ x: p.x, y: p.y + 2, z: p.z }, { x: 0, y: -1, z: 0 });
     const hit = this.world.castRay(ray, 20, true, undefined, undefined, undefined, this.kbody);
     return hit ? p.y + 2 - (hit.timeOfImpact ?? hit.toi) : p.y - 2;
@@ -299,7 +334,7 @@ export class FlyLeno {
     let headNod = 0;
     if (this.gesture) {
       const g = this.gesture; g.t += dt; const e = Math.sin(Math.PI * Math.min(1, g.t / g.dur));
-      if (g.kind === 'fart') this.abdomen.rotation.x = 0.18 - 0.5 * e;
+      if (g.kind === 'fart' || g.kind === 'lay') this.abdomen.rotation.x = 0.18 - (g.kind === 'lay' ? 0.8 : 0.5) * e;
       else headNod = 0.5 * e * (0.8 + 0.2 * Math.sin(g.t * 30));
       if (g.t >= g.dur) { this.gesture = null; this.abdomen.rotation.x = 0.18; }
     }
@@ -348,15 +383,15 @@ export class FlyLeno {
         if (!L.planted || gaitHz === 0 && L.plantedAt.distanceTo(rest) > 0.35) { L.plantedAt.copy(rest); L.planted = true; }
         if (gaitHz > 0 && ph < 0.5) {
           const u = ph / 0.5;
-          footW = L.plantedAt.clone().lerp(rest, u); footW.y += Math.sin(u * Math.PI) * 0.22 * S;
+          footW = L.plantedAt.clone().lerp(rest, u); footW.y += Math.sin(u * Math.PI) * 0.22 * S * this.k;
           if (u > 0.95) L.plantedAt.copy(rest);
         } else footW = L.plantedAt.clone();
         if (P.eat > 0.3 && L.pair === 0) footW.y += 0; // front feet stay down while feeding
       }
       // two-bone IK (femur, tibia) with the knee pushed up and outward; short tarsus to the foot
-      const tarsusLen = 0.22 * S;
+      const tarsusLen = 0.22 * S * this.k;
       const ankle = footW.clone().add(new THREE.Vector3(0, tarsusLen * 0.7, 0)).addScaledVector(hipW.clone().sub(footW).setY(0).normalize(), tarsusLen * 0.7);
-      const a = 0.55 * S, b = 0.62 * S;
+      const a = 0.55 * S * this.k, b = 0.62 * S * this.k;
       const d = ankle.clone().sub(hipW), dist = clamp(d.length(), 0.05, a + b - 0.01);
       const along = (a * a - b * b + dist * dist) / (2 * dist), h = Math.sqrt(Math.max(0, a * a - along * along));
       const dir = d.clone().normalize();
@@ -367,7 +402,7 @@ export class FlyLeno {
         const v = p1.clone().sub(p0), l = v.length();
         mesh.position.copy(p0).add(p1).multiplyScalar(0.5);
         mesh.quaternion.setFromUnitVectors(UP, v.normalize());
-        mesh.scale.set(1, Math.max(0.01, l), 1);
+        mesh.scale.set(1, Math.max(0.01, l / this.k), 1);
         mesh.position.applyMatrix4(rootInv); mesh.quaternion.premultiply(this.root.quaternion.clone().invert());
       };
       seg(L.femur, hipW, knee); seg(L.tibia, knee, ankle); seg(L.tarsus, ankle, footW);
