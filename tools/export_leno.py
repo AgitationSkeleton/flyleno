@@ -57,7 +57,7 @@ from mathutils import Matrix, Vector
 head_w = (arm.matrix_world @ arm.data.bones["head"].head_local)
 MOUTH_Z, CHIN_Z = head_w.z - 0.074, head_w.z - 0.17
 HINGE = Vector((0.0, head_w.y + 0.01, head_w.z - 0.06))
-OPEN_DEG = 17.0
+OPEN_DEG = 26.0
 if not mesh.data.shape_keys:
     mesh.shape_key_add(name="Basis", from_mix=False)
 key = mesh.shape_key_add(name="MouthOpen", from_mix=False)

@@ -4,7 +4,7 @@
 //              turning from DNa01/02, backing up from MDN
 //   flight   - wing power from DNg02/DNp13 (the fly's flight-power / song descending neurons); a giant-fiber
 //              volley (DNp01) makes an escape jump into flight; when wing power fades he lands
-//   feeding  - a proboscis with a fleshy labellum extends from under Leno's chin (MN9 / eat posture)
+//   feeding  - crouches and lowers Leno's face to the food (MN9 / eat posture)
 //   grooming - front legs rub each other (mild) or sweep over the head (strong aDN activity)
 // It shares the Rapier world with the ragdoll (kinematic character controller + kinematic colliders), so
 // thrown tomatoes and pipes hit it, and it offers the same interface as js/body.js (PhysicsLeno).
@@ -60,7 +60,6 @@ export class FlyLeno {
     this.flying = false; this.flyT = 0; this.power = 0; this.quietT = 0;
     this.phase = 0; this.t = 0;
     this.gesture = null;
-    this.proboscis = 0;
     this.state = { root: new THREE.Vector3(), heading: 0, upright: 1, fallen: false, headPos: new THREE.Vector3(), mouthPos: new THREE.Vector3(), buttPos: new THREE.Vector3(), yawRate: 0 };
   }
 
@@ -93,37 +92,53 @@ export class FlyLeno {
     // like the head model: brow between the eyes, and the lip line.
     const HS = 1.9, HY = -0.05;
     const L = (x, y, z) => new THREE.Vector3(x * HS, y * HS + HY, z * HS);
-    // antennae: a jointed chain on the brow between the eyes - scape -> pedicel -> funiculus (3rd segment) with a
-    // feathery arista; each joint is its own group so they can twitch and be swept by the front legs
+    // antennae, rigged to the head: each is anchored on the actual face surface of Leno's brow (found by a ray
+    // cast onto the head mesh) and built from segments between explicit points in head space, so they sit on
+    // the face and point the way a fly's do: scape out/up from the brow, the bulbous 3rd segment hanging down in
+    // front of the face, the feathery arista angled outward and forward.
     const antMat = mat(0x6b4526, { roughness: 0.5 });
+    this.root.updateMatrixWorld(true);
+    const ray = new THREE.Raycaster();
+    const headMeshes = []; hm.traverse((o) => { if (o.isMesh) headMeshes.push(o); });
+    const surface = (x, y) => {
+      const from = this.head.localToWorld(L(x, y, 0.4)), to = this.head.localToWorld(L(x, y, -0.1));
+      ray.set(from, to.clone().sub(from).normalize());
+      const hit = ray.intersectObjects(headMeshes, false)[0];
+      return hit ? this.head.worldToLocal(hit.point.clone()) : L(x, y, 0.085);
+    };
+    const seg = (p0, p1, r0, r1, m = antMat) => {
+      const d = p1.clone().sub(p0), g = new THREE.CylinderGeometry(r1, r0, d.length(), 7);
+      g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.clone().normalize()));
+      g.translate((p0.x + p1.x) / 2, (p0.y + p1.y) / 2, (p0.z + p1.z) / 2);
+      return new THREE.Mesh(g, m);
+    };
     this.antennae = [-1, 1].map((s) => {
-      const root = new THREE.Group(); root.position.copy(L(0.017 * s, 0.03, 0.085)); root.scale.setScalar(1.45);
-      root.rotation.set(0.75, 0.3 * s, -0.25 * s);                 // forward and up off the face, splayed apart
-      const scape = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.018, 0.05, 6).translate(0, 0.025, 0), antMat);
-      const pedJ = new THREE.Group(); pedJ.position.y = 0.05; pedJ.rotation.x = 0.9;          // bends down-forward
-      const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.016, 0.04, 7).translate(0, 0.02, 0), antMat);
-      const funJ = new THREE.Group(); funJ.position.y = 0.04; funJ.rotation.x = 0.5;
-      const fun = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6).scale(0.8, 1.5, 0.8).translate(0, 0.04, 0), mat(0x8a5a30));
-      const arJ = new THREE.Group(); arJ.position.set(0.012 * s, 0.03, -0.012); arJ.rotation.set(-1.2, 0, -0.7 * s);
-      const arista = new THREE.Mesh(new THREE.CylinderGeometry(0.0025, 0.005, 0.2, 4).translate(0, 0.1, 0), antMat);
-      arJ.add(arista);
-      for (let k = 1; k < 7; k++) {                               // feathery branches above and below
-        for (const d of [1, -1]) {
-          const br = new THREE.Mesh(new THREE.CylinderGeometry(0.0012, 0.0015, 0.045 - k * 0.004, 3).translate(0, 0.02, 0), antMat);
-          br.position.y = 0.025 * k; br.rotation.x = 0.9 * d; arista.add(br);
-        }
+      const base = surface(0.026 * s, 0.07);                    // forehead, above and between the eyes
+      const g = new THREE.Group(); g.position.copy(base);         // pivot at the socket (for twitching)
+      const P = (x, y, z) => new THREE.Vector3(x * s, y, z);       // head space, relative to the socket
+      // short thick scape + pedicel out of the socket, then the 3rd segment hangs down close to the face
+      const scapeEnd = P(0.01, 0.0, 0.035), pedEnd = P(0.018, -0.018, 0.055), funEnd = P(0.022, -0.12, 0.06);
+      g.add(new THREE.Mesh(new THREE.SphereGeometry(0.026, 8, 6), antMat));   // socket
+      g.add(seg(P(0, 0, -0.01), scapeEnd, 0.024, 0.02));                        // scape
+      g.add(seg(scapeEnd, pedEnd, 0.03, 0.026));                                // pedicel
+      const fun = new THREE.Mesh(new THREE.SphereGeometry(0.036, 9, 7).scale(0.85, 1.6, 0.85), mat(0x8a5a30));
+      fun.position.copy(pedEnd.clone().lerp(funEnd, 0.5));
+      fun.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), funEnd.clone().sub(pedEnd).normalize());
+      g.add(fun);                                                              // funiculus (3rd segment)
+      const arBase = pedEnd.clone().lerp(funEnd, 0.3).add(P(0.02, 0, 0.01)), arEnd = arBase.clone().add(P(0.17, 0.06, 0.1));
+      g.add(seg(arBase, arEnd, 0.006, 0.003));                                 // arista
+      const dir = arEnd.clone().sub(arBase);
+      for (let k = 1; k <= 6; k++) {                                           // feathery branches
+        const q = arBase.clone().addScaledVector(dir, k / 7.5);
+        const len = 0.05 - k * 0.005;
+        g.add(seg(q, q.clone().add(new THREE.Vector3(0, len, 0.01)), 0.002, 0.0015));
+        g.add(seg(q, q.clone().add(new THREE.Vector3(0, -len, 0.01)), 0.002, 0.0015));
       }
-      funJ.add(fun, arJ); pedJ.add(ped, funJ); root.add(scape, pedJ);
-      this.head.add(root);
-      return { root, pedJ, funJ, side: s, restPed: pedJ.rotation.x, restFun: funJ.rotation.x };
+      this.head.add(g);
+      return { g, side: s };
     });
-    // proboscis: hinged just under the lips; tucked back under the chin at rest, swings down and telescopes
-    // out to feed (rostrum/haustellum stalk + the two fleshy labellar lobes)
-    this.prob = new THREE.Group(); this.prob.position.copy(L(0, -0.085, 0.07));
-    this.probStalk = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, 1, 8).translate(0, -0.5, 0), mat(0x8c5e3b));
-    this.labellum = new THREE.Group();
-    this.labLobes = [-1, 1].map((s) => { const l = new THREE.Mesh(new THREE.SphereGeometry(0.06, 9, 7).scale(0.8, 0.55, 1.15), mat(0x9d6a48)); l.position.x = 0.035 * s; this.labellum.add(l); return l; });
-    this.prob.add(this.probStalk, this.labellum); this.head.add(this.prob);
+    // no proboscis mesh: the mouth for feeding/vomiting is Leno's lip line
+    this.mouthLocal = surface(0, -0.08).add(new THREE.Vector3(0, 0, 0.03));
     // wings (at rest folded back over the abdomen) and halteres
     const wmat = new THREE.MeshStandardMaterial({ map: wingTexture(), transparent: true, side: THREE.DoubleSide, depthWrite: false, roughness: 0.2, metalness: 0.1 });
     this.wings = [-1, 1].map((s) => {
@@ -289,19 +304,10 @@ export class FlyLeno {
       if (g.t >= g.dur) { this.gesture = null; this.abdomen.rotation.x = 0.18; }
     }
     this.head.rotation.set(0.35 * P.eat + headNod + 0.15 * P.rub, clamp(this.yawRate * 0.15, -0.4, 0.4), 0);
-    // proboscis: extends with the feeding motor output and when eating
-    const pTarget = Math.max(P.eat, clamp(c.feed * 0.8, 0, 0.8));
-    this.proboscis += (pTarget - this.proboscis) * Math.min(1, dt * 6);
-    const p = this.proboscis, len = 0.05 + 0.5 * p;
-    this.probStalk.scale.set(1, len, 1); this.labellum.position.y = -len;
-    this.prob.rotation.x = 1.25 * (1 - p) - 0.2 * p;               // tucked back under the chin -> down and slightly forward
-    this.labellum.scale.setScalar(0.55 + 0.6 * p);
-    for (const l of this.labLobes) l.rotation.z = (l.position.x > 0 ? -1 : 1) * 0.5 * p;   // lobes open to feed
     // antennae: small twitches; they flick back when the front legs sweep over the head
-    const sweep = c.groom > 0.5 ? 0.5 + 0.3 * Math.sin(this.t * 12) : 0;
+    const sweep = c.groom > 0.5 ? 0.35 + 0.25 * Math.sin(this.t * 12) : 0;
     for (const a of this.antennae) {
-      a.pedJ.rotation.x = a.restPed + 0.08 * Math.sin(this.t * 3.1 + a.side) + sweep;
-      a.funJ.rotation.x = a.restFun + 0.1 * Math.sin(this.t * 5.3 + a.side * 2);
+      a.g.rotation.set(-sweep + 0.06 * Math.sin(this.t * 3.1 + a.side), 0.05 * Math.sin(this.t * 4.7 + 2 * a.side), 0);
     }
     // wings: fold at rest, beat in flight (visually aliased stroke), buzz a little when "singing"
     this.phase += dt * (this.flying ? 55 : 0);
@@ -375,7 +381,7 @@ export class FlyLeno {
     s.heading = this.heading; s.yawRate = this.yawRate;
     this.root.updateMatrixWorld(true);
     this.head.getWorldPosition(s.headPos); s.headPos.y += 0.2;
-    this.labellum.getWorldPosition(s.mouthPos);
+    this.head.localToWorld(s.mouthPos.copy(this.mouthLocal));
     this.abdomen.localToWorld(s.buttPos.set(0, 0, -0.52 * S));
     s.fallen = false; s.upright = 1;
   }

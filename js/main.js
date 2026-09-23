@@ -293,6 +293,10 @@ $('lessonBtn').onclick = () => {
 };
 
 // ------------------------------------------------------------------ settings
+// Brain settings: browsers restore checkbox states on reload, so force the defaults and tell the worker
+$('optAdapt').checked = false; $('optPlastic').checked = true;
+worker.postMessage({ type: 'adaptation', params: { on: false } });
+worker.postMessage({ type: 'plasticity', params: { enabled: true } });
 $('optAdapt').onchange = (e) => worker.postMessage({ type: 'adaptation', params: { on: e.target.checked } });
 $('optPlastic').onchange = (e) => worker.postMessage({ type: 'plasticity', params: { enabled: e.target.checked } });
 $('resetLearn').onclick = () => worker.postMessage({ type: 'plasticity', resetWeights: true });
@@ -448,6 +452,7 @@ function updateMindUI(t) {
 let lastMotor = null, runawayMs = 0;
 const neuromap = new NeuroMap($('neuromap'));
 neuromap.load().catch((e) => console.warn('neural map unavailable', e));
+$('mapRotate').checked = true; neuromap.autoRotate = true;            // rotates by default
 $('mapRotate').onchange = (e) => (neuromap.autoRotate = e.target.checked);
 worker.onmessage = ({ data }) => {
   switch (data.type) {

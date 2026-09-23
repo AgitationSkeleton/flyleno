@@ -30,7 +30,7 @@ python tools/audio/run_pipeline.sh     # Leno voice/SFX bank from the two Vinesa
 python tools/audio/s09_extra_sfx.py    # boo / cheer / vomit / gag sound effects (YouTube SFX uploads)
 python tools/export_tuurd_stage.py     # optional: the original game stage (?stage=game)
 
-python -m http.server 8123             # module workers need http://
+python tools/serve.py                  # no-cache dev server (module workers need http://)
 # open http://localhost:8123/   (not 127.0.0.1: YouTube refuses embeds on bare-IP origins; the page redirects)
 ```
 
