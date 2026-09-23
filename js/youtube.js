@@ -1,7 +1,12 @@
 // Embedded YouTube music player (IFrame API) with custom controls.
-// Hard-coded playlist (https://youtube.com/playlist?list=PLMTr8QQD4_THG0JS79O71Kr-7kt5k2om1): on the first play it
-// jumps to a random track, then loops the playlist in shuffled order.
+// Hard-coded playlist (https://youtube.com/playlist?list=PLMTr8QQD4_THG0JS79O71Kr-7kt5k2om1). It starts on one of two
+// tracks, picked at random: Jocelyn Pook's "Masked Ball" or David Bowie's "Crystal Japan"; after that it loops the
+// playlist in shuffled order.
 export const PLAYLIST = 'PLMTr8QQD4_THG0JS79O71Kr-7kt5k2om1';
+export const START_TRACKS = [
+  { id: 'CoZJdil0_HI', index: 19 },                // Jocelyn Pook - Masked Ball (Eyes Wide Shut)
+  { id: 'Xm2ciX0_UP8', index: 6 },                 // David Bowie - Crystal Japan
+];
 
 let apiPromise = null;
 export function loadYouTubeApi() {
@@ -35,10 +40,12 @@ export class MusicPlayer {
 
   async init() {
     const YT = await loadYouTubeApi();
+    const start = START_TRACKS[(Math.random() * START_TRACKS.length) | 0];
     await new Promise((resolve) => {
       this.player = new YT.Player(this.root.querySelector('.yt-frame'), {
         width: '100%', height: '200',
-        playerVars: { list: PLAYLIST, listType: 'playlist', loop: 1, playsinline: 1, rel: 0, modestbranding: 1, origin: location.origin },
+        videoId: start.id,
+        playerVars: { list: PLAYLIST, listType: 'playlist', index: start.index, loop: 1, playsinline: 1, rel: 0, modestbranding: 1, origin: location.origin },
         events: {
           onReady: () => {
             this.ready = true; this.player.setVolume(this.volume * this.master);
@@ -48,11 +55,8 @@ export class MusicPlayer {
           onStateChange: (e) => {
             if (e.data === 1) {
               this.errors = 0;
-              // once the playlist is loaded: shuffle and loop it, and start on a random track
-              if (!this.shuffled && this.player.getPlaylist()?.length) {
-                this.player.setShuffle(true); this.player.setLoop(true); this.shuffled = true;
-                if (this.player.getPlaylist().length > 1) this.player.nextVideo();
-              }
+              // shuffle once the playlist is loaded; the starting track keeps playing first
+              if (!this.shuffled && this.player.getPlaylist()?.length) { this.player.setShuffle(true); this.player.setLoop(true); this.shuffled = true; }
             }
             if (e.data === 0) this.player.nextVideo();   // safety: keep going if the loop flag is ignored
             this.refreshTitle();
