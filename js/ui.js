@@ -90,9 +90,18 @@ export class Sidebar {
   }
 
   resizeCanvases() {
+    // The CSS height comes from the markup's height attribute, read ONCE: setting canvas.height rewrites that
+    // attribute, so re-reading it on every resize compounded the height (x3 per resize on a phone, whose address bar
+    // fires resizes constantly) until the canvases ate the GPU memory and the sidebar went white.
+    this.dpr = Math.min(devicePixelRatio || 1, 2);
     for (const c of [this.raster, this.classCanvas]) {
-      const w = c.clientWidth * devicePixelRatio;
-      if (c.width !== w) { c.width = w; c.height = (+c.getAttribute('height')) * devicePixelRatio; }
+      if (!c.dataset.cssHeight) c.dataset.cssHeight = c.getAttribute('height');
+      c.style.height = c.dataset.cssHeight + 'px';
+      const w = Math.round(c.clientWidth * this.dpr), h = Math.round(+c.dataset.cssHeight * this.dpr);
+      if (w > 0 && (c.width !== w || c.height !== h)) {
+        c.width = w; c.height = h;
+        if (c === this.raster) this.rasterT = undefined;             // start the scrolling raster afresh
+      }
     }
   }
 
@@ -196,7 +205,7 @@ export class Sidebar {
       ctx.fillStyle = '#2a2a33'; ctx.fillRect(W - shift, fixed * rh, shift, 1);
       this.rasterT += shift / pxPerSec;
     }
-    const pw = Math.max(1.5, devicePixelRatio * 1.2);
+    const pw = Math.max(1.5, this.dpr * 1.2);
     const tags = this.fixedRows || [];
     for (let i = 0; i < ev.length; i += 3) {
       const row = ev[i], x = W - (this.rasterT - ev[i + 1] / 1000) * pxPerSec;
@@ -215,7 +224,7 @@ export class Sidebar {
     counts.forEach((n, i) => { this.classEma[i] += (n - this.classEma[i]) * 0.2; });
     const max = Math.max(10, ...this.classEma);
     const n = counts.length, bh = H / n;
-    ctx.font = `${10 * devicePixelRatio}px system-ui`;
+    ctx.font = `${10 * this.dpr}px system-ui`;
     this.classes.forEach((name, i) => {
       const w = (Math.log1p(this.classEma[i]) / Math.log1p(max)) * (W * 0.62);
       ctx.fillStyle = CLASS_COLORS[name] || '#aaa';
