@@ -119,7 +119,8 @@ are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when bare
 - **Vinesauce mushroom:** a power-up styled on the Vinesauce logo: green dome (yellow-green to teal) with white spots and a white badge with a teal V, on a white stem with green eyes and a smile.
   It slides slowly for a few seconds, then settles, and it stops whenever he comes close. Eating it corrupts
   the picture for 5 s like a bad NES cartridge: NES-palette pixels, swapped and garbage tiles, torn scanlines,
-  palette shifts and a chiptune garble. The fly sees the flicker on its photoreceptors.
+  hue shifts and a chiptune garble; the fly's photoreceptors see it too. It is kept photosensitivity-safe: no
+  flicker frames, hue shifts keep the brightness, and the corruption changes about twice a second.
   - It falls from the ceiling and slides about the stage.
   - Leno goes for it even when not hungry. Eating it gives a big 3.5 s dopamine reward, a power-up
     sound and cheers.

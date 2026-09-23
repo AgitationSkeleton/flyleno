@@ -607,7 +607,11 @@ const happenings = new Happenings({
   stimAlias, pulse, reinforce, ticker: (t) => sidebar.ticker(t),
 });
 
-happenings.rain.prewarm(renderer, camera);        // the first rain cloud mustn't stall the show compiling shaders
+// compile the shaders of props that are hidden until their moment (the UFO, the Rapture's light column, the rain
+// cloud) now, so their first appearance doesn't stall the show
+show.ufo.g.visible = true; happenings.rapture.beam.visible = true;
+happenings.rain.prewarm(renderer, camera);         // (compiles the whole scene, with the rain cloud's materials added)
+show.ufo.g.visible = false; happenings.rapture.beam.visible = false;
 
 $('eggChance').oninput = (e) => { brood.chance = +e.target.value / 100; $('eggChanceNum').textContent = e.target.value + '%'; };
 
@@ -940,8 +944,8 @@ renderer.setAnimationLoop(() => {
   liveCams?.update(rawDt);
   renderer.render(scene, camera);
   const gk = glitch.update(rawDt);
-  stimAlias('glitchL', 'eyeL', gk ? 20 + 60 * gk * Math.random() : 0);   // the fly sees the flicker too
-  stimAlias('glitchR', 'eyeR', gk ? 20 + 60 * gk * Math.random() : 0);
+  stimAlias('glitchL', 'eyeL', 40 * gk);                // the fly sees the corrupted picture too
+  stimAlias('glitchR', 'eyeR', 40 * gk);
   neuromap.render(rawDt);
 });
 

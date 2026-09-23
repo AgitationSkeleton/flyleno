@@ -199,8 +199,10 @@ export class Ufo {
     this.beamMat = new THREE.MeshBasicMaterial({ color: 0xa8ffe8, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
     this.beam = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 2.6, 1, 24, 1, true).translate(0, -0.5, 0), this.beamMat);
     this.beam.position.y = -0.6; g.add(this.beam);
-    this.light = new THREE.SpotLight(0xb8fff0, 0, 40, 0.35, 0.5, 1); this.light.position.set(0, -0.6, 0);
-    g.add(this.light, this.light.target); this.light.target.position.set(0, -20, 0);
+    // the beam's light lives in the scene, not in the (hidden) saucer: lights inside hidden objects aren't counted,
+    // so the saucer appearing would change the light count and make three.js recompile every shader at once
+    this.light = new THREE.SpotLight(0xb8fff0, 0, 40, 0.35, 0.5, 1);
+    scene.add(this.light, this.light.target);
     g.visible = false;
     scene.add(g); propLOD.track(g);
     this.g = g; this.state = 'off'; this.t = 0; this.beamLevel = 0;
@@ -249,6 +251,8 @@ export class Ufo {
     this.beam.scale.set(1, h, 1);
     this.beamMat.opacity = 0.28 * this.beamLevel * (0.85 + 0.15 * Math.sin(this.t * 20));
     this.light.intensity = 1400 * this.beamLevel;
+    this.light.position.copy(g.position).add(new THREE.Vector3(0, -0.6, 0));
+    this.light.target.position.copy(g.position).add(new THREE.Vector3(0, -20, 0));
   }
 
   clear() { this.state = 'off'; this.g.visible = false; this.beamLevel = 0; this.light.intensity = 0; }
