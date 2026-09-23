@@ -1,9 +1,13 @@
 // The studio audience: low-poly hooded, robed figures in white theatre masks (js/cultist-model.js), one per
-// audience seat marker, drawn as two InstancedMeshes (body, head) so the heads can follow Leno.
+// audience seat marker, drawn as InstancedMeshes (body, head) so the heads can follow Leno.
+// Levels of detail by distance from the viewing camera: near = full model, mid = about half the segments,
+// far = one merged piece with the head fixed. Each frame every seat is written into its level's instances.
 // They bob with applause/cheers, rock with laughter, sway and shake their fists at boos, and one of them
 // occasionally stands up to throw something.
 import * as THREE from 'three';
-import { seatedGeometry, figureMaterial, NECK, FIGURE_SCALE as SCALE } from './cultist-model.js';
+import { seatedGeometry, farSeatedGeometry, figureMaterial, NECK, FIGURE_SCALE as SCALE } from './cultist-model.js';
+
+const LOD_DIST = [16, 32];                 // metres: near < 16 <= mid < 32 <= far (with 10% hysteresis)
 
 export class Cultists {
   constructor(scene, audienceMarkers) {
@@ -12,12 +16,21 @@ export class Cultists {
       const f = a.toHost ? new THREE.Vector3().fromArray(a.toHost) : new THREE.Vector3(0, 0, -1);
       return { p, yaw: Math.atan2(f.x, f.z), phase: Math.random() * 6.28, rate: 0.8 + Math.random() * 0.5, stand: 0, energy: 0 };
     });
-    const mat = figureMaterial();
-    const geo = seatedGeometry();
-    this.mesh = new THREE.InstancedMesh(geo.body, mat, this.seats.length);
-    this.heads = new THREE.InstancedMesh(geo.head, mat, this.seats.length);
-    for (const m of [this.mesh, this.heads]) { m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.frustumCulled = false; scene.add(m); }
-    this.mesh.name = 'Cultists'; this.heads.name = 'CultistHeads';
+    const mat = figureMaterial(), n = this.seats.length;
+    const inst = (geo, name) => {
+      const m = new THREE.InstancedMesh(geo, mat, n);
+      m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.frustumCulled = false; m.name = name; m.count = 0;
+      scene.add(m); return m;
+    };
+    const near = seatedGeometry(), mid = seatedGeometry(undefined, 0.5);
+    this.levels = [
+      { body: inst(near.body, 'Cultists'), head: inst(near.head, 'CultistHeads') },
+      { body: inst(mid.body, 'CultistsMid'), head: inst(mid.head, 'CultistHeadsMid') },
+      { body: inst(farSeatedGeometry(), 'CultistsFar'), head: null },
+    ];
+    this.mesh = this.levels[0].body; this.heads = this.levels[0].head;
+    this.eye = null;                         // camera position for LOD (set by the app); null = all near
+    for (const s of this.seats) s.lod = 0;
     this.target = null;                      // THREE.Vector3 the heads look at (Leno's head)
     for (const s of this.seats) { s.hy = 0; s.hp = 0; }
     this._hm = new THREE.Matrix4(); this._hq = new THREE.Quaternion(); this._neck = NECK.clone().multiplyScalar(SCALE);
@@ -50,7 +63,16 @@ export class Cultists {
     const m = this.mood;
     m.level = Math.max(0, m.level - dt * 0.35);
     const { _m, _q, _e, _s } = this;
+    const counts = [0, 0, 0];
     this.seats.forEach((s, i) => {
+      if (this.hidden.has(i)) return;                              // up and walking (e.g. a heckler)
+      // level of detail from the camera distance, with hysteresis so seats don't flicker between levels
+      if (this.eye) {
+        const d = s.p.distanceTo(this.eye);
+        while (s.lod < 2 && d > LOD_DIST[s.lod] * 1.1) s.lod++;
+        while (s.lod > 0 && d < LOD_DIST[s.lod - 1] * 0.9) s.lod--;
+      } else s.lod = 0;
+      const L = this.levels[s.lod], slot = counts[s.lod]++;
       s.stand = Math.max(0, s.stand - dt * 0.7);
       const e = s.energy * m.level;
       let y = 0, pitch = 0, roll = 0;
@@ -66,9 +88,10 @@ export class Cultists {
       _e.set(pitch, s.yaw, roll, 'YXZ');
       _q.setFromEuler(_e);
       const base = new THREE.Vector3(s.p.x, s.p.y + this.seatHeight * SCALE + y, s.p.z);
-      const sc = this.hidden.has(i) ? this._zero : _s;
+      const sc = _s;
       _m.compose(base, _q, sc);
-      this.mesh.setMatrixAt(i, _m);
+      L.body.setMatrixAt(slot, _m);
+      if (!L.head) return;                                          // far: head merged into the body, fixed
       // head: turn toward Leno (relative to the body), limited like a neck, smoothed
       let ty = 0, tp = 0;
       if (this.target) {
@@ -84,9 +107,11 @@ export class Cultists {
       this._hq.setFromEuler(_e.set(s.hp, s.hy, 0, 'YXZ'));
       const hq = _q.clone().multiply(this._hq);
       this._hm.compose(this._neck.clone().applyQuaternion(_q).add(base), hq, sc);
-      this.heads.setMatrixAt(i, this._hm);
+      L.head.setMatrixAt(slot, this._hm);
     });
-    this.mesh.instanceMatrix.needsUpdate = true;
-    this.heads.instanceMatrix.needsUpdate = true;
+    this.levels.forEach((L, k) => {
+      for (const m of [L.body, L.head]) { if (!m) continue; m.count = counts[k]; m.instanceMatrix.needsUpdate = true; }
+    });
+    this.lodCounts = counts;
   }
 }

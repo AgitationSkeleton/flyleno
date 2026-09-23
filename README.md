@@ -105,6 +105,12 @@ are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when bare
 floor, the puppet strings help him up gradually, physically. He is put back on stage only if he has
 left the set. Dangling in a predator's grip, or eating on all fours, doesn't count as a fall.
 
+**Audience levels of detail** (`js/cultists.js`): each seated cultist is drawn at one of three levels by its
+distance from the viewing camera, with 10% hysteresis so seats don't flicker:
+- **Near** (under 16 m): the full figure, 1,076 triangles, with a head that follows Leno.
+- **Mid** (16–32 m): about half the segments, 364 triangles; the head still follows Leno.
+- **Far** (over 32 m): one merged piece of 104 triangles (robe, hood, white mask), with the head fixed.
+
 **Hecklers:** a heckler charges the stage, then either rants with both arms raised or pelts Leno with
 3–5 tomatoes and pipes thrown from its hand.
 

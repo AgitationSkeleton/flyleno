@@ -761,6 +761,7 @@ renderer.setAnimationLoop(() => {
   }
   projectiles?.update(dt);
   cultists.target = host.state?.headPos ?? hostAt().clone().add(new THREE.Vector3(0, 2.3, 0));
+  cultists.eye = camera.position;                    // levels of detail by distance from the viewer
   cultists.update(dt);
   fx.floorY = hostAt().y + 0.01;
   fx.update(dt);

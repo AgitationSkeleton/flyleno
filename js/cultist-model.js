@@ -32,45 +32,48 @@ export function limb(p0, p1, r0, r1, hex, seg = 6) {
   return colored(g, hex);
 }
 
-/** head geometry around the neck pivot (0,0,0) */
-export function headGeometry(P) {
+/** segment count scaled by quality q (1 = full detail), at least 3 */
+const seg = (n, q) => Math.max(3, Math.round(n * q));
+
+/** head geometry around the neck pivot (0,0,0); q = level of detail (1 full, 0.5 half the segments) */
+export function headGeometry(P, q = 1) {
   const parts = [];
   // cowl: a sphere with a wide opening at the front (+Z), slightly deeper than tall, falling onto the shoulders
-  const cowl = new THREE.SphereGeometry(0.2, 12, 9, Math.PI * 0.62, Math.PI * 1.76, 0, Math.PI * 0.78);
+  const cowl = new THREE.SphereGeometry(0.2, seg(12, q), seg(9, q), Math.PI * 0.62, Math.PI * 1.76, 0, Math.PI * 0.78);
   cowl.scale(1.05, 1.18, 1.18).translate(0, 0.13, -0.015);
   parts.push(colored(cowl, P.hood));
   // dark lining visible inside the opening
-  const lining = new THREE.SphereGeometry(0.185, 10, 8, Math.PI * 0.62, Math.PI * 1.76, 0, Math.PI * 0.8);
+  const lining = new THREE.SphereGeometry(0.185, seg(10, q), seg(8, q), Math.PI * 0.62, Math.PI * 1.76, 0, Math.PI * 0.8);
   lining.scale(-1.0, 1.15, 1.12).translate(0, 0.13, -0.02);   // mirrored so its faces point inward
   parts.push(colored(lining, P.lining));
   // the hood's rim folds (a flattened torus around the face opening)
-  const rim = new THREE.TorusGeometry(0.15, 0.022, 5, 14, Math.PI * 1.55).rotateZ(-Math.PI * 0.275).scale(1, 1.22, 1).translate(0, 0.12, 0.155);
+  const rim = new THREE.TorusGeometry(0.15, 0.022, seg(5, q), seg(14, q), Math.PI * 1.55).rotateZ(-Math.PI * 0.275).scale(1, 1.22, 1).translate(0, 0.12, 0.155);
   parts.push(colored(rim, P.hood));
   // white theatre mask, recessed inside the cowl
-  parts.push(colored(new THREE.SphereGeometry(0.115, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.62).rotateX(Math.PI / 2)
+  parts.push(colored(new THREE.SphereGeometry(0.115, seg(10, q), seg(8, q), 0, Math.PI * 2, 0, Math.PI * 0.62).rotateX(Math.PI / 2)
     .scale(0.95, 1.32, 0.55).translate(0, 0.11, 0.095), P.mask));
   // eye holes and mouth slit
-  for (const x of [-0.042, 0.042]) parts.push(colored(new THREE.SphereGeometry(0.022, 6, 4).scale(1.3, 0.75, 0.5).translate(x, 0.15, 0.158), P.eye));
+  for (const x of [-0.042, 0.042]) parts.push(colored(new THREE.SphereGeometry(0.022, seg(6, q), seg(4, q)).scale(1.3, 0.75, 0.5).translate(x, 0.15, 0.158), P.eye));
   parts.push(colored(new THREE.BoxGeometry(0.05, 0.012, 0.02).translate(0, 0.055, 0.155), P.eye));
   return mergeGeometries(parts);
 }
 
 /** one arm (sleeve + hand) with its pivot at the shoulder (0,0,0), for animated figures; `side` = +1 left, -1 right */
-export function armGeometry(P, side, pose = 'down') {
+export function armGeometry(P, side, pose = 'down', q = 1) {
   const sh = new THREE.Vector3(0, 0, 0);
   const el = pose === 'lap' ? new THREE.Vector3(0.03 * side, -0.27, 0.09) : new THREE.Vector3(0.04 * side, -0.3, 0.02);
   const ha = pose === 'lap' ? new THREE.Vector3(-0.05 * side, -0.37, 0.3) : new THREE.Vector3(0.03 * side, -0.58, 0.05);
   const parts = [
-    limb(sh, el, 0.075, 0.08, P.robe),
-    limb(el, ha, 0.08, 0.1, P.robe),                                       // widening sleeve
+    limb(sh, el, 0.075, 0.08, P.robe, seg(6, q)),
+    limb(el, ha, 0.08, 0.1, P.robe, seg(6, q)),                            // widening sleeve
     // hand just past the cuff, along the forearm direction
-    colored(new THREE.SphereGeometry(0.058, 7, 5).scale(1, 1.15, 1.25).translate(...ha.clone().add(ha.clone().sub(el).normalize().multiplyScalar(0.045)).toArray()), P.hand),
+    colored(new THREE.SphereGeometry(0.058, seg(7, q), seg(5, q)).scale(1, 1.15, 1.25).translate(...ha.clone().add(ha.clone().sub(el).normalize().multiplyScalar(0.045)).toArray()), P.hand),
   ];
   return mergeGeometries(parts);
 }
 
 /** torso/robe (seated or standing), origin = seat surface (seated) or the floor under the figure (standing, shifted) */
-export function bodyGeometry(P, seated, part = 'all') {
+export function bodyGeometry(P, seated, part = 'all', q = 1) {
   const parts = [];
   if (part === 'skirt') {
     // standing figure's lower robe: stays put while the torso bends at the waist; the band hides the seam
@@ -78,13 +81,13 @@ export function bodyGeometry(P, seated, part = 'all') {
     parts.push(colored(new THREE.SphereGeometry(0.3, 10, 6).scale(1, 0.45, 1).translate(0, 0, -0.02), P.robe));
     return mergeGeometries(parts);
   }
-  parts.push(colored(new THREE.CylinderGeometry(0.17, 0.3, 0.62, 9, 1).translate(0, 0.31, -0.02), P.robe));        // torso
-  parts.push(colored(new THREE.CylinderGeometry(0.2, 0.31, 0.16, 9, 1).translate(0, 0.6, -0.01), P.trim));        // sloped mantle over the shoulders
+  parts.push(colored(new THREE.CylinderGeometry(0.17, 0.3, 0.62, seg(9, q), 1).translate(0, 0.31, -0.02), P.robe));        // torso
+  parts.push(colored(new THREE.CylinderGeometry(0.2, 0.31, 0.16, seg(9, q), 1).translate(0, 0.6, -0.01), P.trim));        // sloped mantle over the shoulders
   // the hood's drape belongs to the torso (it must not swing with the head): a collar the head turns inside
-  parts.push(colored(new THREE.CylinderGeometry(0.17, 0.26, 0.2, 10, 1, true).translate(0, NECK.y - 0.04, -0.02), P.hood));
+  parts.push(colored(new THREE.CylinderGeometry(0.17, 0.26, 0.2, seg(10, q), 1, true).translate(0, NECK.y - 0.04, -0.02), P.hood));
   if (seated) {
     parts.push(colored(new THREE.BoxGeometry(0.46, 0.14, 0.42).translate(0, 0.02, 0.2), P.robe));                  // lap
-    parts.push(colored(new THREE.CylinderGeometry(0.22, 0.28, 0.45, 9, 1).translate(0, -0.2, 0.36), P.hood));      // robe to floor
+    parts.push(colored(new THREE.CylinderGeometry(0.22, 0.28, 0.45, seg(9, q), 1).translate(0, -0.2, 0.36), P.hood));      // robe to floor
   } else if (part === 'all') {
     parts.push(colored(new THREE.CylinderGeometry(0.3, 0.38, 0.72, 10, 1).translate(0, -0.36, -0.02), P.robe));    // skirt to floor
   }
@@ -93,16 +96,30 @@ export function bodyGeometry(P, seated, part = 'all') {
 
 const SH_L = new THREE.Vector3(0.24, 0.6, 0), SH_R = new THREE.Vector3(-0.24, 0.6, 0);
 
-/** seated audience member: { body (incl. arms resting on the lap), head (pivot at neck) }, scaled */
-export function seatedGeometry(P = PALETTES.audience) {
+/** seated audience member: { body (incl. arms resting on the lap), head (pivot at neck) }, scaled.
+ *  q = level of detail (1 full, 0.5 about half the segments) */
+export function seatedGeometry(P = PALETTES.audience, q = 1) {
   const body = mergeGeometries([
-    bodyGeometry(P, true),
-    armGeometry(P, 1, 'lap').translate(SH_L.x, SH_L.y, SH_L.z),
-    armGeometry(P, -1, 'lap').translate(SH_R.x, SH_R.y, SH_R.z),
+    bodyGeometry(P, true, 'all', q),
+    armGeometry(P, 1, 'lap', q).translate(SH_L.x, SH_L.y, SH_L.z),
+    armGeometry(P, -1, 'lap', q).translate(SH_R.x, SH_R.y, SH_R.z),
   ]).scale(FIGURE_SCALE, FIGURE_SCALE, FIGURE_SCALE);
-  const head = headGeometry(P).scale(FIGURE_SCALE, FIGURE_SCALE, FIGURE_SCALE);
+  const head = headGeometry(P, q).scale(FIGURE_SCALE, FIGURE_SCALE, FIGURE_SCALE);
   body.computeVertexNormals(); head.computeVertexNormals();
   return { body, head };
+}
+
+/** distant seated audience member: one merged low-poly piece (robe, hood, white mask), head fixed, scaled */
+export function farSeatedGeometry(P = PALETTES.audience) {
+  const g = mergeGeometries([
+    colored(new THREE.CylinderGeometry(0.19, 0.3, 0.72, 6, 1).translate(0, 0.34, -0.02), P.robe),
+    colored(new THREE.BoxGeometry(0.46, 0.14, 0.42).translate(0, 0.02, 0.2), P.robe),                      // lap
+    colored(new THREE.CylinderGeometry(0.22, 0.28, 0.45, 5, 1).translate(0, -0.2, 0.36), P.hood),         // robe to floor
+    colored(new THREE.SphereGeometry(0.22, 6, 4).scale(1.05, 1.15, 1.1).translate(0, NECK.y + 0.13, -0.03), P.hood),   // cowl
+    colored(new THREE.BoxGeometry(0.15, 0.2, 0.03).translate(0, NECK.y + 0.11, 0.2), P.mask),              // the white mask
+  ]).scale(FIGURE_SCALE, FIGURE_SCALE, FIGURE_SCALE);
+  g.computeVertexNormals();
+  return g;
 }
 
 /** standing, animatable figure as a THREE.Group (origin at the feet): .skirt (static), .body (torso, pivots at the
