@@ -26,6 +26,7 @@ export class MusicPlayer {
     this.root = root;
     this.ready = false;
     this.volume = 60;
+    this.master = 1;                 // master volume factor from the viewport slider
     this.el = {
       title: root.querySelector('.yt-title'), play: root.querySelector('.yt-play'), prev: root.querySelector('.yt-prev'),
       next: root.querySelector('.yt-next'), seek: root.querySelector('.yt-seek'), time: root.querySelector('.yt-time'),
@@ -43,7 +44,7 @@ export class MusicPlayer {
         playerVars: { list: PLAYLIST, listType: 'playlist', index: START_INDEX, loop: 1, playsinline: 1, rel: 0, modestbranding: 1, origin: location.origin },
         events: {
           onReady: () => {
-            this.ready = true; this.player.setVolume(this.volume);
+            this.ready = true; this.player.setVolume(this.volume * this.master);
             this.player.setLoop(true);                     // loop the whole playlist
             resolve();
           },
@@ -71,11 +72,13 @@ export class MusicPlayer {
     this.el.next.onclick = () => P.nextVideo();
     this.el.back.onclick = () => P.seekTo(Math.max(0, P.getCurrentTime() - 10), true);
     this.el.fwd.onclick = () => P.seekTo(P.getCurrentTime() + 10, true);
-    this.el.vol.oninput = (e) => { this.volume = +e.target.value; P.setVolume(this.volume); if (this.volume > 0) P.unMute(); };
+    this.el.vol.oninput = (e) => { this.volume = +e.target.value; P.setVolume(this.volume * this.master); if (this.volume > 0) P.unMute(); };
     this.el.seek.oninput = (e) => { this.seeking = true; this.el.time.textContent = `${fmt(+e.target.value)} / ${fmt(P.getDuration())}`; };
     this.el.seek.onchange = (e) => { P.seekTo(+e.target.value, true); this.seeking = false; };
     setInterval(() => this.tick(), 250);
   }
+
+  setMaster(f) { this.master = f; if (this.ready) this.player.setVolume(this.volume * f); }
 
   get isPlaying() { return this.ready && this.player.getPlayerState?.() === 1; }
 

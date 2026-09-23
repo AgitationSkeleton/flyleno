@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>FlyLeno sound audition</title>
+  <style>
+    :root { color-scheme: dark; --line: #2a2a33; --muted: #8d8a96; --accent: #e0263a; --good: #58d68d; }
+    body { margin: 0; background: #0d0d10; color: #e7e4ea; font: 13px/1.4 system-ui, sans-serif; padding: 16px; }
+    h1 { font-size: 18px; margin: 0 0 4px; } p { color: var(--muted); margin: 0 0 12px; max-width: 760px; }
+    h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; margin: 18px 0 6px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; }
+    .clip { display: flex; align-items: center; gap: 8px; background: #16161b; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+    .clip.off { opacity: .45; }
+    .clip button { background: #0b0b0e; color: #eee; border: 1px solid var(--line); border-radius: 999px; width: 30px; height: 30px; cursor: pointer; }
+    .clip .n { flex: 1; min-width: 0; } .clip .n small { display: block; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar { position: sticky; top: 0; background: #0d0d10; padding: 8px 0; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid var(--line); }
+    .bar button { background: #16161b; color: #eee; border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+    #count { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <h1>Sound audition</h1>
+  <p>Every clip in <code>assets/audio/manifest.json</code>. Untick clips that don't sound right. The choice is saved in this
+    browser and the show (same address, e.g. http://localhost:8123/) skips unticked clips, live, no reload needed.</p>
+  <div class="bar"><button id="all">tick all</button><button id="none">untick all in view</button>
+    <label><input type="checkbox" id="onlySfx"> only SFX + crowd</label><span id="count"></span></div>
+  <div id="list"></div>
+<script>
+const KEY = 'flyleno.disabledClips';
+const load = () => { try { return new Set(JSON.parse(localStorage.getItem(KEY) || '[]')); } catch { return new Set(); } };
+const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify([...s])); } catch {} };
+let disabled = load();
+let current = null;
+const play = (file) => { current?.pause(); current = new Audio('../assets/audio/' + file); current.play(); };
+
+function section(title, clips, label = (c) => '') {
+  const h = document.createElement('h2'); h.textContent = `${title} (${clips.length})`;
+  const g = document.createElement('div'); g.className = 'grid';
+  for (const c of clips) {
+    const d = document.createElement('div'); d.className = 'clip' + (disabled.has(c.file) ? ' off' : '');
+    d.innerHTML = `<button title="play">▶</button><div class="n">${c.file.split('/').pop()} ${label(c)}<small>${c.src?.video || ''} ${c.src ? c.src.t0 + '–' + c.src.t1 + ' s' : ''} · ${c.dur ?? ''} s</small></div><input type="checkbox" ${disabled.has(c.file) ? '' : 'checked'}>`;
+    d.querySelector('button').onclick = () => play(c.file);
+    d.querySelector('input').onchange = (e) => { e.target.checked ? disabled.delete(c.file) : disabled.add(c.file); d.classList.toggle('off', !e.target.checked); save(disabled); count(); };
+    g.appendChild(d);
+  }
+  return [h, g];
+}
+function count() { document.getElementById('count').textContent = `${disabled.size} clips unticked`; }
+
+async function render() {
+  const m = await fetch('../assets/audio/manifest.json', { cache: 'no-store' }).then((r) => r.json());
+  const L = document.getElementById('list'); L.innerHTML = '';
+  const only = document.getElementById('onlySfx').checked;
+  for (const [kind, clips] of Object.entries(m.sfx || {})) L.append(...section('sfx / ' + kind, clips));
+  for (const [kind, clips] of Object.entries(m.crowd || {})) L.append(...section('crowd / ' + kind, clips));
+  if (!only) {
+    L.append(...section('Leno / mutters', m.leno.mutters || [], (c) => `<b>${c.kind || ''}</b>`));
+    L.append(...section('Leno / words', m.leno.words || [], (c) => `<b>${c.text}</b>`));
+    L.append(...section('Leno / syllables', m.leno.syllables || [], (c) => `<b>${c.text}</b>`));
+    for (const [ph, clips] of Object.entries(m.leno.phonemes || {})) L.append(...section('Leno / phoneme ' + ph, clips));
+  }
+  count();
+}
+document.getElementById('onlySfx').onchange = render;
+document.getElementById('all').onclick = () => { disabled = new Set(); save(disabled); render(); };
+document.getElementById('none').onclick = () => { document.querySelectorAll('.clip input').forEach((i) => { if (i.checked) i.click(); }); };
+render();
+</script>
+</body>
+</html>

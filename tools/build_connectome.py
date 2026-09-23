@@ -104,7 +104,7 @@ with gzip.open(os.path.join(args.out, "connectome.bin.gz"), "wb", compresslevel=
 print(f"connectome.bin.gz: raw {len(raw)/1e6:.1f} MB -> {os.path.getsize(os.path.join(args.out, 'connectome.bin.gz'))/1e6:.1f} MB")
 
 # ---------------------------------------------------------------- annotations
-ann = pd.read_csv(args.annotations, sep="\t", usecols=["root_id", "super_class", "cell_class", "cell_type", "side", "nerve"],
+ann = pd.read_csv(args.annotations, sep="\t", usecols=["root_id", "super_class", "cell_class", "cell_sub_class", "cell_type", "side", "nerve"],
                   dtype={"root_id": np.int64}, low_memory=False)
 ann = ann.drop_duplicates("root_id").set_index("root_id")
 ann = ann.reindex(root_ids)
@@ -126,6 +126,9 @@ def resolve(g):
     if "super_class" in q: m &= ann["super_class"].isin(q["super_class"])
     if "cell_class" in q: m &= ann["cell_class"].isin(q["cell_class"])
     if "nerve" in q: m &= ann["nerve"].isin(q["nerve"])
+    if "side" in q: m &= ann["side"].isin(q["side"])
+    if "cell_sub_class" in q: m &= ann["cell_sub_class"].isin(q["cell_sub_class"])
+    if "cell_type_exact" in q: m &= ann["cell_type"].isin(q["cell_type_exact"])
     if "cell_type_prefix" in q:
         ct = ann["cell_type"].fillna("")
         m &= ct.apply(lambda t: any(t.startswith(pfx) for pfx in q["cell_type_prefix"]))

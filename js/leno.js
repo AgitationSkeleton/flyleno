@@ -68,10 +68,46 @@ export class Leno {
       l: this.modelDir(this.bones.upperarm_l, this.bones.lowerarm_l),
       r: this.modelDir(this.bones.upperarm_r, this.bones.lowerarm_r),
     };
+    this.setupMouth();
     return this;
   }
 
-  /** Place on the host marker, standing on the stage surface. */
+  // ---- lip-sync: the MouthOpen shape key (added by tools/export_leno.py) + a dark mouth interior
+  // attached to the head bone at the lip line, both driven by setMouth(0..1)
+  setupMouth() {
+    this.mouthOpen = 0;
+    this.morphs = [];
+    this.model.traverse((o) => {
+      const i = o.morphTargetDictionary?.MouthOpen;
+      if (i !== undefined) this.morphs.push([o, i]);
+    });
+    const head = this.bones.head;
+    if (!head) return;
+    this.model.updateMatrixWorld(true);
+    // lip line in the model's own frame (metres before HOST_SCALE; +Y up, +Z forward), from the face render
+    const lip = this.model.localToWorld(new THREE.Vector3(-0.003, 1.588, 0.13));
+    const geo = new THREE.CircleGeometry(0.5, 16);
+    const mat = new THREE.MeshBasicMaterial({ color: 0x1a0406, polygonOffset: true, polygonOffsetFactor: -2 });
+    this.mouthMesh = new THREE.Mesh(geo, mat);
+    head.add(this.mouthMesh);
+    this.mouthMesh.position.copy(head.worldToLocal(lip.clone()));
+    const qModel = this.model.getWorldQuaternion(new THREE.Quaternion());
+    const qHead = head.getWorldQuaternion(new THREE.Quaternion());
+    this.mouthMesh.quaternion.copy(qHead.invert().multiply(qModel));      // faces the model's +Z
+    const s = head.getWorldScale(new THREE.Vector3()).x;
+    this.mouthScale = (HOST_SCALE / s) * 0.001;                             // mesh units per mm
+    this.setMouth(0);
+  }
+
+  setMouth(v) {
+    this.mouthOpen = v;
+    for (const [o, i] of this.morphs) o.morphTargetInfluences[i] = v;
+    if (this.mouthMesh) {
+      this.mouthMesh.visible = v > 0.04;
+      // ~44 mm wide, up to ~30 mm tall, centred slightly below the lip line as the jaw drops
+      this.mouthMesh.scale.set(44 * this.mouthScale, (4 + 30 * v) * this.mouthScale, 1);
+    }
+  }
   place(hostMarker, groundMeshes, stageCenter) {
     this.ground = groundMeshes;
     const p = hostMarker.position;
@@ -114,6 +150,7 @@ export class Leno {
   rot(bone, axis, angle) { this.rotateModel(bone, new THREE.Quaternion().setFromAxisAngle(axis, angle)); }
 
   setMotor(m) { Object.assign(this.motor, m); }
+  setPosture(p) { this.posture = p; }
 
   /** One-shot body gestures triggered by behaviour: 'retch' | 'vomit' | 'fart'. */
   trigger(kind) { this.gesture = { kind, t: 0, dur: { retch: 0.9, vomit: 1.6, fart: 0.8 }[kind] || 1 }; }

@@ -19,6 +19,17 @@ const GESTURES = {
   fart: { spine_pitch_flex: 0.5, hip_l_pitch_flex: 0.35, hip_r_pitch_flex: 0.35, knee_l_pitch_flex: 0.5, knee_r_pitch_flex: 0.5, neck_yaw_flex: 0.8 },
 };
 
+// sustained postures (weight 0..1, smoothed), e.g. from js/instincts.js
+const POSTURES = {
+  // fly-like feeding: crouch and bring the face down to the food ("proboscis extension")
+  eat: { spine_pitch_flex: 1, neck_pitch_flex: 1, hip_l_pitch_flex: 0.35, hip_r_pitch_flex: 0.35,
+    knee_l_pitch_flex: 0.6, knee_r_pitch_flex: 0.6, ankle_l_pitch_flex: 0.3, ankle_r_pitch_flex: 0.3,
+    shoulder_l_pitch_flex: 0.35, shoulder_r_pitch_flex: 0.35 },
+  // fly-like leg rubbing: forearms up in front of the chest, hands together (oscillation added in update)
+  rub: { shoulder_l_pitch_flex: 0.45, shoulder_r_pitch_flex: 0.45, shoulder_l_roll_ext: 0.45, shoulder_r_roll_ext: 0.45,
+    elbow_l_pitch_flex: 0.75, elbow_r_pitch_flex: 0.75, shoulder_l_yaw_flex: 0.4, shoulder_r_yaw_flex: 0.4, neck_pitch_flex: 0.25 },
+};
+
 export class PhysicsLeno {
   constructor(leno) {
     this.leno = leno;                 // kinematic Leno instance (used only as the model loader)
@@ -35,6 +46,8 @@ export class PhysicsLeno {
     this.activation = {};
     this.onFall = null;
     this.keepOnStage = false;         // true: body reflex keeps Leno on the platform top
+    this.posture = { eat: 0, rub: 0 }; this.postureTarget = { eat: 0, rub: 0 };
+    this.t = 0;
   }
 
   async init(stage, hostPos) {
@@ -83,6 +96,17 @@ export class PhysicsLeno {
       world.createCollider(R.ColliderDesc.cuboid(hx, H, hz).setTranslation(x, box.min.y + H, z).setCollisionGroups(G));
     }
     this.worldBox = box;
+    // screens, backdrop and ceiling as solid surfaces (trimesh from their world-space triangles)
+    const solid = [];
+    stage.root?.traverse((o) => { if (o.isMesh && /^(BackdropScreen|SideScreensUpper|SideScreensLower|Ceiling)$/.test(o.name)) solid.push(o); });
+    for (const m of solid) {
+      m.updateMatrixWorld(true);
+      const g = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry;
+      const pos = g.attributes.position, V = new Float32Array(pos.count * 3), I = new Uint32Array(pos.count);
+      const v = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i++) { v.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld); V.set([v.x, v.y, v.z], i * 3); I[i] = i; }
+      world.createCollider(R.ColliderDesc.trimesh(V, I).setCollisionGroups(G));
+    }
   }
 
   groundAt(p) {
@@ -95,6 +119,7 @@ export class PhysicsLeno {
   // ---- interface shared with the kinematic Leno
   setMotor(cmd) { Object.assign(this.cmd, cmd); }
   setPools(rates) { this.poolRates = rates || {}; }
+  setPosture(p) { Object.assign(this.postureTarget, p); }
   trigger(kind) { this.gesture = { kind, t: 0, dur: { retch: 0.9, vomit: 1.6, fart: 0.8 }[kind] || 1 }; }
   get position() { return this.state.root; }
   forward() { return new THREE.Vector3(Math.sin(this.state.heading), 0, Math.cos(this.state.heading)); }
@@ -134,13 +159,22 @@ export class PhysicsLeno {
       g = GESTURES[this.gesture.kind];
       if (u >= 1) this.gesture = null;
     }
+    this.t += dt;
+    for (const k in this.posture) this.posture[k] += ((this.postureTarget[k] || 0) - this.posture[k]) * Math.min(1, dt * 3);
+    const P = this.posture, rubOsc = 0.25 * Math.sin(this.t * 13);
     const act = this.activation;
     for (const name of MUSCLE_NAMES) {
       const direct = clamp01((this.poolRates[name] || 0) / this.directGain);
-      act[name] = clamp01(this.vncWeight * (vnc[name] || 0) + this.directWeight * direct + (g?.[name] || 0) * env);
+      let pose = 0;
+      for (const k in POSTURES) pose += (POSTURES[k][name] || 0) * P[k];
+      if (P.rub > 0.05 && /elbow_[lr]_pitch_flex/.test(name)) pose += rubOsc * (name.includes('_l_') ? 1 : -1) * P.rub;
+      // postures take over from the gait pattern while they are held
+      const vncW = this.vncWeight * (1 - 0.8 * Math.max(P.eat, P.rub * 0.5));
+      act[name] = clamp01(vncW * (vnc[name] || 0) + this.directWeight * direct + (g?.[name] || 0) * env + pose);
     }
     this.rag.setActivations(act);
-    this.rag.setSupport(this.support);
+    // the puppet strings let him crouch down to eat
+    this.rag.setSupport(this.support * (1 - 0.55 * P.eat));
     this.rag.step(dt);
     this.rag.syncSkin();
 

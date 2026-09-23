@@ -128,7 +128,7 @@ export class Projectiles {
   splat(it, bodyName) {
     const p = it.mesh.position.clone();
     this.remove(it);
-    this.onSplat?.(p);
+    this.onSplat?.(p, bodyName);
     const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(bodyName ? 0.2 : 0.32, 1), this.splatMat.clone());
     mesh.position.copy(p);
     if (bodyName) { mesh.scale.set(1, 0.4, 1); mesh.rotation.set(Math.random(), Math.random(), Math.random()); }

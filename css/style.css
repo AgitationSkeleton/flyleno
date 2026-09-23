@@ -118,3 +118,13 @@ button.mini { margin-left: auto; font-size: 11px; }
 #throws { position: absolute; top: 14px; right: 14px; display: flex; gap: 6px; }
 #throws button { background: #000b; color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; font: inherit; }
 #throws button:hover { border-color: var(--accent); }
+
+#volume { position: absolute; bottom: 14px; right: 14px; display: flex; align-items: center; gap: 6px; background: #000b;
+  border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; color: var(--text); }
+#volume input { width: 120px; }
+#volume span { font: 11px var(--mono); width: 26px; text-align: right; color: var(--muted); }
+
+#form { position: absolute; top: 58px; right: 14px; display: flex; gap: 0; }
+#form button { background: #000b; color: var(--text); border: 1px solid var(--line); padding: 5px 12px; cursor: pointer; font: inherit; }
+#form button:first-child { border-radius: 999px 0 0 999px; } #form button:last-child { border-radius: 0 999px 999px 0; }
+#form button.on { border-color: var(--accent); background: #e0263a44; }

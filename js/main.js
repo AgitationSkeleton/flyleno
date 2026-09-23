@@ -18,6 +18,10 @@ import { PhysicsLeno } from './body.js';
 import { Cultists } from './cultists.js';
 import { Projectiles } from './projectiles.js';
 import { LiveCams } from './livecam.js';
+import { Food } from './food.js';
+import { Npcs } from './npcs.js';
+import { Instincts } from './instincts.js';
+import { FlyLeno } from './flybody.js';
 
 // YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
 if (location.hostname === '127.0.0.1') { location.replace(location.href.replace('//127.0.0.1', '//localhost')); await new Promise(() => {}); }
@@ -91,6 +95,8 @@ if (BODY === 'ragdoll') {
     leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
   }
 }
+const physHost = host !== leno ? host : null;       // the ragdoll body (null when unavailable)
+let flyHost = null;                                 // Fly-Leno body, created on first use
 const hostAt = () => (host === leno ? leno.root.position : host.position);
 key.position.set(hostPos.x, hostPos.y + 14, hostPos.z + 10);
 key.target.position.copy(hostPos);
@@ -160,15 +166,28 @@ function pulse(alias, group, rate, seconds) {
   clearTimeout(pulseTimers[alias]);
   pulseTimers[alias] = setTimeout(() => worker.postMessage({ type: 'stim', key: alias, rate: 0 }), seconds * 1000);
 }
+// rate-controlled stimulus under an alias key (for continuous signals like looming or taste)
+const aliasSent = new Set(), aliasRate = {};
+function stimAlias(alias, group, rate) {
+  if (Math.abs((aliasRate[alias] ?? -1) - rate) < 1 && !(rate === 0 && aliasRate[alias] > 0)) return;
+  aliasRate[alias] = rate;
+  const msg = { type: 'stim', key: alias, rate };
+  if (!aliasSent.has(alias)) { msg.indices = stimByKey[group].indices; aliasSent.add(alias); }
+  worker.postMessage(msg);
+}
 function setAmbience(x) { stimRate('ambientTaste', 5 * x); stimRate('ambientTouch', 1 * x); }
 
-const director = new Director((k, on) => sidebar?.setAuto(k, on), (text) => sidebar?.ticker(text));
+const getLeno = () => ({ pos: hostAt().clone() });
+const director = new Director((k, on) => sidebar?.setAuto(k, on), (text) => sidebar?.ticker(text), {
+  snack: () => { if (npcs.busy) return false; npcs.deliverSnack(getLeno); return true; },
+  heckler: () => { if (npcs.busy) return false; npcs.heckle(getLeno); return true; },
+});
 const mind = new Mind((k, on) => sidebar?.setAuto(k, on));
 sidebar = new Sidebar({
   meta,
   onStim: (s, rate) => worker.postMessage({ type: 'stim', key: s.key, indices: s.indices, rate }),
-  onPause: (p) => worker.postMessage({ type: p ? 'pause' : 'run' }),
-  onReset: () => worker.postMessage({ type: 'reset' }),
+  onPause: (p) => setPaused(p),
+  onReset: () => resetShow(),
   onSpeed: (v) => worker.postMessage({ type: 'speed', value: v }),
   onAutopilot: (on) => { director.enabled = on; if (!on) director.stopAll(); },
 });
@@ -192,7 +211,9 @@ const leftOrRight = () => {
 };
 const audience = new Audience(audio, reinforce, {
   onReact: (e) => {
-    sidebar.ticker(`Audience: ${e.kind}s at the ${e.act.replace('Hit', ' hit')}`);
+    const verb = { cheer: 'cheers', laugh: 'laughs', applause: 'applauds', boo: 'boos', gasp: 'gasps' }[e.kind] || e.kind;
+    const what = { speak: 'babbling', stroll: 'stroll', startle: 'flinch', groom: 'grooming', tomatoHit: 'tomato hit', pipeHit: 'pipe hit', eat: 'meal', burp: 'burp', fall: 'fall' }[e.act] || e.act;
+    sidebar.ticker(`Audience ${verb} at the ${what}`);
     cultists.react(e.kind, e.intensity);
     // an unhappy crowd throws things
     if (e.kind === 'boo' && Math.random() < 0.35) setTimeout(() => throwThing(Math.random() < 0.15 ? 'pipe' : 'tomato'), 400 + Math.random() * 900);
@@ -202,7 +223,7 @@ const audience = new Audience(audio, reinforce, {
 // ------------------------------------------------------------------ projectiles (tomatoes, pipes)
 const projectiles = host !== leno ? new Projectiles(scene, host, {
   onApproach: () => pulse('loom', 'heckler', 200, 0.35),
-  onSplat: (p) => fx.splash(p),              // looming object -> LC4 looming detectors
+  onSplat: (p, onLeno) => { fx.splash(p); if (!onLeno) food.addTomato(p); },              // looming object -> LC4 looming detectors
   onImpact: (it, { hitLeno, speed }) => {
     const p = it.mesh.position.clone().project(camera), pan = Math.max(-1, Math.min(1, p.x));
     const gain = Math.min(1.2, 0.3 + speed / 12);
@@ -273,23 +294,89 @@ $('optPlastic').onchange = (e) => worker.postMessage({ type: 'plasticity', param
 $('resetLearn').onclick = () => worker.postMessage({ type: 'plasticity', resetWeights: true });
 $('ambience').oninput = (e) => setAmbience(+e.target.value);
 $('hearGain').oninput = (e) => (hearing.gain = +e.target.value);
-$('sfxVol').oninput = (e) => audio.setVolume(+e.target.value);
+$('sfxVol').oninput = (e) => audio.setVolume(+e.target.value * masterVol);
+// master volume (viewport): scales the show's sounds and the music together
+let masterVol = 0.8;
+function applyMaster() { audio.setVolume(+$('sfxVol').value * masterVol); music.setMaster(masterVol); $('masterVolNum').textContent = Math.round(masterVol * 100); }
+$('masterVol').oninput = (e) => { masterVol = +e.target.value; applyMaster(); };
+applyMaster();
 $('initiative').onchange = (e) => { mind.initiative = e.target.checked; if (!e.target.checked) mind.stopAll(); };
 
+// ------------------------------------------------------------------ food, stagehand / heckler, fly instincts
+const food = new Food(scene);
+const npcs = new Npcs(scene, stage, { food, cultists, audio, onEvent: (t) => sidebar.ticker(t) });
+const instincts = new Instincts({
+  food, stimRate, pulse, reinforce, audio,
+  onEvent: (type, item) => {
+    const pan = leftOrRight();
+    if (type === 'eatStart') sidebar.ticker(`Leno extends his "proboscis" to the ${item.kind}`);
+    if (type === 'bite') { audio.sfx('splat', { pan, gain: 0.25 }); if (Math.random() < 0.3) audio.mutter('hmm', { pan, gain: 0.5 }); }
+    if (type === 'ate') {
+      sidebar.ticker(`Leno finished the ${item.kind}`);
+      audience.react('eat');
+      if (Math.random() < 0.45) setTimeout(() => { audio.sfx('burp', { pan: leftOrRight() }); audience.react('burp'); }, 900);
+    }
+  },
+});
+for (const [id, k] of [['iSacc', 'saccades'], ['iBout', 'bouts'], ['iTaxis', 'taxis'], ['iDust', 'dust']]) $(id).onchange = (e) => (instincts.enabled[k] = e.target.checked);
+let loomPrev = null;
+function looming(dt) {
+  // LC4 looming detectors respond to the expansion rate of an approaching object's angular size
+  if (!dt) return;
+  const head = host.state?.headPos ?? hostAt().clone().add(new THREE.Vector3(0, 2.3, 0));
+  let best = 0;
+  const heads = npcs.approaching();
+  heads.forEach((p, i) => {
+    const theta = 2 * Math.atan(0.6 / Math.max(0.3, p.distanceTo(head)));
+    const prev = loomPrev?.[i] ?? theta;
+    best = Math.max(best, (theta - prev) / dt);
+  });
+  loomPrev = heads.map((p) => 2 * Math.atan(0.6 / Math.max(0.3, p.distanceTo(head))));
+  stimAlias('loomNpc', 'heckler', Math.min(200, Math.max(0, best) * 900));
+}
+
 // Body controls (ragdoll)
-if (host !== leno) {
-  host.onFall = () => { audience.react('fall'); sidebar.ticker('Leno collapses!'); };
+if (physHost) {
+  physHost.onFall = () => { audience.react('fall'); sidebar.ticker('Leno collapses!'); };
   const bc = $('bodyControls');
   bc.innerHTML = `<div class="status" style="margin-top:6px">Body: physics ragdoll, 46 muscles</div>
-    <label class="rowlbl">puppet strings (support) <input id="bSupport" type="range" min="0" max="1" step="0.05" value="${host.support}"></label>
-    <label class="rowlbl">VNC assist (leg rhythms) <input id="bVnc" type="range" min="0" max="1" step="0.05" value="${host.vncWeight}"></label>
-    <label class="rowlbl">direct DN → muscles <input id="bDirect" type="range" min="0" max="2" step="0.05" value="${host.directWeight}"></label>
+    <label class="rowlbl">puppet strings (support) <input id="bSupport" type="range" min="0" max="1" step="0.05" value="${physHost.support}"></label>
+    <label class="rowlbl">VNC assist (leg rhythms) <input id="bVnc" type="range" min="0" max="1" step="0.05" value="${physHost.vncWeight}"></label>
+    <label class="rowlbl">direct DN → muscles <input id="bDirect" type="range" min="0" max="2" step="0.05" value="${physHost.directWeight}"></label>
     <label class="chk"><input type="checkbox" id="bStage"> keep Leno on the stage (edge reflex)</label>`;
-  $('bSupport').oninput = (e) => (host.support = +e.target.value);
-  $('bVnc').oninput = (e) => (host.vncWeight = +e.target.value);
-  $('bDirect').oninput = (e) => (host.directWeight = +e.target.value);
-  $('bStage').onchange = (e) => (host.keepOnStage = e.target.checked);
+  $('bSupport').oninput = (e) => (physHost.support = +e.target.value);
+  $('bVnc').oninput = (e) => (physHost.vncWeight = +e.target.value);
+  $('bDirect').oninput = (e) => (physHost.directWeight = +e.target.value);
+  $('bStage').onchange = (e) => (physHost.keepOnStage = e.target.checked);
 }
+
+// ------------------------------------------------------------------ body form: Leno <-> Fly-Leno
+async function setForm(form) {
+  if (!physHost) { sidebar.ticker('Fly-Leno needs the physics body (not ?body=kinematic)'); return; }
+  document.querySelectorAll('#form button').forEach((b) => b.classList.toggle('on', b.dataset.form === form));
+  const from = host.state?.root?.clone() ?? hostAt().clone(), yaw = host.state?.heading ?? 0;
+  if (form === 'fly') {
+    if (host === flyHost) return;
+    if (!flyHost) { sidebar.ticker('Growing wings…'); flyHost = (await new FlyLeno(scene).load()).attach(physHost, stage); }
+    for (const b of Object.values(physHost.rag.bodies)) b.setEnabled(false);
+    for (const b of Object.values(flyHost.rag.bodies)) b.setEnabled(true);
+    leno.root.visible = false; flyHost.setVisible(true);
+    flyHost.place(from, yaw);
+    host = flyHost;
+    sidebar.ticker('Leno is now a fruit fly');
+  } else {
+    if (host === physHost) return;
+    for (const b of Object.values(flyHost.rag.bodies)) b.setEnabled(false);
+    for (const b of Object.values(physHost.rag.bodies)) b.setEnabled(true);
+    flyHost.setVisible(false); leno.root.visible = true;
+    physHost.rag.place(from, yaw);
+    host = physHost;
+    sidebar.ticker('Leno is himself again');
+  }
+  if (projectiles) projectiles.host = host;
+}
+document.querySelectorAll('#form button').forEach((b) => (b.onclick = () => setForm(b.dataset.form)));
+if (params.get('form') === 'fly') setForm('fly');
 
 // Mind panel: action values
 const qEls = {};
@@ -309,6 +396,7 @@ const biBar = (bar, num, v) => {
 function updateMindUI(t) {
   biBar($('daBar'), $('daNum'), mind.da);
   biBar($('moodBar'), $('moodNum'), mind.mood);
+  $('instinctNow').textContent = instincts.status || (instincts.hunger > 0.25 ? `hungry (${(instincts.hunger * 100) | 0}%)` : 'content');
   $('mindNow').textContent = mind.current ? mind.current.action : mind.initiative ? 'waiting…' : 'off';
   for (const a of ACTIONS) {
     const q = mind.Q[a.key], e = qEls[a.key];
@@ -347,8 +435,9 @@ worker.onmessage = ({ data }) => {
       break;
     case 'tick': {
       // Self-sustained runaway (the Shiu model can ignite it, e.g. Or56a): >250k spikes/s for 3 s -> reset.
-      runawayMs = data.spikesPerSec > 250e3 ? runawayMs + data.winMs : 0;
-      if (runawayMs > 3000) {
+      // (with adaptation the runaway state plateaus ~200-250k spikes/s; normal activity stays under ~100k)
+      runawayMs = data.spikesPerSec > 150e3 ? runawayMs + data.winMs : 0;
+      if (runawayMs > 2500) {
         runawayMs = 0;
         if (director.enabled) director.commercialBreak(() => worker.postMessage({ type: 'reset' }));
         else { worker.postMessage({ type: 'reset' }); sidebar.ticker('Runaway activity: brain reset'); }
@@ -356,8 +445,8 @@ worker.onmessage = ({ data }) => {
       window.flyleno.lastTick = data;
       if (data.spikes) neuromap.addSpikes(data.spikes);
       lastMotor = decodeMotor(data.rates, data.winMs);
-      host.setMotor(lastMotor.command);
       if (host.setPools) host.setPools(data.muscles);
+      host.setRates?.(data.rates);
       acts(lastMotor.command);
       behavior.tick(data);
       mind.tick(data);
@@ -408,18 +497,58 @@ $('aboutLink').onclick = (e) => {
 // ------------------------------------------------------------------ loop
 const clock = new THREE.Clock();
 let hearAcc = 0;
+// ------------------------------------------------------------------ pause / reset (whole show, not just the brain)
+let paused = false;
+let mouth = 0;
+function setPaused(p) {
+  paused = p;
+  worker.postMessage({ type: p ? 'pause' : 'run' });
+  sidebar.ticker(p ? 'Paused' : 'Resumed');
+}
+function resetShow() {
+  director.stopAll(); mind.stopAll();
+  for (const k of [...sidebar.manual]) { sidebar.manual.delete(k); sidebar.refreshStim(k); }
+  for (const k of Object.keys(pulseTimers)) worker.postMessage({ type: 'stim', key: k, rate: 0 });
+  for (const k of ['reward', 'punish']) stimRate(k, 0);
+  worker.postMessage({ type: 'reset' });
+  if (projectiles) { for (const it of [...projectiles.items]) projectiles.remove(it); for (const s of projectiles.splats) scene.remove(s.mesh); projectiles.splats.length = 0; }
+  if (host === flyHost) flyHost.place(physHost.home, 0);
+  else if (host.rag) { host.rag.place(host.home, 0); host.gesture = null; host.fallenFor = 0; }
+  else leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
+  mind.mood = 0; behavior.nausea = 0; behavior.transcript.length = 0;
+  food.clear(); for (const n of npcs.list) n.remove(); npcs.list.length = 0; cultists.hidden.clear(); instincts.hunger = 0.4;
+  sidebar.ticker('Show reset');
+}
+
 renderer.setAnimationLoop(() => {
-  const dt = Math.min(0.05, clock.getDelta());
+  const rawDt = Math.min(0.05, clock.getDelta());
+  const dt = paused ? 0 : rawDt;
+  if (!paused) {
   director.update(dt);
   mind.update(dt);
   audience.update(dt);
   behavior.update(dt, { pan: leftOrRight() });
+  if (lastMotor) {
+    const adj = instincts.update(dt, host, lastMotor.command, window.flyleno?.lastTick?.rates);
+    host.setMotor(adj.cmd);
+    host.setPosture?.(adj.posture);
+    behavior.eating = instincts.eating;
+  }
+  npcs.update(dt);
+  looming(dt);
   host.update(dt);
+  // lip-sync: mouth follows the loudness of Leno's own sounds (fast open, slower close); feeding opens it too
+  {
+    const target = Math.max(audio.mouthOpen(), behavior.eating ? 0.55 + 0.25 * Math.sin(clock.elapsedTime * 9) : 0);
+    mouth += (target - mouth) * Math.min(1, dt * (target > mouth ? 30 : 12));
+    (host.setMouth ? host : leno).setMouth(mouth);
+  }
   projectiles?.update(dt);
   cultists.target = host.state?.headPos ?? hostAt().clone().add(new THREE.Vector3(0, 2.3, 0));
   cultists.update(dt);
   fx.floorY = hostAt().y + 0.01;
   fx.update(dt);
+  }
   stage.screens.update(clock.elapsedTime);
   hearAcc += dt;
   if (hearAcc > 0.05) {
@@ -431,16 +560,16 @@ renderer.setAnimationLoop(() => {
   }
   if (camMode === 'follow' || camMode === 'close') {
     const c = cams[camMode]();
-    camera.position.lerp(c.pos, 1 - Math.exp(-dt * 3));
-    controls.target.lerp(c.target, 1 - Math.exp(-dt * 5));
+    camera.position.lerp(c.pos, 1 - Math.exp(-rawDt * 3));
+    controls.target.lerp(c.target, 1 - Math.exp(-rawDt * 5));
   }
   controls.update();
-  liveCams?.update(dt);
+  liveCams?.update(rawDt);
   renderer.render(scene, camera);
-  neuromap.render(dt);
+  neuromap.render(rawDt);
 });
 
 window.flyleno = {
-  scene, camera, controls, leno, host, stage, cultists, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
+  scene, camera, controls, leno, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
   get motor() { return lastMotor; },
 };

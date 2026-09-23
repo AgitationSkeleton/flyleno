@@ -628,6 +628,59 @@
    },
    "rate": 1.0,
    "hidden": true
+  },
+  {
+   "key": "smellL",
+   "label": "Smell (left antenna)",
+   "sub": "fruit/vinegar odour receptor neurons of the left antenna (DM1-4, VA2)",
+   "query": {
+    "cell_type_exact": [
+     "ORN_DM1",
+     "ORN_DM2",
+     "ORN_DM3",
+     "ORN_DM4",
+     "ORN_VA2"
+    ],
+    "side": [
+     "left"
+    ]
+   },
+   "rate": 0.0,
+   "hidden": true,
+   "dynamic": true
+  },
+  {
+   "key": "smellR",
+   "label": "Smell (right antenna)",
+   "sub": "fruit/vinegar odour receptor neurons of the right antenna",
+   "query": {
+    "cell_type_exact": [
+     "ORN_DM1",
+     "ORN_DM2",
+     "ORN_DM3",
+     "ORN_DM4",
+     "ORN_VA2"
+    ],
+    "side": [
+     "right"
+    ]
+   },
+   "rate": 0.0,
+   "hidden": true,
+   "dynamic": true
+  },
+  {
+   "key": "sugarTaste",
+   "label": "Taste: sugar",
+   "sub": "all sugar/water gustatory receptor neurons (food touched by legs/mouth)",
+   "query": {
+    "cell_sub_class": [
+     "sugar/water"
+    ]
+   },
+   "rate": 0.0,
+   "hidden": true,
+   "dynamic": true
   }
  ],
  "motor": [

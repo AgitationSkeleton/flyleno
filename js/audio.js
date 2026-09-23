@@ -14,7 +14,16 @@ export const VOWELS = Object.keys(FORMANTS);
 export const CONSONANTS = ['B', 'D', 'G', 'P', 'T', 'K', 'M', 'N', 'L', 'R', 'S', 'SH', 'F', 'V', 'Z', 'HH', 'W', 'Y'];
 
 const rand = (a, b) => a + Math.random() * (b - a);
-const pick = (arr) => arr[(Math.random() * arr.length) | 0];
+// clips unticked on tools/audition.html (same origin) are skipped
+let disabled = new Set();
+const readDisabled = () => { try { disabled = new Set(JSON.parse(localStorage.getItem('flyleno.disabledClips') || '[]')); } catch { disabled = new Set(); } };
+readDisabled();
+addEventListener('storage', (e) => { if (e.key === 'flyleno.disabledClips') readDisabled(); });
+const pick = (arr) => {
+  const ok = arr.filter((c) => !disabled.has(c.file));
+  const pool = ok.length ? ok : arr;
+  return pool[(Math.random() * pool.length) | 0];
+};
 
 export class AudioWorld {
   constructor() {
@@ -34,6 +43,12 @@ export class AudioWorld {
     this.master = ctx.createGain(); this.master.gain.value = this.volume;
     this.bus = ctx.createGain();                 // all in-world sound
     this.bus.connect(this.master).connect(ctx.destination);
+    // Leno's own sounds go through voiceBus, analysed for lip-sync (mouthOpen)
+    this.voiceBus = ctx.createGain();
+    this.voiceAnalyser = ctx.createAnalyser(); this.voiceAnalyser.fftSize = 512;
+    this.voiceBus.connect(this.voiceAnalyser);
+    this.voiceBus.connect(this.bus);
+    this._vbuf = new Float32Array(this.voiceAnalyser.fftSize);
     this.noise = this.makeNoise(2);
     await this.reloadBank();
     // the bank may still be growing (tools/audio writes partial manifests): pick up new clips live
@@ -57,6 +72,15 @@ export class AudioWorld {
   }
 
   get usingBank() { return !!this.bank; }
+
+  /** 0..1 mouth openness from the loudness of Leno's own sounds right now */
+  mouthOpen() {
+    if (!this.voiceAnalyser) return 0;
+    this.voiceAnalyser.getFloatTimeDomainData(this._vbuf);
+    let e = 0; for (const x of this._vbuf) e += x * x;
+    const rms = Math.sqrt(e / this._vbuf.length);
+    return Math.max(0, Math.min(1, (20 * Math.log10(rms + 1e-6) + 42) / 28));   // -42 dBFS closed .. -14 dBFS wide open
+  }
 
   setVolume(v) { this.volume = v; if (this.master) this.master.gain.value = v; }
 
@@ -86,12 +110,12 @@ export class AudioWorld {
     return this.buffers.get(file);
   }
 
-  async playClip(clip, { gain = 1, rate = 1, pan = 0, when = 0 } = {}) {
+  async playClip(clip, { gain = 1, rate = 1, pan = 0, when = 0, voice = false } = {}) {
     const buf = await this.load(clip.file);
     if (!buf) return 0;
     const ctx = this.ctx, src = ctx.createBufferSource(), g = ctx.createGain(), p = ctx.createStereoPanner();
     src.buffer = buf; src.playbackRate.value = rate; g.gain.value = gain; p.pan.value = pan;
-    src.connect(g).connect(p).connect(this.bus);
+    src.connect(g).connect(p).connect(voice ? this.voiceBus : this.bus);
     src.start(ctx.currentTime + when);
     return buf.duration / rate;
   }
@@ -101,7 +125,7 @@ export class AudioWorld {
   phoneme(ph, { pan = 0, gain = 1, stretch = 1 } = {}) {
     if (!this.ctx) return 0;
     const clips = this.bank?.leno?.phonemes?.[ph];
-    if (clips?.length) return this.playClip(pick(clips), { gain, pan, rate: this.lenoPitch * rand(0.95, 1.05) / stretch });
+    if (clips?.length) return this.playClip(pick(clips), { gain, pan, rate: this.lenoPitch * rand(0.95, 1.05) / stretch, voice: true });
     return this.synth ? this.synthPhone(ph, { pan, gain, dur: 0.14 * stretch }) : 0;
   }
 
@@ -110,7 +134,7 @@ export class AudioWorld {
     const m = this.bank?.leno?.mutters;
     if (m?.length) {
       const pool = kind ? m.filter((x) => x.kind === kind) : m;
-      return this.playClip(pick(pool.length ? pool : m), { gain, pan, rate: this.lenoPitch * rand(0.93, 1.07) });
+      return this.playClip(pick(pool.length ? pool : m), { gain, pan, rate: this.lenoPitch * rand(0.93, 1.07), voice: true });
     }
     // synth: "uhhh"/"hmm" = long AH or M-ish murmur
     return this.synth ? this.synthPhone(kind === 'hmm' ? 'UH' : 'AH', { pan, gain: gain * 0.7, dur: rand(0.25, 0.5) }) : 0;
@@ -118,7 +142,7 @@ export class AudioWorld {
 
   word(text, { pan = 0 } = {}) {
     const w = this.bank?.leno?.words?.find((x) => x.text.toLowerCase() === text.toLowerCase());
-    return w ? this.playClip(w, { pan, rate: this.lenoPitch }) : null;
+    return w ? this.playClip(w, { pan, rate: this.lenoPitch, voice: true }) : null;
   }
 
   synthPhone(ph, { pan = 0, gain = 1, dur = 0.14 } = {}) {
@@ -166,7 +190,10 @@ export class AudioWorld {
   sfx(kind, { pan = 0, gain = 1 } = {}) {
     if (!this.ctx) return 0;
     const clips = this.clips('sfx', kind);
-    if (clips?.length) return this.playClip(pick(clips), { pan, gain, rate: rand(0.94, 1.06) });
+    const mouthy = ['retch', 'vomit', 'burp'].includes(kind);            // come out of Leno's mouth -> lip-sync
+    // gag/vomit SFX are recorded by other people: pitch them down a little toward Leno's low voice
+    const rate = mouthy && kind !== 'burp' ? rand(0.82, 0.9) : rand(0.94, 1.06);
+    if (clips?.length) return this.playClip(pick(clips), { pan, gain, rate, voice: mouthy });
     if (kind === 'vomit' && this.clips('sfx', 'retch')) {
       // no vomit clips: a heave followed by a splash
       const r = this.playClip(pick(this.clips('sfx', 'retch')), { pan, gain, rate: rand(0.85, 0.95) });

@@ -10,8 +10,9 @@ const EVENTS = [
 ];
 
 export class Director {
-  constructor(setStim, onEvent) {
+  constructor(setStim, onEvent, actions = {}) {
     this.setStim = setStim;       // (key, on:boolean) => void
+    this.actions = actions;       // key -> () => bool: events acted out by characters instead of direct stimulation
     this.onEvent = onEvent;
     this.enabled = true;
     this.next = 2;
@@ -30,6 +31,7 @@ export class Director {
     let r = Math.random() * total, ev = EVENTS[0];
     for (const e of EVENTS) { if ((r -= e.weight) <= 0) { ev = e; break; } }
     const dur = ev.dur[0] + Math.random() * (ev.dur[1] - ev.dur[0]);
+    if (this.actions[ev.key]?.()) { this.onEvent?.(ev.text, []); this.next = this.t + 6 + Math.random() * 5; return; }
     const keys = [ev.key];
     if (ev.with && Math.random() < 0.7) keys.push(ev.with[Math.floor(Math.random() * ev.with.length)]);
     keys.forEach((k) => this.setStim(k, true));

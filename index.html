@@ -31,6 +31,8 @@
         <button data-cam="free">Free</button>
         <label class="chk"><input type="checkbox" id="showMarkers"> markers</label>
       </div>
+      <div id="volume" title="master volume (show sounds + music)">🔊 <input id="masterVol" type="range" min="0" max="1" step="0.01" value="0.8"><span id="masterVolNum">80</span></div>
+      <div id="form" title="who is Leno?"><button data-form="leno" class="on">Leno</button><button data-form="fly">🪰 Fly-Leno</button></div>
       <div id="throws">
         <button id="throwTomato" title="a cultist in the audience throws a tomato">🍅 Throw tomato</button>
         <button id="throwPipe" title="a cultist in the audience throws a metal pipe">🔧 Throw pipe</button>
@@ -76,6 +78,7 @@
         <div class="meter bi"><div class="lbl">Mood<small>slow average</small></div><div class="bar"><i id="moodBar"></i></div><div class="num" id="moodNum">0</div></div>
         <div class="row" style="margin:6px 0 2px"><span class="status">Deciding:</span> <b id="mindNow" class="status">—</b>
           <label class="chk" style="margin-left:auto"><input type="checkbox" id="initiative" checked> initiative</label></div>
+        <div class="row status" style="margin:2px 0 4px"><span>Instinct:</span> <b id="instinctNow">—</b></div>
         <div id="qvals"></div>
         <div class="row status" style="margin-top:6px"><span>synaptic learning: <b id="learnNum">0</b> mV/s on <span id="learnEdges">–</span> synapses</span></div>
       </section>
@@ -128,6 +131,11 @@
         <label class="rowlbl">stage ambience (taste/touch noise) <input id="ambience" type="range" min="0" max="3" step="0.1" value="1"></label>
         <label class="rowlbl">hearing gain <input id="hearGain" type="range" min="0" max="2" step="0.05" value="1"></label>
         <label class="rowlbl">sound volume <input id="sfxVol" type="range" min="0" max="1" step="0.05" value="0.9"></label>
+        <div class="status" style="margin-top:6px">Fly instincts <small>(engineered body-level shaping)</small></div>
+        <label class="chk"><input type="checkbox" id="iSacc" checked> saccadic turns</label>
+        <label class="chk"><input type="checkbox" id="iBout" checked> walk in bouts</label>
+        <label class="chk"><input type="checkbox" id="iTaxis" checked> seek food when hungry</label>
+        <label class="chk"><input type="checkbox" id="iDust" checked> dust on antennae (→ grooming)</label>
         <div id="bodyControls"></div>
       </section>
 

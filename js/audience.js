@@ -17,6 +17,8 @@ const TABLE = {
   fall:       [0.10, 0.60, 0.05, 0.15, 0.60],
   tomatoHit:  [0.25, 0.90, 0.30, 0.05, 0.15],
   pipeHit:    [0.15, 0.60, 0.10, 0.10, 0.90],
+  eat:        [0.35, 0.50, 0.40, 0.10, 0.10],
+  burp:       [0.20, 0.80, 0.15, 0.20, 0.10],
 };
 const KINDS = ['cheer', 'laugh', 'applause', 'boo', 'gasp'];
 const VALENCE = { cheer: 1, laugh: 0.7, applause: 1, boo: -1, gasp: -0.5 };
