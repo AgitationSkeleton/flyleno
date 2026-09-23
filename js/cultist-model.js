@@ -70,8 +70,14 @@ export function armGeometry(P, side, pose = 'down') {
 }
 
 /** torso/robe (seated or standing), origin = seat surface (seated) or the floor under the figure (standing, shifted) */
-export function bodyGeometry(P, seated) {
+export function bodyGeometry(P, seated, part = 'all') {
   const parts = [];
+  if (part === 'skirt') {
+    // standing figure's lower robe: stays put while the torso bends at the waist; the band hides the seam
+    parts.push(colored(new THREE.CylinderGeometry(0.3, 0.38, 0.72, 10, 1).translate(0, -0.36, -0.02), P.robe));
+    parts.push(colored(new THREE.SphereGeometry(0.3, 10, 6).scale(1, 0.45, 1).translate(0, 0, -0.02), P.robe));
+    return mergeGeometries(parts);
+  }
   parts.push(colored(new THREE.CylinderGeometry(0.17, 0.3, 0.62, 9, 1).translate(0, 0.31, -0.02), P.robe));        // torso
   parts.push(colored(new THREE.CylinderGeometry(0.2, 0.31, 0.16, 9, 1).translate(0, 0.6, -0.01), P.trim));        // sloped mantle over the shoulders
   // the hood's drape belongs to the torso (it must not swing with the head): a collar the head turns inside
@@ -79,7 +85,7 @@ export function bodyGeometry(P, seated) {
   if (seated) {
     parts.push(colored(new THREE.BoxGeometry(0.46, 0.14, 0.42).translate(0, 0.02, 0.2), P.robe));                  // lap
     parts.push(colored(new THREE.CylinderGeometry(0.22, 0.28, 0.45, 9, 1).translate(0, -0.2, 0.36), P.hood));      // robe to floor
-  } else {
+  } else if (part === 'all') {
     parts.push(colored(new THREE.CylinderGeometry(0.3, 0.38, 0.72, 10, 1).translate(0, -0.36, -0.02), P.robe));    // skirt to floor
   }
   return mergeGeometries(parts);
@@ -99,16 +105,19 @@ export function seatedGeometry(P = PALETTES.audience) {
   return { body, head };
 }
 
-/** standing, animatable figure as a THREE.Group: .body, .head, .armL, .armR (origin at the feet) */
+/** standing, animatable figure as a THREE.Group (origin at the feet): .skirt (static), .body (torso, pivots at the
+ *  waist) carrying .head (neck pivot) and .armL/.armR (shoulder pivots), so bending the body takes hood and arms along */
 export function standingFigure(P, mat) {
   const g = new THREE.Group();
-  const lift = 0.72;                                   // skirt reaches the floor
+  const lift = 0.72;                                   // skirt reaches the floor; the waist is at `lift`
   const mk = (geo) => { const m = new THREE.Mesh(geo.scale(FIGURE_SCALE, FIGURE_SCALE, FIGURE_SCALE), mat); m.castShadow = true; return m; };
-  g.body = mk(bodyGeometry(P, false)); g.body.position.y = lift * FIGURE_SCALE;
-  g.head = mk(headGeometry(P)); g.head.position.set(0, (lift + NECK.y) * FIGURE_SCALE, 0);
-  g.armL = mk(armGeometry(P, 1)); g.armL.position.copy(SH_L).setY(SH_L.y + lift).multiplyScalar(FIGURE_SCALE);
-  g.armR = mk(armGeometry(P, -1)); g.armR.position.copy(SH_R).setY(SH_R.y + lift).multiplyScalar(FIGURE_SCALE);
-  g.add(g.body, g.head, g.armL, g.armR);
+  g.skirt = mk(bodyGeometry(P, false, 'skirt')); g.skirt.position.y = lift * FIGURE_SCALE;
+  g.body = mk(bodyGeometry(P, false, 'torso')); g.body.position.y = lift * FIGURE_SCALE;
+  g.head = mk(headGeometry(P)); g.head.position.copy(NECK).multiplyScalar(FIGURE_SCALE);
+  g.armL = mk(armGeometry(P, 1)); g.armL.position.copy(SH_L).multiplyScalar(FIGURE_SCALE);
+  g.armR = mk(armGeometry(P, -1)); g.armR.position.copy(SH_R).multiplyScalar(FIGURE_SCALE);
+  g.body.add(g.head, g.armL, g.armR);
+  g.add(g.skirt, g.body);
   g.handOffset = new THREE.Vector3(0.03, -0.58, 0.05).multiplyScalar(FIGURE_SCALE);   // hand in arm-local space
   return g;
 }

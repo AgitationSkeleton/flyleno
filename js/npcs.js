@@ -60,7 +60,6 @@ class Npc {
       const k = this.speed / WALK;
       this.phase += dt * 7 * Math.max(0.6, k);
       f.body.position.y = 0.72 * FIGURE_SCALE + Math.abs(Math.sin(this.phase)) * 0.05 * k;
-      f.head.position.y = (0.72 + 0.72) * FIGURE_SCALE + Math.abs(Math.sin(this.phase)) * 0.05 * k;
       if (!this.carrying) f.armL.rotation.x = Math.sin(this.phase) * 0.5 * k;
       f.armR.rotation.x = -Math.sin(this.phase) * 0.5 * k;
     }
