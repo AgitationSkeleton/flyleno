@@ -78,7 +78,7 @@ weighted by whether the screen is in Leno's field of view, drive 400 sampled R1-
 eye. For a YouTube video that needs "pipe tab audio", whose tab capture also carries the picture;
 browsers don't expose iframe pixels otherwise. The video's sound reaches the fly's ears the same way.
 
-**The goose** (`js/goose.js`): now and then (while autopilot is on), or via the 🦆 Goose button, a
+**The goose** (`js/goose.js`): at random intervals (every ~1–3 minutes, on its own schedule) a
 low-poly goose waddles onto the stage. It honks (YouTube SFX) and defecates profusely. The droppings
 are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when barely hungry, tastes them
 (sugar neurons → MN9) and eats them.
@@ -89,7 +89,7 @@ are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when bare
 **Eating posture:** humanoid Leno gets down on all fours to eat. The puppet strings lower him, lean
 him forward over his hands and tip his pelvis. Fly-Leno lowers its head to the food.
 
-`?quiet` starts the page with autopilot and initiative off.
+`?quiet` starts the page with autopilot, initiative and goose visits off.
 
 **Eggs and hatchlings** (`js/brood.js`, engineered):
 - **Laying:** each time Leno reaches a new surface (floor, a platform step, the platform top, or a

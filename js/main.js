@@ -372,13 +372,13 @@ const goose = new Goose({
     if (type === 'leave') sidebar.ticker('The goose waddles off');
   },
 });
-$('releaseGoose').onclick = () => goose.spawn();
 $('eggChance').oninput = (e) => { brood.chance = +e.target.value / 100; $('eggChanceNum').textContent = e.target.value + '%'; };
 
 // ?quiet: start with the show director (autopilot) and the fly's initiative off
 if (params.has('quiet')) {
   director.enabled = false; $('autopilot').checked = false;
   mind.initiative = false; $('initiative').checked = false;
+  goose.enabled = false;
 }
 
 for (const [id, k] of [['iSacc', 'saccades'], ['iBout', 'bouts'], ['iTaxis', 'taxis'], ['iDust', 'dust']]) $(id).onchange = (e) => (instincts.enabled[k] = e.target.checked);
@@ -604,7 +604,7 @@ renderer.setAnimationLoop(() => {
   }
   npcs.update(dt);
   brood.update(dt, host);
-  goose.update(dt, director.enabled);
+  goose.update(dt, true);                            // visits at random, on its own schedule
   looming(dt);
   host.update(dt);
   // lip-sync: mouth follows the loudness of Leno's own sounds (fast open, slower close); feeding opens it too
