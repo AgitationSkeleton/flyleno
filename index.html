@@ -83,6 +83,10 @@
         <h2>Mind <small>dopamine from the model's PAM / PPL1 neurons</small></h2>
         <div class="meter bi"><div class="lbl">Dopamine<small>PAM − PPL1</small></div><div class="bar"><i id="daBar"></i></div><div class="num" id="daNum">0</div></div>
         <div class="meter bi"><div class="lbl">Mood<small>slow average</small></div><div class="bar"><i id="moodBar"></i></div><div class="num" id="moodNum">0</div></div>
+        <div class="row status" style="margin:6px 0 2px"><span>Condition:</span> <b id="conditionNow">—</b></div>
+        <div class="wb-head">State of mind</div><div id="wbMind"></div>
+        <div class="wb-head">Body</div><div id="wbBody"></div>
+        <div class="wb-head">Brain health</div><div id="wbBrain"></div>
         <div class="row" style="margin:6px 0 2px"><span class="status">Deciding:</span> <b id="mindNow" class="status">—</b>
           <label class="chk" style="margin-left:auto"><input type="checkbox" id="initiative" checked> initiative</label></div>
         <div class="row status" style="margin:2px 0 4px"><span>Instinct:</span> <b id="instinctNow">—</b></div>
@@ -143,8 +147,8 @@
         <div class="row lesson"><input id="screenUrl" value="https://www.youtube.com/watch?v=ki3ssj466E0" placeholder="YouTube link or id"><button id="screenPlay">Show</button></div>
         <div class="status" id="screenTitle" style="margin:4px 0">live Leno cams</div>
         <label class="rowlbl">video volume <input id="screenVol" type="range" min="0" max="100" value="70"></label>
-        <div class="meter"><div class="lbl">Left eye<small>R1-6 drive</small></div><div class="bar"><i id="eyeLBar"></i></div><div class="num" id="eyeLNum">0</div></div>
-        <div class="meter"><div class="lbl">Right eye<small>R1-6 drive</small></div><div class="bar"><i id="eyeRBar"></i></div><div class="num" id="eyeRNum">0</div></div>
+        <div class="meter"><div class="lbl">Left eye<small>R1-6 drive (eyes + screen)</small></div><div class="bar"><i id="eyeLBar"></i></div><div class="num" id="eyeLNum">0</div></div>
+        <div class="meter"><div class="lbl">Right eye<small>R1-6 drive (eyes + screen)</small></div><div class="bar"><i id="eyeRBar"></i></div><div class="num" id="eyeRNum">0</div></div>
         <div class="status" id="visionNote"></div>
       </section>
 
@@ -152,6 +156,7 @@
         <h2>Brain settings</h2>
         <label class="chk"><input type="checkbox" id="optAdapt"> spike-frequency adaptation <small class="status">(off = pure Shiu model; can run away)</small></label>
         <label class="chk"><input type="checkbox" id="optPlastic" checked> dopamine plasticity on articulator synapses</label>
+        <label class="chk" title="a few times a second two tiny wide cameras at Leno's eyes render the scene; each eye's brightness and motion drive its photoreceptors, so the brain sees everything, not just the stage screen"><input type="checkbox" id="optEgo" checked> eyesight: the fly sees the stage through its own eyes</label>
         <div class="row"><button id="resetLearn" class="mini">forget learning</button></div>
         <label class="chk" title="&quot;The worms in my brain only eat the cells I don't need.&quot; An engineered lesion, not biology: worms slowly silence neurons that have been quiet and aren't sensory or motor."><input type="checkbox" id="optWorms"> brain worms <small class="status">(eat the cells he doesn't need)</small></label>
         <div class="row status"><span id="wormsInfo">0 cells eaten</span><button id="wormsHeal" class="mini">heal</button></div>

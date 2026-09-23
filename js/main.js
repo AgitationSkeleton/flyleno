@@ -33,7 +33,9 @@ import { Happenings } from './happenings.js';
 import { propLOD } from './lod.js';
 import { disposeObject } from './dispose.js';
 import { NesGlitch } from './glitch.js';
-import { FlyEyeView, humanFov } from './eyeview.js';
+import { FlyEyeView, humanFov, EgoVision } from './eyeview.js';
+import { Wellbeing } from './wellbeing.js';
+const wellbeing = new Wellbeing();                  // state of mind and body (read-outs for the Mind panel)
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 // YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
@@ -153,6 +155,8 @@ let camMode = 'audience';
 const EYE_MODES = new Set(['eyes', 'flyeyes']);
 const eyeMode = () => EYE_MODES.has(camMode);
 const flyEye = new FlyEyeView(96);
+const ego = new EgoVision();                        // the fly's own eyesight (see the render loop)
+let egoOn = true, egoT = 0;
 const eyeRaw = { pos: new THREE.Vector3(), quat: new THREE.Quaternion() };
 const eyeS = { pos: new THREE.Vector3(), quat: new THREE.Quaternion(), init: false };
 const CAM_FLIP = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);   // cameras look along -Z
@@ -220,6 +224,7 @@ function stimRate(k, rate) {
 }
 const reinforceTimers = {};
 function reinforce(valence, seconds) {
+  wellbeing.reinforced(valence);
   const k = valence >= 0 ? 'reward' : 'punish';
   stimRate(k, 40 * Math.min(1, Math.abs(valence)));
   clearTimeout(reinforceTimers[k]);
@@ -228,6 +233,7 @@ function reinforce(valence, seconds) {
 // short stimulus pulse on a named group under its own key (so it does not clash with UI-managed stimuli)
 const pulseTimers = {};
 function pulse(alias, group, rate, seconds) {
+  wellbeing.sensed(alias, rate);
   worker.postMessage({ type: 'stim', key: alias, indices: stimByKey[group].indices, rate });
   clearTimeout(pulseTimers[alias]);
   pulseTimers[alias] = setTimeout(() => worker.postMessage({ type: 'stim', key: alias, rate: 0 }), seconds * 1000);
@@ -350,7 +356,7 @@ $('throwPipe').onclick = () => throwThing('pipe');
 $('throwRose').onclick = () => throwThing('rose');
 const behavior = new Behavior(meta, audio, {
   onEvent: (type, d) => {
-    if (type === 'vomit') { host.trigger('vomit'); setTimeout(() => fx.vomit(() => host.mouth(), () => host.headDown(), 1.1), 500); }
+    if (type === 'vomit') { wellbeing.vomited(); host.trigger('vomit'); setTimeout(() => fx.vomit(() => host.mouth(), () => host.headDown(), 1.1), 500); }
     if (type === 'retch') host.trigger('retch');
     if (type === 'fart') { host.trigger('fart'); fx.fart(() => host.butt(), () => host.forward().negate()); }
     if (type === 'speak') {
@@ -396,6 +402,8 @@ $('optAdapt').checked = false; $('optPlastic').checked = true;
 worker.postMessage({ type: 'adaptation', params: { on: false } });
 worker.postMessage({ type: 'plasticity', params: { enabled: true } });
 $('optAdapt').onchange = (e) => worker.postMessage({ type: 'adaptation', params: { on: e.target.checked } });
+$('optEgo').checked = true;
+$('optEgo').onchange = (e) => { egoOn = e.target.checked; if (!egoOn) { stimAlias('worldL', 'eyeL', 0); stimAlias('worldR', 'eyeR', 0); } };
 $('optPlastic').onchange = (e) => worker.postMessage({ type: 'plasticity', params: { enabled: e.target.checked } });
 $('resetLearn').onclick = () => worker.postMessage({ type: 'plasticity', resetWeights: true });
 // brain worms: "my cabinet members" (engineered lesion, off by default)
@@ -434,6 +442,7 @@ const instincts = new Instincts({
     if (type === 'ate') {
       sidebar.ticker(item.kind === 'poop' ? 'Fly-Leno happily slurps up the goose droppings' : `Leno finished the ${item.kind}`);
       audience.react(item.kind === 'poop' ? 'eatPoop' : item.kind === 'mushroom' ? 'powerUp' : 'eat');
+      wellbeing.ate(item.kind);
       if (item.kind === 'mushroom') {
         // power-up: a big, long dopamine reward
         reinforce(1, 3.5); showSfx.sting('powerup', { gain: 0.6 }); crowdDo('cheer', 1);
@@ -581,7 +590,7 @@ function holdHost(p) {
   f.multiplyScalar(0.5 * m * dt).add(new THREE.Vector3(0, m * 9.81 * dt, 0));
   b.applyImpulse({ x: f.x, y: f.y, z: f.z }, true);
 }
-let convulseT = 0, carShoveT = 0;
+let convulseT = 0, carShoveT = 0, contactT = 0;
 const ceiling = stage.root.getObjectByName('Ceiling');
 const predators = new Predators({
   scene, sfx: showSfx,
@@ -661,21 +670,45 @@ if (params.has('quiet')) {
 
 for (const [id, k] of [['iSacc', 'saccades'], ['iBout', 'bouts'], ['iTaxis', 'taxis'], ['iDust', 'dust'], ['iHome', 'homing']]) $(id).onchange = (e) => (instincts.enabled[k] = e.target.checked);
 let loomPrev = null;
+/** everything that moves in the scene, as { key, p, r } (key: a stable object, so each is tracked on its own) */
+function movers() {
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const out = [];
+  for (const n of npcs.list) out.push({ key: n, p: n.headPos(), r: 0.6 });                               // stagehand, heckler
+  if (goose.active) out.push({ key: goose.active, p: goose.active.g.position.clone().add(V(0, 0.5, 0)), r: 0.45 });
+  const fr = show.frog.active; if (fr) out.push({ key: fr, p: fr.g.position.clone().add(V(0, 0.8, 0)), r: 0.75 });
+  show.loomers().forEach((o, i) => out.push({ key: 'show' + i, ...o }));                               // tongue, car, UFO
+  predators.loomers().forEach((o, i) => out.push({ key: 'pred' + i, ...o }));                          // spider, swatter
+  const sp = predators.spider.active; if (sp) out.push({ key: sp, p: sp.root.position, r: 1.0 });
+  const sw = predators.swatter.active; if (sw) out.push({ key: sw, p: sw.g.position, r: 0.5 });
+  for (const a of happenings.aliens.list) out.push({ key: a, p: a.p.clone().add(V(0, 0.6, 0)), r: 0.25 });
+  const mu = happenings.mushroom.active; if (mu) out.push({ key: mu, p: mu.mesh.position, r: 0.45 });
+  const rc = happenings.rain.active; if (rc) out.push({ key: rc, p: rc.g.position, r: 1.6 * rc.level });
+  for (const b of show.balloons.list) out.push({ key: b, p: b.g.position, r: 0.35 });
+  for (const y of brood.young) out.push({ key: y, p: y.kind === 'fly' ? y.body.root.position : y.body.root.position, r: 0.3 });
+  for (const it of projectiles?.items ?? []) out.push({ key: it, p: it.mesh.position, r: it.kind === 'pipe' ? 0.35 : it.kind === 'tomato' || it.kind === 'rose' ? 0.12 : 0.4 });
+  return out;
+}
+let loomMap = new Map();
 function looming(dt) {
-  // LC4 looming detectors respond to the expansion rate of an approaching object's angular size
+  // LC4 looming detectors respond to the expansion rate of an approaching object's angular size (whatever it is)
   if (!dt) return;
   const head = host.state?.headPos ?? hostAt().clone().add(new THREE.Vector3(0, 2.3, 0));
   let best = 0;
-  const objs = [...npcs.approaching().map((p) => ({ p, r: 0.6 })), ...show.loomers(), ...predators.loomers()];
-  const thetas = objs.map(({ p, r }) => 2 * Math.atan(r / Math.max(0.3, p.distanceTo(head))));
-  if (loomPrev?.length === thetas.length) thetas.forEach((th, i) => (best = Math.max(best, (th - loomPrev[i]) / dt)));
-  loomPrev = thetas;
+  const next = new Map();
+  for (const o of movers()) {
+    const th = 2 * Math.atan(o.r / Math.max(0.3, o.p.distanceTo(head)));
+    const prev = loomMap.get(o.key);
+    if (prev !== undefined) best = Math.max(best, (th - prev) / dt);
+    next.set(o.key, th);
+  }
+  loomMap = next;
   stimAlias('loomNpc', 'heckler', Math.min(200, Math.max(0, best) * 900));
 }
 
 // Body controls (ragdoll)
 if (physHost) {
-  physHost.onFall = () => { audience.react('fall'); sidebar.ticker('Leno collapses!'); };
+  physHost.onFall = () => { audience.react('fall'); sidebar.ticker('Leno collapses!'); pulse('fallTouch', 'ambientTouch', 80, 0.5); };
   const bc = $('bodyControls');
   bc.innerHTML = `<div class="status" style="margin-top:6px">Body: physics ragdoll, 46 muscles</div>
     <label class="rowlbl">puppet strings (support) <input id="bSupport" type="range" min="0" max="1" step="0.05" value="${physHost.support}"></label>
@@ -732,7 +765,38 @@ const biBar = (bar, num, v) => {
   bar.style.background = v >= 0 ? 'var(--good)' : 'var(--accent)';
   num.textContent = v.toFixed(2);
 };
+// state of mind / body / brain health rows (built once, updated a few times a second)
+const wbEls = {};
+function buildWellbeingUI() {
+  const R = wellbeing.rows();
+  for (const [group, id] of [['mind', 'wbMind'], ['body', 'wbBody'], ['brain', 'wbBrain']]) {
+    wbEls[group] = R[group].map(([label, sub]) => {
+      const el = document.createElement('div');
+      el.className = 'meter wb';
+      el.innerHTML = `<div class="lbl">${label}<small>${sub}</small></div><div class="bar"><i></i></div><div class="num">0</div>`;
+      $(id).appendChild(el);
+      return { bar: el.querySelector('i'), num: el.querySelector('.num') };
+    });
+  }
+}
+buildWellbeingUI();
+let wbUiT = 0;
+function updateWellbeingUI() {
+  const now = performance.now();
+  if (now - wbUiT < 250) return;
+  wbUiT = now;
+  const R = wellbeing.rows();
+  for (const group of ['mind', 'body', 'brain']) R[group].forEach(([, , v, text, good], i) => {
+    const e = wbEls[group][i];
+    e.bar.style.width = (Math.max(0, Math.min(1, v)) * 100).toFixed(0) + '%';
+    e.bar.className = good === true ? 'good' : good === false ? 'bad' : 'neutral';
+    e.num.textContent = text;
+  });
+  $('conditionNow').textContent = wellbeing.summary();
+}
+
 function updateMindUI(t) {
+  updateWellbeingUI();
   biBar($('daBar'), $('daNum'), mind.da);
   biBar($('moodBar'), $('moodNum'), mind.mood);
   $('broodNow').textContent = `${brood.eggs.length} egg${brood.eggs.length === 1 ? '' : 's'}, ${brood.young.length} hatchling${brood.young.length === 1 ? '' : 's'} (${brood.young.filter((y) => y.kind === 'fly').length} fly-form)`;
@@ -783,7 +847,7 @@ worker.onmessage = ({ data }) => {
       const nowW = performance.now(), wallMs = Math.min(1000, nowW - (lastTickWall || nowW)); lastTickWall = nowW;
       runawayMs = data.spikesPerSec > 150e3 ? runawayMs + wallMs : 0;
       if (runawayMs > 2500) {
-        runawayMs = 0;
+        runawayMs = 0; wellbeing.runaway();
         if (director.enabled) director.commercialBreak(() => worker.postMessage({ type: 'reset' }));
         else { worker.postMessage({ type: 'reset' }); sidebar.ticker('Runaway activity: brain reset'); }
       }
@@ -889,6 +953,14 @@ renderer.setAnimationLoop(() => {
   }
   npcs.update(dt);
   director.hold = show.active;
+  wellbeing.update({
+    dt, arousal: mind.arousal, mood: mind.mood, cmd: lastMotor?.command, rates: window.flyleno?.lastTick?.rates,
+    isFly: host === flyHost, flying: host === flyHost && flyHost.flying, fallen: !!host.state?.fallen,
+    held: host === flyHost ? !!flyHost.heldAt : (host.heldUntil ?? 0) > performance.now(),
+    knocked: host === flyHost ? flyHost.knockT > 0 : (host.slack ?? 0) > 0.3, glitch: glitch.active, eating: instincts.eating,
+    hunger: instincts.hunger, nausea: behavior.nausea, homesick: instincts.homeUrge,
+    spikes: window.flyleno?.lastTick?.spikesPerSec ?? 0, eatenFrac: wormsTotal / meta.N,
+  });
   show.update(dt);
   predators.update(dt, true);                        // random visits, like the goose
   if (host !== flyHost && show.car.present && host.rag) {
@@ -923,6 +995,16 @@ renderer.setAnimationLoop(() => {
     ents.push(...show.colliders());
     for (const y of brood.young) ents.push({ key: y, pos: y.kind === 'fly' ? y.body.pos : y.body.root.position, radius: y.kind === 'fly' ? 0.3 : 0.22, height: y.kind === 'fly' ? 0.5 : 0.85 });
     entityCols.sync(ents);
+    // contact: anything solid rubbing against him drives his mechanosensory neurons
+    contactT -= dt;
+    if (contactT <= 0) {
+      const hp = hostAt();
+      for (const e of ents) {
+        if (Math.hypot(e.pos.x - hp.x, e.pos.z - hp.z) < e.radius + 0.5 && Math.abs(e.pos.y - hp.y) < e.height + 0.5) {
+          contactT = 0.4; pulse('contactTouch', 'ambientTouch', 35, 0.35); break;
+        }
+      }
+    }
   }
   looming(dt);
   host.update(dt);
@@ -940,12 +1022,23 @@ renderer.setAnimationLoop(() => {
   fx.update(dt);
   }
   stage.screens.update(clock.elapsedTime);
+  // the fly's own eyesight: a few times a second, what its eyes see drives its photoreceptors
+  if (!paused && egoOn) {
+    egoT -= rawDt;
+    if (egoT <= 0) {
+      egoT = MOBILE ? 0.25 : 0.125;
+      const E = eyePose();
+      hideHead(true); ego.sample(renderer, scene, E.pos, E.quat); hideHead(false);
+      stimAlias('worldL', 'eyeL', ego.rates.L); stimAlias('worldR', 'eyeR', ego.rates.R);
+    }
+  }
+  if (stageScreens?.available) stageScreens.gain = egoOn && stageScreens.mode !== 'video' ? 0 : 1;   // (seen through the eyes already)
   if (stageScreens?.available) {
     if (stageScreens.greenGlow && stage.screens.glow) stage.screens.glow.color.set(0x33ff33);
     stageScreens.update(rawDt);
-    const r = stageScreens.rates;
-    $('eyeLBar').style.width = Math.min(100, r.L / 0.9).toFixed(0) + '%'; $('eyeLNum').textContent = r.L.toFixed(0);
-    $('eyeRBar').style.width = Math.min(100, r.R / 0.9).toFixed(0) + '%'; $('eyeRNum').textContent = r.R.toFixed(0);
+    const r = stageScreens.rates, eL = egoOn ? ego.rates.L : 0, eR = egoOn ? ego.rates.R : 0;
+    $('eyeLBar').style.width = Math.min(100, (r.L + eL) / 0.9).toFixed(0) + '%'; $('eyeLNum').textContent = (r.L + eL).toFixed(0);
+    $('eyeRBar').style.width = Math.min(100, (r.R + eR) / 0.9).toFixed(0) + '%'; $('eyeRNum').textContent = (r.R + eR).toFixed(0);
     $('visionNote').textContent = stageScreens.visionNote;
   }
   hearAcc += dt;

@@ -72,3 +72,51 @@ export function humanFov(aspect) {
   const h = 110 * Math.PI / 180;
   return Math.min(100, 2 * Math.atan(Math.tan(h / 2) / aspect) * 180 / Math.PI);
 }
+
+/**
+ * The fly's own eyesight for its photoreceptors: a few times a second, two tiny wide cameras at the eye (one per
+ * compound eye, 150 degrees each, yawed 75 degrees to either side: ~300 degrees together, blind straight behind)
+ * render the scene; each eye's brightness and frame-to-frame change drive that eye's R1-6 photoreceptors, the same
+ * way the stage-screen vision does. So everything in the scene is visible to the brain: the stage, the crowd,
+ * whatever approaches or darkens the view.
+ */
+export class EgoVision {
+  constructor(w = 40, h = 28) {
+    this.w = w; this.h = h;
+    this.rt = new THREE.WebGLRenderTarget(w, h);
+    this.buf = new Uint8Array(w * h * 4);
+    const aspect = w / h, vfov = 2 * Math.atan(Math.tan(75 * Math.PI / 180) / aspect) * 180 / Math.PI;
+    const up = new THREE.Vector3(0, 1, 0), flip = new THREE.Quaternion().setFromAxisAngle(up, Math.PI);
+    // +X is the head's left when it looks along +Z
+    this.eyes = [1, -1].map((side) => ({
+      side, cam: new THREE.PerspectiveCamera(vfov, aspect, 0.03, 250), prev: null,
+      turn: new THREE.Quaternion().setFromAxisAngle(up, side * 75 * Math.PI / 180).multiply(flip),
+    }));
+    this.rates = { L: 0, R: 0, lumL: 0, lumR: 0, motL: 0, motR: 0 };
+  }
+
+  sample(renderer, scene, pos, quat) {
+    const prevRT = renderer.getRenderTarget(), n = this.w * this.h;
+    const out = {};
+    for (const e of this.eyes) {
+      e.cam.position.copy(pos);
+      e.cam.quaternion.copy(quat).multiply(e.turn);
+      e.cam.updateMatrixWorld();
+      renderer.setRenderTarget(this.rt);
+      renderer.render(scene, e.cam);
+      renderer.readRenderTargetPixels(this.rt, 0, 0, this.w, this.h, this.buf);
+      const lum = new Float32Array(n);
+      let sum = 0, mot = 0;
+      for (let i = 0; i < n; i++) {
+        const l = (0.2126 * this.buf[i * 4] + 0.7152 * this.buf[i * 4 + 1] + 0.0722 * this.buf[i * 4 + 2]) / 255;
+        lum[i] = l; sum += l; if (e.prev) mot += Math.abs(l - e.prev[i]);
+      }
+      e.prev = lum;
+      out[e.side > 0 ? 'L' : 'R'] = { lum: Math.min(1, sum / n * 2.5), mot: mot / n };      // (linear render: brighten)
+    }
+    renderer.setRenderTarget(prevRT);
+    const drive = (s) => Math.min(90, 6 + 25 * s.lum + 400 * s.mot);                          // same as the screen vision
+    this.rates = { L: drive(out.L), R: drive(out.R), lumL: out.L.lum, lumR: out.R.lum, motL: out.L.mot, motR: out.R.mot };
+    return this.rates;
+  }
+}

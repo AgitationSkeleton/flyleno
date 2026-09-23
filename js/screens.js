@@ -203,7 +203,7 @@ export class StageScreens {
       const a = drive(lumL, motL), b = drive(lumR, motR);
       if (facing > 0.3) { L = vis * a; R = vis * b; }                        // ahead: each half on its eye
       else { const m = (a + b) / 2; L = vis * m * toLeft; R = vis * m * (1 - toLeft); }   // off to one side
-      L = Math.min(90, L); R = Math.min(90, R);
+      L = Math.min(90, L * (this.gain ?? 1)); R = Math.min(90, R * (this.gain ?? 1));
     }
     this.rates = { L, R, lumL, lumR, motL, motR };
     this.stimAlias('visL', 'eyeL', L);

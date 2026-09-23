@@ -237,14 +237,38 @@ after 2.5 s, shown as a commercial break during the show.
   onsets adding bursts. With "pipe tab audio" (tab capture, which shows the browser's sharing bar) that
   includes the real waveform of the YouTube music; otherwise the page's own sounds plus a
   volume-based estimate of the music.
-- **Looming:** approaching hecklers, thrown objects, Mr. Frog's tongue, the roadster and the arriving
-  UFO drive LC4 looming neurons (expansion rate of their angular size).
+- **Eyesight:** a few times a second two tiny wide cameras at Leno's eyes (one per compound eye, 150° each,
+  ~300° together) render the scene, and each eye's brightness and motion drive its 400 sampled R1-6
+  photoreceptors. So the brain sees everything: the stage, the crowd, whatever approaches or darkens the view.
+  The stage-screen vision then only adds a YouTube video from tab capture, which WebGL can't see. It can be
+  turned off in Brain settings.
+- **Looming:** every moving thing drives the LC4 looming neurons by how fast its angular size grows, each one
+  tracked on its own: stagehands and hecklers, the goose, Mr. Frog and his tongue, the roadster, the UFO,
+  spider-Leno and the swatter glove, mini aliens, a falling mushroom, balloons, hatchlings, the rain cloud and
+  every thrown or falling object.
+- **Contact:** bumping into anything solid (stagehands, the goose, the frog, hatchlings, aliens) and falling over
+  drive mechanosensory neurons.
 - **Light:** the follow spot, disco strobe and tractor beam falling on Leno add drive to the R1-6
   photoreceptors of both eyes, on top of what the stage screens show.
 - **Touch and taste:** tomato hits drive bitter taste and mechanosensory neurons (a tomato that misses
   him lands as pulp on the floor or stage below where it burst), pipe hits drive
   mechanosensory neurons plus punishment dopamine, and occasional "dust" on the antennae drives JO.
 - **Ambience:** low-rate noise on taste and touch neurons.
+
+**State of mind and body** (Mind panel, `js/wellbeing.js`): read-outs, not drives.
+- **Condition:** a one-line summary, e.g. "on his feet; bruised, damp, frightened".
+- **State of mind:**
+  - Arousal (overall firing).
+  - Stress: builds with threats, hits and punishment dopamine, and fades.
+  - Fear: follows the looming detectors and startles.
+  - Morale: slow dopamine mood.
+  - Hunger, nausea, homesickness, and dizziness (from knocks, tumbles and the glitch).
+- **Body:**
+  - Health: injuries from hits, zaps, kicks, falls and the rig; heals slowly, faster at rest.
+  - Energy: used by walking, flying and struggling; restored by food and rest.
+  - Wetness: rain, drying off.
+  - Grime: splats and slime, cleaned by grooming.
+- **Brain health:** load against the runaway threshold, recent runaway resets, and cells lost to brain worms.
 
 **Learning:**
 - **Crowd reactions:** these are reinforcement. Cheers, laughs and applause stimulate PAM (reward)
