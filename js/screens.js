@@ -112,6 +112,7 @@ export class StageScreens {
     this.card = { card, tex, mat, t: 0, until: secs };
     this.big.material = mat; this.sides.forEach((m) => (m.material = mat));
     this.cssObj.visible = false;
+    this.greenGlow = false;                     // show cards take over whatever mode is chosen; the mode comes back after
     if (this.mode === 'video') this.player?.pauseVideo?.();
     this.prev = null;
   }

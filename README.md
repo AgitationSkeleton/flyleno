@@ -112,7 +112,7 @@ are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when bare
     every 2 s while he's under it.
   - **Lightning:** strikes toward him with thunder and a flash on the eyes.
   - **Leaving:** it drifts off after 35–50 s.
-- **Vine mushroom:** a tomato-red power-up mushroom in the Vinesauce style (leafy crown, curly vine, eyes on the stem).
+- **Vinesauce mushroom:** a power-up styled on the Vinesauce logo: green dome (yellow-green to teal) with white spots and a white badge with a teal V, on a white stem with green eyes and a smile.
   - It falls from the ceiling and slides about the stage.
   - Leno goes for it even when not hungry. Eating it gives a big 3.5 s dopamine reward, a power-up
     sound and cheers.

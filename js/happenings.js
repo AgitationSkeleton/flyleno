@@ -3,12 +3,13 @@
 //                  seats fill with babies, who grow back into their grown cultist selves in real time
 //   RainCloud    - a personal storm cloud follows Leno and rains on him (touch, water on the antennae, low
 //                  dopamine); lightning and thunder
-//   VineMushroom - a Vinesauce-tomato-styled power-up mushroom falls from the ceiling and slides about; eating it
+//   VineMushroom - a Vinesauce-logo mushroom power-up falls from the ceiling and slides about; eating it
 //                  is a big dopamine reward
 //   rig drops    - studio cameras and stage lights fall from the ceiling (physics objects, js/projectiles.js)
 //   MiniAliens   - dozens of little grey aliens walk up and kick him in the shins ("TOES", "mimimi")
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -188,28 +189,52 @@ export class RainCloud {
 }
 
 // ------------------------------------------------------------------------------------------------ mushroom
+// The Vinesauce mushroom: a green dome (yellow-green on top to teal at the rim) with white spots and a big white
+// badge holding a teal "V", on a white box of a stem with two green oval eyes and an open smile.
 function mushroomModel() {
-  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, flatShading: false });
-  const RED = 0xd4221c, CREAM = 0xf3e9d2, GREEN = 0x2e9a2b, DARK = 0x111111;
-  const parts = [
-    col(new THREE.CylinderGeometry(0.13, 0.15, 0.22, 16).translate(0, 0.11, 0), CREAM),                         // stem
-    col(new THREE.SphereGeometry(0.026, 8, 6).scale(0.6, 1.4, 0.5).translate(0.05, 0.14, 0.13), DARK),        // eyes
-    col(new THREE.SphereGeometry(0.026, 8, 6).scale(0.6, 1.4, 0.5).translate(-0.05, 0.14, 0.13), DARK),
-    col(new THREE.SphereGeometry(0.25, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.55).scale(1, 0.85, 1).translate(0, 0.19, 0), RED),   // tomato cap
-    col(new THREE.CylinderGeometry(0.245, 0.245, 0.02, 20).translate(0, 0.2, 0), 0xa3160f),                    // cap rim
-  ];
-  for (const [a, e] of [[0.4, 0.6], [2.3, 0.5], [4.1, 0.75], [5.5, 0.45]]) {                                   // pale spots
-    const p = V(Math.cos(a) * Math.sin(e), Math.cos(e), Math.sin(a) * Math.sin(e)).multiplyScalar(0.25);
-    parts.push(col(new THREE.SphereGeometry(0.055, 10, 6).scale(1, 0.35, 1).lookAt(p).translate(p.x, 0.19 + p.y * 0.85, p.z), CREAM));
-  }
-  for (let k = 0; k < 5; k++) {                                                                                 // leafy calyx
-    const a = k / 5 * Math.PI * 2;
-    parts.push(col(new THREE.ConeGeometry(0.045, 0.2, 4).rotateZ(Math.PI / 2 - 0.35).rotateY(-a).translate(Math.cos(a) * 0.08, 0.41, Math.sin(a) * 0.08), GREEN));
-  }
-  parts.push(col(new THREE.CylinderGeometry(0.015, 0.02, 0.1, 6).translate(0, 0.45, 0), GREEN));              // stalk
-  parts.push(col(new THREE.TorusGeometry(0.05, 0.012, 6, 12, Math.PI * 1.5).translate(0.04, 0.53, 0), GREEN));  // curly vine
   const g = new THREE.Group();
-  g.add(new THREE.Mesh(mergeGeometries(parts), mat));
+  const R = 0.32, SQ = 0.78;                             // cap radius, vertical squash
+  // cap with a vertical colour gradient
+  const cap = new THREE.SphereGeometry(R, 28, 14, 0, Math.PI * 2, 0, Math.PI * 0.5).scale(1, SQ, 1);
+  { const p = cap.attributes.position, c = new Float32Array(p.count * 3), top = new THREE.Color(0x7fb10f), mid = new THREE.Color(0x13903f), low = new THREE.Color(0x046f62), k = new THREE.Color();
+    for (let i = 0; i < p.count; i++) {
+      const u = p.getY(i) / (R * SQ);                    // 0 at the rim, 1 on top
+      if (u > 0.5) k.copy(mid).lerp(top, (u - 0.5) / 0.5); else k.copy(low).lerp(mid, u / 0.5);
+      c[i * 3] = k.r; c[i * 3 + 1] = k.g; c[i * 3 + 2] = k.b;
+    }
+    cap.setAttribute('color', new THREE.BufferAttribute(c, 3)); }
+  const capM = new THREE.Mesh(cap, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, envMapIntensity: 0.3 }));
+  capM.position.y = 0.26; g.add(capM);
+  const rimM = new THREE.Mesh(new THREE.CylinderGeometry(R, R * 0.97, 0.03, 28), new THREE.MeshStandardMaterial({ color: 0x139486, roughness: 0.7 }));
+  rimM.position.y = 0.26; g.add(rimM);
+  const white = new THREE.MeshStandardMaterial({ color: 0xf6f6f2, roughness: 0.6 });
+  // decals on the dome: discs laid on the surface, facing out
+  const onCap = (az, el, radius, mat, lift = 0.004) => {
+    const d = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
+    const m = new THREE.Mesh(new THREE.CircleGeometry(radius, 24), mat);
+    m.position.set(d.x * (R + lift), 0.26 + d.y * (R + lift) * SQ, d.z * (R + lift));
+    m.lookAt(m.position.clone().add(new THREE.Vector3(d.x, d.y / SQ, d.z)));          // face along the surface normal
+    g.add(m); return m;
+  };
+  for (const [az, el, r] of [[1.1, 0.4, 0.06], [-1.1, 0.4, 0.06], [0.62, 1.02, 0.065], [-0.62, 1.02, 0.065],
+    [2.2, 0.45, 0.06], [-2.2, 0.45, 0.06], [3.14, 0.9, 0.08], [2.0, 1.15, 0.05], [-2.0, 1.15, 0.05]]) onCap(az, el, r, white);
+  // the badge: a big white disc on the front with a teal V made of two leaves
+  const badge = onCap(0, 0.5, 0.105, white, 0.006);
+  const leaf = (pts, color) => {
+    const sh = new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y)));
+    const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), new THREE.MeshBasicMaterial({ color, toneMapped: false }));   // logo colours, unlit
+    m.position.z = 0.002; badge.add(m);
+  };
+  leaf([[-0.072, 0.06], [-0.03, 0.066], [0.012, -0.03], [0.0, -0.078], [-0.03, -0.03]], 0x3cb4c8);   // left arm, lighter
+  leaf([[0.072, 0.06], [0.03, 0.066], [-0.012, -0.03], [0.0, -0.078], [0.03, -0.03]], 0x0b7a82);     // right arm
+  // stem: a white rounded box with a face
+  const stem = new THREE.Mesh(new RoundedBoxGeometry(0.34, 0.28, 0.3, 3, 0.04), white);
+  stem.position.y = 0.13; g.add(stem);
+  const face = new THREE.Group(); face.position.set(0, 0.13, 0.151); g.add(face);
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x33b06c, toneMapped: false });
+  for (const x of [-0.055, 0.055]) { const e = new THREE.Mesh(new THREE.CircleGeometry(0.022, 16).scale(0.8, 1.35, 1), eyeMat); e.position.set(x, 0.035, 0); face.add(e); }
+  const mouth = new THREE.Mesh(new THREE.CircleGeometry(0.05, 20, Math.PI, Math.PI), new THREE.MeshStandardMaterial({ color: 0x1b1b1d, roughness: 0.6 }));
+  mouth.position.set(0, -0.025, 0); face.add(mouth);
   g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   g.scale.setScalar(1.7);
   return g;
@@ -268,7 +293,7 @@ export class VineMushroom {
       else { p.x = next.x; p.z = next.z; }
     }
     p.y += (gy - p.y) * Math.min(1, dt * 10);
-    A.mesh.rotation.y += dt * 0.6;
+    A.mesh.rotation.y += dt * 0.35;
     A.item?.pos.copy(p);
   }
 }
@@ -342,7 +367,7 @@ export class MiniAliens {
     if (this.chatT <= 0 && this.list.length) {
       this.chatT = rand(0.35, 1.1);
       const a = this.list[(Math.random() * this.list.length) | 0];
-      ctx.playSfx(Math.random() < 0.5 ? 'sfx/minialien/TOES.mp3' : 'sfx/minialien/mimimi.mp3', { gain: rand(0.45, 0.8), pan: ctx.pan(a.p), rate: rand(0.95, 1.12) });
+      ctx.playSfx(Math.random() < 0.5 ? 'sfx/minialien/TOES.mp3' : 'sfx/minialien/mimimi.mp3', { gain: rand(1.2, 1.7), pan: ctx.pan(a.p), rate: rand(0.95, 1.12) });
     }
     const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), one = V(1, 1, 1);
     let n = 0;
@@ -372,7 +397,7 @@ export class MiniAliens {
           if (shin && shin.distanceTo(foot) < 0.8) {
             this.hits++;
             ctx.kick(shins.indexOf(shin), V(Math.sin(a.yaw), 0.25, Math.cos(a.yaw)));
-            ctx.playSfx('sfx/minialien/go_alert2.wav', { gain: 0.55, pan: ctx.pan(a.p) });
+            ctx.playSfx('sfx/minialien/go_alert2.wav', { gain: 0.18, pan: ctx.pan(a.p) });
           }
         }
         if (a.kick > 0.45) {

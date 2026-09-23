@@ -535,8 +535,13 @@ const happenings = new Happenings({
   },
   kick: (i, dir) => {
     // a kick in the shins: knocks the leg (and him) around
-    if (host === flyHost) flyHost.applyImpulse('thorax', dir.clone().multiplyScalar(30));
-    else if (host.rag) { host.rag.applyImpulse(i ? 'calf_r' : 'calf_l', dir.clone().multiplyScalar(45)); host.rag.applyImpulse('pelvis', dir.clone().setY(0).multiplyScalar(18)); }
+    if (host === flyHost) flyHost.applyImpulse('thorax', dir.clone().multiplyScalar(110).add(new THREE.Vector3(0, 60, 0)));
+    else if (host.rag) {
+      // the leg is swept, and the whole body gets shoved and popped up a little
+      host.rag.applyImpulse(i ? 'calf_r' : 'calf_l', dir.clone().multiplyScalar(90));
+      host.rag.applyImpulse('pelvis', dir.clone().setY(0).multiplyScalar(110).add(new THREE.Vector3(0, 70, 0)));
+      host.rag.applyImpulse('chest', dir.clone().setY(0).multiplyScalar(60));
+    }
     pulse('alienKick', 'ambientTouch', 60, 0.3); reinforce(-0.15, 0.4); audience.react('alienKick');
   },
   dropRig: (kind, p) => projectiles?.drop(kind, p),
