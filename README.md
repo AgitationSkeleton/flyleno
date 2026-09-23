@@ -199,7 +199,7 @@ him forward over his hands and tip his pelvis. Fly-Leno lowers its head to the f
 | Guest: Mr. Frog | a frog hops to the guest spot, answers every question with "Good. Good. Good." (croaks), and flicks his tongue at the host. He can catch and spit out Fly-Leno. He leaves when Leno bites his ankles (mouth open right next to him), shouts him off ("Up yours! You're out of here, Mr. Frog"), or his time is up | croaks (JO); tongue = looming (LC4) + hit (mechanosensory, punishment); the crowd reacts |
 | Sunday drive | a vintage roadster laps the stage, brakes and honks "a-oo-gah" when Leno is in the way ("do you drive a car?") | engine rumble (JO-B), floor vibration (mechanosensory), headlights approaching (LC4) |
 | Take it away, Johnny! | a spotlight swings to the empty band stool; the music drops out, crickets; "Where's Johnny?"; rimshot | sudden silence, crickets (JO-A), spotlight on the eyes |
-| A word from our sponsor | GRONK sponsor card (strobing), then "Buy Grey Leno NFTs" | strong visual flicker (R1-6) |
+| A word from our sponsor | GRONK sponsor card (a slow, throbbing glow; no strobe), then "Buy Grey Leno NFTs" | pulsing light on the eyes (R1-6) |
 | Technical difficulties | screens full of static; "Dave, can you fix the static?" | visual noise (R1-6), hiss (JO-A) |
 | Call-in | phone rings, a garbled caller asks e.g. "Why do you puke so much?"; the answer is on a cue card | ring and voice (JO) |
 | Space scabies telethon | telethon card with a donation counter ("three out of four Martians have the same problem") | itching: bursts on the mechanosensory and antennal JO neurons (→ grooming) |
@@ -355,7 +355,7 @@ The videos contain no clean booing, cheering or vomiting. The tagger's "retch" h
 burps and are kept as `sfx/burp`. So those categories come from short YouTube sound-effect uploads:
 - **Boos:** u0D718AmYTs, hJlxgWYqvR0, Dk3OZ4a9m6o.
 - **Cheers:** barWV7RWkq0, Vw9MCNbFggI, JhE6hEgTth0.
-- **Vomiting:** UnDhyWnHPD0, RgJ8wfuDfo4, yoD5T0N1SzU.
+- **Vomiting:** UnDhyWnHPD0, RgJ8wfuDfo4.
 - **Gagging:** pf93OHsjkQM, A3wzIw1tWkw, jqHViajqnwc.
 - **Pipe clang:** f8mL0_4GeV0.
 - **Goose honks:** zcDiAD8RGq8, J0WO22NhTK8, A8nqfY3rUKw.

@@ -33,7 +33,6 @@ SOURCES = [
     ("crowd", "cheer", "JhE6hEgTth0", "bed", 2),
     ("sfx", "vomit", "UnDhyWnHPD0", "event", 3),
     ("sfx", "vomit", "RgJ8wfuDfo4", "event", 3),
-    ("sfx", "vomit", "yoD5T0N1SzU", "event", 3),
     ("sfx", "retch", "pf93OHsjkQM", "event", 3),
     ("sfx", "retch", "A3wzIw1tWkw", "event", 3),
     ("sfx", "retch", "jqHViajqnwc", "event", 3),

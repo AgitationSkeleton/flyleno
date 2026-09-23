@@ -57,11 +57,6 @@
    "title": "sound effect"
   },
   {
-   "id": "yoD5T0N1SzU",
-   "url": "https://www.youtube.com/watch?v=yoD5T0N1SzU",
-   "title": "sound effect"
-  },
-  {
    "id": "pf93OHsjkQM",
    "url": "https://www.youtube.com/watch?v=pf93OHsjkQM",
    "title": "sound effect"
@@ -4482,19 +4477,6 @@
      "video": "RgJ8wfuDfo4",
      "t0": 1.26,
      "t1": 4.431
-    },
-    "conf": null,
-    "origin": "youtube-sfx"
-   },
-   {
-    "file": "sfx/vomit/vomit_x005.ogg",
-    "dur": 2.749,
-    "rms": null,
-    "f0": null,
-    "src": {
-     "video": "yoD5T0N1SzU",
-     "t0": 6.051,
-     "t1": 8.8
     },
     "conf": null,
     "origin": "youtube-sfx"

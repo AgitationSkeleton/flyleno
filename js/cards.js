@@ -11,17 +11,21 @@ function fitText(ctx, text, maxW, size, font = 'Impact, "Arial Black", sans-seri
 }
 
 const CARDS = {
-  /** "this next bit is brought to you by our sponsor: Gronk" - with a strobing logo */
+  /** "this next bit is brought to you by our sponsor: Gronk" - with a throbbing logo. No strobing: the colours
+   *  stay put and only a soft red glow swells about once a second (photosensitivity: nothing flashes) */
   gronk(ctx, t) {
-    const on = Math.floor(t * 6) % 2 === 0;
-    ctx.fillStyle = on ? '#120000' : '#c3001a'; ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = on ? '#ff2a2a' : '#1a0000'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const beat = 0.5 - 0.5 * Math.cos(t * Math.PI * 2 * 0.9);            // 0..1, smooth, ~0.9 Hz
+    ctx.fillStyle = '#2a0006'; ctx.fillRect(0, 0, W, H);
+    const glow = ctx.createRadialGradient(W / 2, H / 2 + 20, 20, W / 2, H / 2 + 20, W * 0.6);
+    glow.addColorStop(0, `rgba(170,0,26,${0.35 + 0.2 * beat})`); glow.addColorStop(1, 'rgba(170,0,26,0)');
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#ff5a5a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     fitText(ctx, 'THIS BIT IS BROUGHT TO YOU BY', W * 0.9, 38); ctx.fillText('THIS BIT IS BROUGHT TO YOU BY', W / 2, 60);
-    ctx.save(); ctx.translate(W / 2 + (Math.random() - 0.5) * 14, H / 2 + 20 + (Math.random() - 0.5) * 10);
-    ctx.rotate((Math.random() - 0.5) * 0.06);
-    fitText(ctx, 'GRONK', W * 0.85, 230); ctx.fillStyle = on ? '#ffffff' : '#000000'; ctx.fillText('GRONK', 0, 0);
+    ctx.save(); ctx.translate(W / 2 + Math.sin(t * 5.3) * 4, H / 2 + 20 + Math.sin(t * 4.1) * 3);   // a slow wobble
+    ctx.rotate(Math.sin(t * 2.3) * 0.025); const k = 1 + 0.04 * beat; ctx.scale(k, k);
+    fitText(ctx, 'GRONK', W * 0.85, 230); ctx.fillStyle = '#f4e8e8'; ctx.fillText('GRONK', 0, 0);
     ctx.restore();
-    ctx.fillStyle = on ? '#ff7070' : '#300000'; fitText(ctx, 'our sponsor', W * 0.5, 34, 'Georgia, serif', 'italic');
+    ctx.fillStyle = '#ff8a8a'; fitText(ctx, 'our sponsor', W * 0.5, 34, 'Georgia, serif', 'italic');
     ctx.fillText('our sponsor', W / 2, H - 42);
   },
   /** "Buy these new Grey Leno NFTs" */
