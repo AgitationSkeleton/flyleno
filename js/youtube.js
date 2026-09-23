@@ -1,9 +1,7 @@
 // Embedded YouTube music player (IFrame API) with custom controls.
-// Hard-coded playlist; starts at "Masked Ball (1999 Extended Mix)" (index=23 in the playlist URL),
-// then loops the playlist in shuffled order.
-export const PLAYLIST = 'PLxqmDuD9PdVq2GjdlhaViQSRyxlmi0Uq4';
-export const START_VIDEO = 'fHRLoVmPeLU';
-export const START_INDEX = 23;
+// Hard-coded playlist (https://youtube.com/playlist?list=PLMTr8QQD4_THG0JS79O71Kr-7kt5k2om1): on the first play it
+// jumps to a random track, then loops the playlist in shuffled order.
+export const PLAYLIST = 'PLMTr8QQD4_THG0JS79O71Kr-7kt5k2om1';
 
 let apiPromise = null;
 export function loadYouTubeApi() {
@@ -40,8 +38,7 @@ export class MusicPlayer {
     await new Promise((resolve) => {
       this.player = new YT.Player(this.root.querySelector('.yt-frame'), {
         width: '100%', height: '200',
-        videoId: START_VIDEO,
-        playerVars: { list: PLAYLIST, listType: 'playlist', index: START_INDEX, loop: 1, playsinline: 1, rel: 0, modestbranding: 1, origin: location.origin },
+        playerVars: { list: PLAYLIST, listType: 'playlist', loop: 1, playsinline: 1, rel: 0, modestbranding: 1, origin: location.origin },
         events: {
           onReady: () => {
             this.ready = true; this.player.setVolume(this.volume * this.master);
@@ -51,8 +48,11 @@ export class MusicPlayer {
           onStateChange: (e) => {
             if (e.data === 1) {
               this.errors = 0;
-              // shuffle once the playlist is loaded; the starting track keeps playing first
-              if (!this.shuffled && this.player.getPlaylist()?.length) { this.player.setShuffle(true); this.player.setLoop(true); this.shuffled = true; }
+              // once the playlist is loaded: shuffle and loop it, and start on a random track
+              if (!this.shuffled && this.player.getPlaylist()?.length) {
+                this.player.setShuffle(true); this.player.setLoop(true); this.shuffled = true;
+                if (this.player.getPlaylist().length > 1) this.player.nextVideo();
+              }
             }
             if (e.data === 0) this.player.nextVideo();   // safety: keep going if the loop flag is ignored
             this.refreshTitle();
