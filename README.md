@@ -67,6 +67,17 @@ the connectome, labelled as such in the sidebar).
 | spontaneous actions | action selector ("initiative"): softmax over values learned from dopamine | engineered, driven by neural dopamine |
 | Fly-Leno flight | DNg02/DNp13 wing power; giant-fiber escape take-off | neural |
 
+**Stage screens** (viewport buttons: 📹 Cams / ▶ YouTube / 🟩 Green; YouTube link box in the sidebar):
+- **Cams:** live cameras following Leno.
+- **YouTube:** any YouTube video on the big backdrop screen. The real iframe is placed in 3D behind a
+  transparent hole in the WebGL canvas, so objects in front occlude it.
+- **Green:** a lime full-bright green screen.
+
+The fly **sees** the big screen: its left and right halves (brightness + frame-to-frame motion),
+weighted by whether the screen is in Leno's field of view, drive 400 sampled R1-6 photoreceptors per
+eye. For a YouTube video that needs "pipe tab audio", whose tab capture also carries the picture;
+browsers don't expose iframe pixels otherwise. The video's sound reaches the fly's ears the same way.
+
 **Senses:**
 - **Hearing:** in-world sound drives the fly's auditory JO-B (low band) and JO-A (high band) neurons, with
   onsets adding bursts. With "pipe tab audio" (tab capture, which shows the browser's sharing bar) that

@@ -22,6 +22,7 @@ import { Food } from './food.js';
 import { Npcs } from './npcs.js';
 import { Instincts } from './instincts.js';
 import { FlyLeno } from './flybody.js';
+import { StageScreens, parseYouTubeId } from './screens.js';
 
 // YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
 if (location.hostname === '127.0.0.1') { location.replace(location.href.replace('//127.0.0.1', '//localhost')); await new Promise(() => {}); }
@@ -35,7 +36,8 @@ const setLoading = (t) => { loadingText.textContent = t; console.log('[flyleno]'
 
 // ------------------------------------------------------------------ renderer / scene
 const canvas = $('three');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+// alpha: the stage's YouTube screen is an iframe *behind* the canvas, shown through a transparent hole
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true, alpha: true });
 renderer.setPixelRatio(LITE ? 1 : Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -55,9 +57,11 @@ const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.maxDistance = 90;
 
+let stageScreens = null;
 function resize() {
   const w = canvas.clientWidth, h = canvas.clientHeight;
   renderer.setSize(w, h, false);
+  stageScreens?.resize(w, h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
 }
@@ -297,7 +301,7 @@ $('hearGain').oninput = (e) => (hearing.gain = +e.target.value);
 $('sfxVol').oninput = (e) => audio.setVolume(+e.target.value * masterVol);
 // master volume (viewport): scales the show's sounds and the music together
 let masterVol = 0.8;
-function applyMaster() { audio.setVolume(+$('sfxVol').value * masterVol); music.setMaster(masterVol); $('masterVolNum').textContent = Math.round(masterVol * 100); }
+function applyMaster() { audio.setVolume(+$('sfxVol').value * masterVol); music.setMaster(masterVol); stageScreens?.setVolume?.(stageScreens.volume, masterVol); $('masterVolNum').textContent = Math.round(masterVol * 100); }
 $('masterVol').oninput = (e) => { masterVol = +e.target.value; applyMaster(); };
 applyMaster();
 $('initiative').onchange = (e) => { mind.initiative = e.target.checked; if (!e.target.checked) mind.stopAll(); };
@@ -318,6 +322,33 @@ const instincts = new Instincts({
     }
   },
 });
+// ------------------------------------------------------------------ stage screens: cams / YouTube / green screen
+stageScreens = new StageScreens({
+  renderer, scene, camera, stage, viewport: $('viewport'), liveCams, hearing, stimAlias,
+  getHost: () => host,
+  onChange: (mode) => {
+    document.querySelectorAll('#screenModes button').forEach((b) => b.classList.toggle('on', b.dataset.screen === mode));
+    setTimeout(() => ($('screenTitle').textContent = mode === 'video' ? (stageScreens.title() || '…') : mode === 'green' ? 'lime green screen' : 'live Leno cams'), 800);
+  },
+});
+if (stageScreens.available) {
+  stageScreens.resize(canvas.clientWidth, canvas.clientHeight);
+  hearing.screenVideo = () => (stageScreens.mode === 'video' && stageScreens.player?.getPlayerState?.() === 1 ? (stageScreens.volume * stageScreens.master) / 100 : 0);
+  document.querySelectorAll('#screenModes button').forEach((b) => (b.onclick = () => {
+    const id = parseYouTubeId($('screenUrl').value);
+    stageScreens.setMode(b.dataset.screen, b.dataset.screen === 'video' ? id : undefined);
+  }));
+  $('screenPlay').onclick = () => {
+    const id = parseYouTubeId($('screenUrl').value);
+    if (!id) { $('screenTitle').textContent = 'not a YouTube link'; return; }
+    stageScreens.setMode('video', id);
+  };
+  $('screenVol').oninput = (e) => stageScreens.setVolume(+e.target.value, masterVol);
+} else {
+  $('screenModes').hidden = true;
+  $('screenTitle').textContent = 'screen modes need the original stage';
+}
+
 for (const [id, k] of [['iSacc', 'saccades'], ['iBout', 'bouts'], ['iTaxis', 'taxis'], ['iDust', 'dust']]) $(id).onchange = (e) => (instincts.enabled[k] = e.target.checked);
 let loomPrev = null;
 function looming(dt) {
@@ -550,6 +581,14 @@ renderer.setAnimationLoop(() => {
   fx.update(dt);
   }
   stage.screens.update(clock.elapsedTime);
+  if (stageScreens?.available) {
+    if (stageScreens.greenGlow && stage.screens.glow) stage.screens.glow.color.set(0x33ff33);
+    stageScreens.update(rawDt);
+    const r = stageScreens.rates;
+    $('eyeLBar').style.width = Math.min(100, r.L / 0.9).toFixed(0) + '%'; $('eyeLNum').textContent = r.L.toFixed(0);
+    $('eyeRBar').style.width = Math.min(100, r.R / 0.9).toFixed(0) + '%'; $('eyeRNum').textContent = r.R.toFixed(0);
+    $('visionNote').textContent = stageScreens.visionNote;
+  }
   hearAcc += dt;
   if (hearAcc > 0.05) {
     hearAcc = 0;
@@ -570,6 +609,6 @@ renderer.setAnimationLoop(() => {
 });
 
 window.flyleno = {
-  scene, camera, controls, leno, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
+  scene, camera, controls, leno, stageScreens, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
   get motor() { return lastMotor; },
 };

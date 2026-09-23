@@ -681,6 +681,40 @@
    "rate": 0.0,
    "hidden": true,
    "dynamic": true
+  },
+  {
+   "key": "eyeL",
+   "label": "Vision (left eye)",
+   "sub": "R1-6 photoreceptors of the left eye (every ~11th of 4,423): brightness/motion of what the fly sees",
+   "query": {
+    "cell_type_exact": [
+     "R1-6"
+    ],
+    "side": [
+     "left"
+    ],
+    "sample": 400
+   },
+   "rate": 0.0,
+   "hidden": true,
+   "dynamic": true
+  },
+  {
+   "key": "eyeR",
+   "label": "Vision (right eye)",
+   "sub": "R1-6 photoreceptors of the right eye (sampled 400)",
+   "query": {
+    "cell_type_exact": [
+     "R1-6"
+    ],
+    "side": [
+     "right"
+    ],
+    "sample": 400
+   },
+   "rate": 0.0,
+   "hidden": true,
+   "dynamic": true
   }
  ],
  "motor": [

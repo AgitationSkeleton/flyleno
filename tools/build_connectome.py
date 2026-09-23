@@ -136,7 +136,11 @@ def resolve(g):
     if "exclude_cell_type_prefix" in q:
         ct = ann["cell_type"].fillna("")
         m &= ~ct.apply(lambda t: any(t.startswith(pfx) for pfx in q["exclude_cell_type_prefix"]))
-    return [int(r) for r in ann.index[m.values]]
+    ids = [int(r) for r in ann.index[m.values]]
+    if "sample" in q and len(ids) > q["sample"]:          # deterministic, evenly spaced subset
+        ids = sorted(ids)
+        ids = [ids[int(i * len(ids) / q["sample"])] for i in range(q["sample"])]
+    return ids
 
 
 for kind in ("stimuli", "motor", "readouts"):

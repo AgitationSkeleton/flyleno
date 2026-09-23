@@ -17,7 +17,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
   font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
 #app { display: grid; grid-template-columns: 1fr 380px; height: 100vh; }
 #viewport { position: relative; overflow: hidden; min-width: 0; }
-#three { display: block; width: 100%; height: 100%; }
+#three { display: block; width: 100%; height: 100%; position: relative; z-index: 1; }
 
 #hud { position: absolute; top: 14px; left: 18px; display: flex; flex-direction: column; gap: 6px; pointer-events: none; text-shadow: 0 2px 8px #000; }
 .hud-title { font: 800 30px/1 "Arial Black", Impact, sans-serif; color: var(--accent); letter-spacing: 1px; }
@@ -128,3 +128,9 @@ button.mini { margin-left: auto; font-size: 11px; }
 #form button { background: #000b; color: var(--text); border: 1px solid var(--line); padding: 5px 12px; cursor: pointer; font: inherit; }
 #form button:first-child { border-radius: 999px 0 0 999px; } #form button:last-child { border-radius: 0 999px 999px 0; }
 #form button.on { border-color: var(--accent); background: #e0263a44; }
+
+#screenModes { position: absolute; top: 102px; right: 14px; display: flex; z-index: 2; }
+#screenModes button { background: #000b; color: var(--text); border: 1px solid var(--line); padding: 5px 10px; cursor: pointer; font: inherit; }
+#screenModes button:first-child { border-radius: 999px 0 0 999px; } #screenModes button:last-child { border-radius: 0 999px 999px 0; }
+#screenModes button.on { border-color: var(--accent); background: #e0263a44; }
+#hud, #cams, #throws, #form, #volume, #loading { z-index: 2; }

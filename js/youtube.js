@@ -6,7 +6,7 @@ export const START_VIDEO = 'fHRLoVmPeLU';
 export const START_INDEX = 23;
 
 let apiPromise = null;
-function loadApi() {
+export function loadYouTubeApi() {
   if (!apiPromise) {
     apiPromise = new Promise((resolve) => {
       const prev = window.onYouTubeIframeAPIReady;
@@ -36,7 +36,7 @@ export class MusicPlayer {
   }
 
   async init() {
-    const YT = await loadApi();
+    const YT = await loadYouTubeApi();
     await new Promise((resolve) => {
       this.player = new YT.Player(this.root.querySelector('.yt-frame'), {
         width: '100%', height: '200',

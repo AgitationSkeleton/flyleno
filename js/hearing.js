@@ -28,10 +28,17 @@ export class Hearing {
   async pipeTabAudio() {
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { frameRate: 1, width: 16, height: 16 }, audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+        video: { frameRate: 10, width: { max: 960 } }, audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
         preferCurrentTab: true, selfBrowserSurface: 'include', systemAudio: 'include', surfaceSwitching: 'exclude',
       });
-      stream.getVideoTracks().forEach((t) => t.stop());
+      // keep the picture too: the stage screens use it to let the fly see a YouTube video (js/screens.js)
+      const vt = stream.getVideoTracks()[0];
+      if (vt) {
+        this.captureVideo = document.createElement('video');
+        this.captureVideo.muted = true; this.captureVideo.playsInline = true;
+        this.captureVideo.srcObject = new MediaStream([vt]);
+        this.captureVideo.play().catch(() => {});
+      }
       if (!stream.getAudioTracks().length) throw new Error('no audio track shared (tick "share tab audio")');
       const ctx = this.audio.ctx;
       this.capSrc = ctx.createMediaStreamSource(stream);
@@ -78,6 +85,8 @@ export class Hearing {
       low = Math.max(low, v * (0.8 + 0.2 * Math.sin(performance.now() / 250)));
       high = Math.max(high, v * 0.6);
     }
+    const sv = this.mode !== 'piped' ? (this.screenVideo?.() ?? 0) : 0;   // YouTube on the stage screen (estimate)
+    if (sv > 0) { low = Math.max(low, sv * 0.75 * (0.8 + 0.2 * Math.sin(performance.now() / 180))); high = Math.max(high, sv * 0.7); }
     this.onset = Math.max(this.onset * 0.6, Math.min(1, b.flux / 3));
     const k = 0.5;
     this.low += (low - this.low) * k; this.high += (high - this.high) * k;

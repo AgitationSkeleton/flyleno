@@ -33,6 +33,7 @@
       </div>
       <div id="volume" title="master volume (show sounds + music)">🔊 <input id="masterVol" type="range" min="0" max="1" step="0.01" value="0.8"><span id="masterVolNum">80</span></div>
       <div id="form" title="who is Leno?"><button data-form="leno" class="on">Leno</button><button data-form="fly">🪰 Fly-Leno</button></div>
+      <div id="screenModes" title="what the stage screens show"><button data-screen="cams" class="on">📹 Cams</button><button data-screen="video">▶ YouTube</button><button data-screen="green">🟩 Green</button></div>
       <div id="throws">
         <button id="throwTomato" title="a cultist in the audience throws a tomato">🍅 Throw tomato</button>
         <button id="throwPipe" title="a cultist in the audience throws a metal pipe">🔧 Throw pipe</button>
@@ -121,6 +122,16 @@
         <div class="row status" style="margin-top:4px"><span id="hearMode">hearing: off</span><button id="pipeBtn" class="mini">pipe tab audio</button></div>
         <div class="meter"><div class="lbl">JO-B low<small>30–300 Hz</small></div><div class="bar"><i id="hearLowBar"></i></div><div class="num" id="hearLowNum">0</div></div>
         <div class="meter"><div class="lbl">JO-A high<small>0.3–4 kHz</small></div><div class="bar"><i id="hearHighBar"></i></div><div class="num" id="hearHighNum">0</div></div>
+      </section>
+
+      <section class="panel">
+        <h2>Stage screens <small>seen by the fly (R1-6 photoreceptors)</small></h2>
+        <div class="row lesson"><input id="screenUrl" value="https://www.youtube.com/watch?v=ki3ssj466E0" placeholder="YouTube link or id"><button id="screenPlay">Show</button></div>
+        <div class="status" id="screenTitle" style="margin:4px 0">live Leno cams</div>
+        <label class="rowlbl">video volume <input id="screenVol" type="range" min="0" max="100" value="70"></label>
+        <div class="meter"><div class="lbl">Left eye<small>R1-6 drive</small></div><div class="bar"><i id="eyeLBar"></i></div><div class="num" id="eyeLNum">0</div></div>
+        <div class="meter"><div class="lbl">Right eye<small>R1-6 drive</small></div><div class="bar"><i id="eyeRBar"></i></div><div class="num" id="eyeRNum">0</div></div>
+        <div class="status" id="visionNote"></div>
       </section>
 
       <section class="panel">
