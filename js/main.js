@@ -133,13 +133,21 @@ const cams = {
   },
 };
 let camMode = 'audience';
+// Follow / Close-up keep tracking Leno when you orbit or zoom: the camera then rides along rigidly with its target
+// (and turns with Leno's heading in Close-up) instead of snapping back. Clicking the mode again resets the view.
+let camUser = false, camYaw = 0;
+const hostYaw = () => { const f = host.forward(); return Math.atan2(f.x, f.z); };
+const tracking = () => camMode === 'follow' || camMode === 'close';
 function setCam(mode) {
-  camMode = mode;
+  camMode = mode; camUser = false;
   document.querySelectorAll('#cams button').forEach((b) => b.classList.toggle('on', b.dataset.cam === mode));
   if (cams[mode]) { const c = cams[mode](); camera.position.copy(c.pos); controls.target.copy(c.target); }
 }
 document.querySelectorAll('#cams button').forEach((b) => (b.onclick = () => setCam(b.dataset.cam)));
-controls.addEventListener('start', () => { if (camMode !== 'free') { camMode = 'free'; setCam('free'); } });
+controls.addEventListener('start', () => {
+  if (tracking()) { camUser = true; camYaw = hostYaw(); }
+  else if (camMode !== 'free') setCam('free');
+});
 $('showMarkers').onchange = (e) => (stage.markerGroup.visible = e.target.checked);
 resize();
 setCam('audience');
@@ -649,10 +657,21 @@ renderer.setAnimationLoop(() => {
     $('hearLowBar').style.width = (100 * h.low / hearing.maxRate).toFixed(0) + '%'; $('hearLowNum').textContent = h.low.toFixed(0);
     $('hearHighBar').style.width = (100 * h.high / hearing.maxRate).toFixed(0) + '%'; $('hearHighNum').textContent = h.high.toFixed(0);
   }
-  if (camMode === 'follow' || camMode === 'close') {
+  if (tracking()) {
     const c = cams[camMode]();
-    camera.position.lerp(c.pos, 1 - Math.exp(-rawDt * 3));
-    controls.target.lerp(c.target, 1 - Math.exp(-rawDt * 5));
+    if (!camUser) {
+      camera.position.lerp(c.pos, 1 - Math.exp(-rawDt * 3));
+      controls.target.lerp(c.target, 1 - Math.exp(-rawDt * 5));
+    } else {
+      // keep the user's orbit: move the camera with the target, and in Close-up turn it with Leno
+      const before = controls.target.clone();
+      controls.target.lerp(c.target, 1 - Math.exp(-rawDt * 5));
+      camera.position.add(controls.target.clone().sub(before));
+      if (camMode === 'close') {
+        const y = hostYaw(); let dy = y - camYaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); camYaw = y;
+        camera.position.sub(controls.target).applyAxisAngle(THREE.Object3D.DEFAULT_UP, dy).add(controls.target);
+      }
+    }
   }
   controls.update();
   liveCams?.update(rawDt);
