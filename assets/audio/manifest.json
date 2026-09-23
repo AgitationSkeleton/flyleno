@@ -1,0 +1,5103 @@
+{
+ "version": 1,
+ "sources": [
+  {
+   "id": "w7lBVJwHABM",
+   "title": "Vinny - Grey Leno announces his candidacy",
+   "url": "https://www.youtube.com/watch?v=w7lBVJwHABM"
+  },
+  {
+   "id": "ki3ssj466E0",
+   "title": "[Vinesauce] Vinny - The Grey Leno Show",
+   "url": "https://www.youtube.com/watch?v=ki3ssj466E0"
+  },
+  {
+   "id": "f8mL0_4GeV0",
+   "title": "Metal pipe falling sound effect",
+   "url": "https://www.youtube.com/watch?v=f8mL0_4GeV0"
+  },
+  {
+   "id": "u0D718AmYTs",
+   "url": "https://www.youtube.com/watch?v=u0D718AmYTs",
+   "title": "sound effect"
+  },
+  {
+   "id": "hJlxgWYqvR0",
+   "url": "https://www.youtube.com/watch?v=hJlxgWYqvR0",
+   "title": "sound effect"
+  },
+  {
+   "id": "Dk3OZ4a9m6o",
+   "url": "https://www.youtube.com/watch?v=Dk3OZ4a9m6o",
+   "title": "sound effect"
+  },
+  {
+   "id": "barWV7RWkq0",
+   "url": "https://www.youtube.com/watch?v=barWV7RWkq0",
+   "title": "sound effect"
+  },
+  {
+   "id": "Vw9MCNbFggI",
+   "url": "https://www.youtube.com/watch?v=Vw9MCNbFggI",
+   "title": "sound effect"
+  },
+  {
+   "id": "JhE6hEgTth0",
+   "url": "https://www.youtube.com/watch?v=JhE6hEgTth0",
+   "title": "sound effect"
+  },
+  {
+   "id": "UnDhyWnHPD0",
+   "url": "https://www.youtube.com/watch?v=UnDhyWnHPD0",
+   "title": "sound effect"
+  },
+  {
+   "id": "RgJ8wfuDfo4",
+   "url": "https://www.youtube.com/watch?v=RgJ8wfuDfo4",
+   "title": "sound effect"
+  },
+  {
+   "id": "yoD5T0N1SzU",
+   "url": "https://www.youtube.com/watch?v=yoD5T0N1SzU",
+   "title": "sound effect"
+  },
+  {
+   "id": "pf93OHsjkQM",
+   "url": "https://www.youtube.com/watch?v=pf93OHsjkQM",
+   "title": "sound effect"
+  },
+  {
+   "id": "A3wzIw1tWkw",
+   "url": "https://www.youtube.com/watch?v=A3wzIw1tWkw",
+   "title": "sound effect"
+  },
+  {
+   "id": "jqHViajqnwc",
+   "url": "https://www.youtube.com/watch?v=jqHViajqnwc",
+   "title": "sound effect"
+  },
+  {
+   "id": "zcDiAD8RGq8",
+   "url": "https://www.youtube.com/watch?v=zcDiAD8RGq8",
+   "title": "sound effect"
+  },
+  {
+   "id": "J0WO22NhTK8",
+   "url": "https://www.youtube.com/watch?v=J0WO22NhTK8",
+   "title": "sound effect"
+  },
+  {
+   "id": "A8nqfY3rUKw",
+   "url": "https://www.youtube.com/watch?v=A8nqfY3rUKw",
+   "title": "sound effect"
+  }
+ ],
+ "leno": {
+  "phonemes": {
+   "AA": [
+    {
+     "file": "leno/phonemes/AA_001.ogg",
+     "dur": 0.09,
+     "rms": 0.1,
+     "f0": 225.9,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1079.67,
+      "t1": 1079.76
+     },
+     "conf": 0.633
+    },
+    {
+     "file": "leno/phonemes/AA_002.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 275.7,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 118.65,
+      "t1": 118.81
+     },
+     "conf": 0.608
+    },
+    {
+     "file": "leno/phonemes/AA_003.ogg",
+     "dur": 0.095,
+     "rms": 0.1,
+     "f0": 435.1,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 914.88,
+      "t1": 914.975
+     },
+     "conf": 0.55
+    },
+    {
+     "file": "leno/phonemes/AA_004.ogg",
+     "dur": 0.129,
+     "rms": 0.1,
+     "f0": 223.9,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1104.88,
+      "t1": 1105.01
+     },
+     "conf": 0.548
+    },
+    {
+     "file": "leno/phonemes/AA_005.ogg",
+     "dur": 0.135,
+     "rms": 0.1,
+     "f0": 295.5,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 515.55,
+      "t1": 515.685
+     },
+     "conf": 0.5
+    },
+    {
+     "file": "leno/phonemes/AA_006.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 192.7,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 121.14,
+      "t1": 121.3
+     },
+     "conf": 0.481
+    },
+    {
+     "file": "leno/phonemes/AA_007.ogg",
+     "dur": 0.134,
+     "rms": 0.1,
+     "f0": 217.6,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1058.07,
+      "t1": 1058.205
+     },
+     "conf": 0.472
+    },
+    {
+     "file": "leno/phonemes/AA_008.ogg",
+     "dur": 0.15,
+     "rms": 0.1,
+     "f0": 492.6,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 941.57,
+      "t1": 941.72
+     },
+     "conf": 0.471
+    }
+   ],
+   "AE": [
+    {
+     "file": "leno/phonemes/AE_001.ogg",
+     "dur": 0.135,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 39.725,
+      "t1": 39.86
+     },
+     "conf": 0.776
+    },
+    {
+     "file": "leno/phonemes/AE_002.ogg",
+     "dur": 0.085,
+     "rms": 0.1,
+     "f0": 204.2,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 37.585,
+      "t1": 37.67
+     },
+     "conf": 0.764
+    },
+    {
+     "file": "leno/phonemes/AE_003.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 194.9,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 24.26,
+      "t1": 24.38
+     },
+     "conf": 0.755
+    },
+    {
+     "file": "leno/phonemes/AE_004.ogg",
+     "dur": 0.135,
+     "rms": 0.1,
+     "f0": 185.1,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 83.315,
+      "t1": 83.45
+     },
+     "conf": 0.745
+    },
+    {
+     "file": "leno/phonemes/AE_005.ogg",
+     "dur": 0.15,
+     "rms": 0.1,
+     "f0": 303.3,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 136.365,
+      "t1": 136.515
+     },
+     "conf": 0.719
+    },
+    {
+     "file": "leno/phonemes/AE_006.ogg",
+     "dur": 0.101,
+     "rms": 0.1,
+     "f0": 243.5,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 53.18,
+      "t1": 53.28
+     },
+     "conf": 0.714
+    },
+    {
+     "file": "leno/phonemes/AE_007.ogg",
+     "dur": 0.095,
+     "rms": 0.1,
+     "f0": 450.5,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 993.03,
+      "t1": 993.125
+     },
+     "conf": 0.706
+    },
+    {
+     "file": "leno/phonemes/AE_008.ogg",
+     "dur": 0.105,
+     "rms": 0.1,
+     "f0": 245.6,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 43.25,
+      "t1": 43.355
+     },
+     "conf": 0.68
+    }
+   ],
+   "AH": [
+    {
+     "file": "leno/phonemes/AH_001.ogg",
+     "dur": 0.08,
+     "rms": 0.1,
+     "f0": 191.6,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 118.83,
+      "t1": 118.91
+     },
+     "conf": 0.801
+    },
+    {
+     "file": "leno/phonemes/AH_002.ogg",
+     "dur": 0.061,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 111.345,
+      "t1": 111.405
+     },
+     "conf": 0.761
+    },
+    {
+     "file": "leno/phonemes/AH_003.ogg",
+     "dur": 0.07,
+     "rms": 0.1,
+     "f0": 258.7,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 249.34,
+      "t1": 249.409
+     },
+     "conf": 0.74
+    },
+    {
+     "file": "leno/phonemes/AH_004.ogg",
+     "dur": 0.155,
+     "rms": 0.1,
+     "f0": 193.8,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 739.93,
+      "t1": 740.085
+     },
+     "conf": 0.74
+    },
+    {
+     "file": "leno/phonemes/AH_005.ogg",
+     "dur": 0.085,
+     "rms": 0.1,
+     "f0": 190.5,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 259.615,
+      "t1": 259.7
+     },
+     "conf": 0.737
+    },
+    {
+     "file": "leno/phonemes/AH_006.ogg",
+     "dur": 0.129,
+     "rms": 0.1,
+     "f0": 198.3,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 115.27,
+      "t1": 115.399
+     },
+     "conf": 0.736
+    },
+    {
+     "file": "leno/phonemes/AH_007.ogg",
+     "dur": 0.105,
+     "rms": 0.1,
+     "f0": 199.5,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 259.36,
+      "t1": 259.465
+     },
+     "conf": 0.727
+    },
+    {
+     "file": "leno/phonemes/AH_008.ogg",
+     "dur": 0.049,
+     "rms": 0.1,
+     "f0": 198.3,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 292.051,
+      "t1": 292.099
+     },
+     "conf": 0.721
+    }
+   ],
+   "AO": [
+    {
+     "file": "leno/phonemes/AO_001.ogg",
+     "dur": 0.115,
+     "rms": 0.1,
+     "f0": 339.4,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1177.79,
+      "t1": 1177.905
+     },
+     "conf": 0.457
+    },
+    {
+     "file": "leno/phonemes/AO_002.ogg",
+     "dur": 0.094,
+     "rms": 0.1,
+     "f0": 333.6,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 938.91,
+      "t1": 939.005
+     },
+     "conf": 0.404
+    }
+   ],
+   "EH": [
+    {
+     "file": "leno/phonemes/EH_001.ogg",
+     "dur": 0.055,
+     "rms": 0.1,
+     "f0": 384.3,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 354.655,
+      "t1": 354.71
+     },
+     "conf": 0.772
+    },
+    {
+     "file": "leno/phonemes/EH_002.ogg",
+     "dur": 0.055,
+     "rms": 0.1,
+     "f0": 168.7,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 11.91,
+      "t1": 11.965
+     },
+     "conf": 0.758
+    },
+    {
+     "file": "leno/phonemes/EH_003.ogg",
+     "dur": 0.09,
+     "rms": 0.1,
+     "f0": 285.4,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 157.85,
+      "t1": 157.94
+     },
+     "conf": 0.744
+    },
+    {
+     "file": "leno/phonemes/EH_004.ogg",
+     "dur": 0.105,
+     "rms": 0.1,
+     "f0": 247.0,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 39.45,
+      "t1": 39.555
+     },
+     "conf": 0.742
+    },
+    {
+     "file": "leno/phonemes/EH_005.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": 211.4,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 22.04,
+      "t1": 22.139
+     },
+     "conf": 0.735
+    },
+    {
+     "file": "leno/phonemes/EH_006.ogg",
+     "dur": 0.105,
+     "rms": 0.1,
+     "f0": 215.1,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 344.37,
+      "t1": 344.475
+     },
+     "conf": 0.734
+    },
+    {
+     "file": "leno/phonemes/EH_007.ogg",
+     "dur": 0.08,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 747.985,
+      "t1": 748.065
+     },
+     "conf": 0.732
+    },
+    {
+     "file": "leno/phonemes/EH_008.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": 463.6,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 239.42,
+      "t1": 239.52
+     },
+     "conf": 0.722
+    }
+   ],
+   "ER": [
+    {
+     "file": "leno/phonemes/ER_001.ogg",
+     "dur": 0.096,
+     "rms": 0.1,
+     "f0": 176.7,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 97.469,
+      "t1": 97.565
+     },
+     "conf": 0.706
+    },
+    {
+     "file": "leno/phonemes/ER_002.ogg",
+     "dur": 0.065,
+     "rms": 0.1,
+     "f0": 435.1,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 239.59,
+      "t1": 239.655
+     },
+     "conf": 0.632
+    },
+    {
+     "file": "leno/phonemes/ER_003.ogg",
+     "dur": 0.125,
+     "rms": 0.1,
+     "f0": 191.6,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 84.485,
+      "t1": 84.61
+     },
+     "conf": 0.588
+    }
+   ],
+   "IH": [
+    {
+     "file": "leno/phonemes/IH_001.ogg",
+     "dur": 0.06,
+     "rms": 0.1,
+     "f0": 216.3,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 155.82,
+      "t1": 155.88
+     },
+     "conf": 0.78
+    },
+    {
+     "file": "leno/phonemes/IH_002.ogg",
+     "dur": 0.081,
+     "rms": 0.1,
+     "f0": 225.2,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 515.27,
+      "t1": 515.351
+     },
+     "conf": 0.778
+    },
+    {
+     "file": "leno/phonemes/IH_003.ogg",
+     "dur": 0.08,
+     "rms": 0.1,
+     "f0": 182.9,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 98.61,
+      "t1": 98.691
+     },
+     "conf": 0.749
+    },
+    {
+     "file": "leno/phonemes/IH_004.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": 259.5,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 95.57,
+      "t1": 95.67
+     },
+     "conf": 0.743
+    },
+    {
+     "file": "leno/phonemes/IH_005.ogg",
+     "dur": 0.089,
+     "rms": 0.1,
+     "f0": 200.7,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 82.715,
+      "t1": 82.804
+     },
+     "conf": 0.738
+    },
+    {
+     "file": "leno/phonemes/IH_006.ogg",
+     "dur": 0.082,
+     "rms": 0.1,
+     "f0": 213.8,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1033.319,
+      "t1": 1033.401
+     },
+     "conf": 0.727
+    },
+    {
+     "file": "leno/phonemes/IH_007.ogg",
+     "dur": 0.085,
+     "rms": 0.1,
+     "f0": 551.4,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 38.535,
+      "t1": 38.62
+     },
+     "conf": 0.714
+    },
+    {
+     "file": "leno/phonemes/IH_008.ogg",
+     "dur": 0.08,
+     "rms": 0.1,
+     "f0": 213.2,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 240.3,
+      "t1": 240.38
+     },
+     "conf": 0.706
+    }
+   ],
+   "IY": [
+    {
+     "file": "leno/phonemes/IY_001.ogg",
+     "dur": 0.095,
+     "rms": 0.1,
+     "f0": 117.9,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 36.45,
+      "t1": 36.544
+     },
+     "conf": 0.939
+    },
+    {
+     "file": "leno/phonemes/IY_002.ogg",
+     "dur": 0.096,
+     "rms": 0.1,
+     "f0": 255.7,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 88.169,
+      "t1": 88.265
+     },
+     "conf": 0.913
+    },
+    {
+     "file": "leno/phonemes/IY_003.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 283.8,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 117.71,
+      "t1": 117.87
+     },
+     "conf": 0.912
+    },
+    {
+     "file": "leno/phonemes/IY_004.ogg",
+     "dur": 0.111,
+     "rms": 0.1,
+     "f0": 201.2,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 110.51,
+      "t1": 110.621
+     },
+     "conf": 0.91
+    },
+    {
+     "file": "leno/phonemes/IY_005.ogg",
+     "dur": 0.115,
+     "rms": 0.1,
+     "f0": 268.6,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 69.02,
+      "t1": 69.135
+     },
+     "conf": 0.897
+    },
+    {
+     "file": "leno/phonemes/IY_006.ogg",
+     "dur": 0.07,
+     "rms": 0.1,
+     "f0": 119.3,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 84.839,
+      "t1": 84.909
+     },
+     "conf": 0.895
+    },
+    {
+     "file": "leno/phonemes/IY_007.ogg",
+     "dur": 0.089,
+     "rms": 0.1,
+     "f0": 241.4,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 116.71,
+      "t1": 116.8
+     },
+     "conf": 0.884
+    },
+    {
+     "file": "leno/phonemes/IY_008.ogg",
+     "dur": 0.141,
+     "rms": 0.1,
+     "f0": 453.1,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 880.79,
+      "t1": 880.93
+     },
+     "conf": 0.871
+    }
+   ],
+   "OW": [
+    {
+     "file": "leno/phonemes/OW_001.ogg",
+     "dur": 0.11,
+     "rms": 0.1,
+     "f0": 300.6,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 112.03,
+      "t1": 112.14
+     },
+     "conf": 0.726
+    },
+    {
+     "file": "leno/phonemes/OW_002.ogg",
+     "dur": 0.11,
+     "rms": 0.1,
+     "f0": 237.2,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 4.07,
+      "t1": 4.18
+     },
+     "conf": 0.669
+    },
+    {
+     "file": "leno/phonemes/OW_003.ogg",
+     "dur": 0.114,
+     "rms": 0.1,
+     "f0": 245.6,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 990.325,
+      "t1": 990.439
+     },
+     "conf": 0.578
+    }
+   ],
+   "UW": [
+    {
+     "file": "leno/phonemes/UW_001.ogg",
+     "dur": 0.115,
+     "rms": 0.1,
+     "f0": 461.0,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1108.36,
+      "t1": 1108.475
+     },
+     "conf": 0.787
+    },
+    {
+     "file": "leno/phonemes/UW_002.ogg",
+     "dur": 0.094,
+     "rms": 0.1,
+     "f0": 244.2,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 515.89,
+      "t1": 515.984
+     },
+     "conf": 0.756
+    },
+    {
+     "file": "leno/phonemes/UW_003.ogg",
+     "dur": 0.106,
+     "rms": 0.1,
+     "f0": 435.1,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 881.429,
+      "t1": 881.536
+     },
+     "conf": 0.736
+    },
+    {
+     "file": "leno/phonemes/UW_004.ogg",
+     "dur": 0.081,
+     "rms": 0.1,
+     "f0": 312.1,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1160.04,
+      "t1": 1160.121
+     },
+     "conf": 0.66
+    },
+    {
+     "file": "leno/phonemes/UW_005.ogg",
+     "dur": 0.135,
+     "rms": 0.1,
+     "f0": 240.7,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 112.875,
+      "t1": 113.01
+     },
+     "conf": 0.654
+    },
+    {
+     "file": "leno/phonemes/UW_006.ogg",
+     "dur": 0.075,
+     "rms": 0.1,
+     "f0": 264.8,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1161.315,
+      "t1": 1161.39
+     },
+     "conf": 0.638
+    }
+   ],
+   "AY": [
+    {
+     "file": "leno/phonemes/AY_001.ogg",
+     "dur": 0.18,
+     "rms": 0.1,
+     "f0": 173.7,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 352.57,
+      "t1": 352.75
+     },
+     "conf": 0.92
+    },
+    {
+     "file": "leno/phonemes/AY_002.ogg",
+     "dur": 0.13,
+     "rms": 0.1,
+     "f0": 223.9,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 258.87,
+      "t1": 259.0
+     },
+     "conf": 0.883
+    },
+    {
+     "file": "leno/phonemes/AY_003.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 225.2,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 258.35,
+      "t1": 258.51
+     },
+     "conf": 0.882
+    },
+    {
+     "file": "leno/phonemes/AY_004.ogg",
+     "dur": 0.179,
+     "rms": 0.1,
+     "f0": 229.2,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 762.61,
+      "t1": 762.79
+     },
+     "conf": 0.768
+    },
+    {
+     "file": "leno/phonemes/AY_005.ogg",
+     "dur": 0.104,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1117.845,
+      "t1": 1117.949
+     },
+     "conf": 0.739
+    },
+    {
+     "file": "leno/phonemes/AY_006.ogg",
+     "dur": 0.08,
+     "rms": 0.1,
+     "f0": 271.0,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1118.23,
+      "t1": 1118.31
+     },
+     "conf": 0.723
+    },
+    {
+     "file": "leno/phonemes/AY_007.ogg",
+     "dur": 0.125,
+     "rms": 0.1,
+     "f0": 454.4,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1163.17,
+      "t1": 1163.295
+     },
+     "conf": 0.676
+    },
+    {
+     "file": "leno/phonemes/AY_008.ogg",
+     "dur": 0.08,
+     "rms": 0.1,
+     "f0": 481.4,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1187.19,
+      "t1": 1187.27
+     },
+     "conf": 0.666
+    }
+   ],
+   "EY": [
+    {
+     "file": "leno/phonemes/EY_001.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 274.1,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 23.96,
+      "t1": 24.12
+     },
+     "conf": 0.774
+    },
+    {
+     "file": "leno/phonemes/EY_002.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 210.1,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 6.73,
+      "t1": 6.89
+     },
+     "conf": 0.751
+    },
+    {
+     "file": "leno/phonemes/EY_003.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 282.1,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 71.2,
+      "t1": 71.36
+     },
+     "conf": 0.747
+    },
+    {
+     "file": "leno/phonemes/EY_004.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 404.8,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1033.13,
+      "t1": 1033.29
+     },
+     "conf": 0.738
+    },
+    {
+     "file": "leno/phonemes/EY_005.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 239.3,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 165.07,
+      "t1": 165.23
+     },
+     "conf": 0.73
+    },
+    {
+     "file": "leno/phonemes/EY_006.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 259.5,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1033.73,
+      "t1": 1033.89
+     },
+     "conf": 0.724
+    },
+    {
+     "file": "leno/phonemes/EY_007.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 178.2,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 138.21,
+      "t1": 138.37
+     },
+     "conf": 0.713
+    },
+    {
+     "file": "leno/phonemes/EY_008.ogg",
+     "dur": 0.159,
+     "rms": 0.1,
+     "f0": 387.6,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 75.86,
+      "t1": 76.019
+     },
+     "conf": 0.703
+    }
+   ],
+   "AW": [
+    {
+     "file": "leno/phonemes/AW_001.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 175.7,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 56.7,
+      "t1": 56.86
+     },
+     "conf": 0.713
+    },
+    {
+     "file": "leno/phonemes/AW_002.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 230.5,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 292.67,
+      "t1": 292.83
+     },
+     "conf": 0.704
+    },
+    {
+     "file": "leno/phonemes/AW_003.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 212.6,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 55.74,
+      "t1": 55.9
+     },
+     "conf": 0.695
+    },
+    {
+     "file": "leno/phonemes/AW_004.ogg",
+     "dur": 0.079,
+     "rms": 0.1,
+     "f0": 252.8,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 9.95,
+      "t1": 10.029
+     },
+     "conf": 0.694
+    },
+    {
+     "file": "leno/phonemes/AW_005.ogg",
+     "dur": 0.105,
+     "rms": 0.1,
+     "f0": 223.9,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1164.985,
+      "t1": 1165.09
+     },
+     "conf": 0.619
+    },
+    {
+     "file": "leno/phonemes/AW_006.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 152.1,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 233.23,
+      "t1": 233.39
+     },
+     "conf": 0.561
+    }
+   ],
+   "B": [
+    {
+     "file": "leno/phonemes/B_001.ogg",
+     "dur": 0.08,
+     "rms": 0.1,
+     "f0": 153.8,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 35.53,
+      "t1": 35.61
+     },
+     "conf": 0.788
+    },
+    {
+     "file": "leno/phonemes/B_002.ogg",
+     "dur": 0.08,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1189.05,
+      "t1": 1189.13
+     },
+     "conf": 0.684
+    },
+    {
+     "file": "leno/phonemes/B_003.ogg",
+     "dur": 0.08,
+     "rms": 0.1,
+     "f0": 248.5,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 952.58,
+      "t1": 952.66
+     },
+     "conf": 0.583
+    }
+   ],
+   "D": [
+    {
+     "file": "leno/phonemes/D_001.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 133.9,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 9.13,
+      "t1": 9.25
+     },
+     "conf": 0.901
+    },
+    {
+     "file": "leno/phonemes/D_002.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": 138.6,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 35.76,
+      "t1": 35.86
+     },
+     "conf": 0.773
+    },
+    {
+     "file": "leno/phonemes/D_003.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": 188.9,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 14.95,
+      "t1": 15.05
+     },
+     "conf": 0.734
+    },
+    {
+     "file": "leno/phonemes/D_004.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": 180.3,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 259.75,
+      "t1": 259.85
+     },
+     "conf": 0.722
+    }
+   ],
+   "G": [
+    {
+     "file": "leno/phonemes/G_001.ogg",
+     "dur": 0.099,
+     "rms": 0.1,
+     "f0": 200.7,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 352.851,
+      "t1": 352.95
+     },
+     "conf": 0.781
+    },
+    {
+     "file": "leno/phonemes/G_002.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": 236.6,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 279.87,
+      "t1": 279.97
+     },
+     "conf": 0.716
+    },
+    {
+     "file": "leno/phonemes/G_003.ogg",
+     "dur": 0.099,
+     "rms": 0.1,
+     "f0": 258.7,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 297.821,
+      "t1": 297.92
+     },
+     "conf": 0.714
+    },
+    {
+     "file": "leno/phonemes/G_004.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": 210.8,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1063.18,
+      "t1": 1063.28
+     },
+     "conf": 0.691
+    }
+   ],
+   "P": [
+    {
+     "file": "leno/phonemes/P_001.ogg",
+     "dur": 0.064,
+     "rms": 0.1,
+     "f0": 272.5,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 118.605,
+      "t1": 118.67
+     },
+     "conf": 0.791
+    },
+    {
+     "file": "leno/phonemes/P_002.ogg",
+     "dur": 0.095,
+     "rms": 0.1,
+     "f0": 318.5,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 20.585,
+      "t1": 20.68
+     },
+     "conf": 0.746
+    },
+    {
+     "file": "leno/phonemes/P_003.ogg",
+     "dur": 0.088,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 15.262,
+      "t1": 15.35
+     },
+     "conf": 0.731
+    },
+    {
+     "file": "leno/phonemes/P_004.ogg",
+     "dur": 0.06,
+     "rms": 0.1,
+     "f0": 215.1,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 18.18,
+      "t1": 18.24
+     },
+     "conf": 0.573
+    }
+   ],
+   "T": [
+    {
+     "file": "leno/phonemes/T_001.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": 274.1,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 14.59,
+      "t1": 14.69
+     },
+     "conf": 0.878
+    },
+    {
+     "file": "leno/phonemes/T_002.ogg",
+     "dur": 0.119,
+     "rms": 0.1,
+     "f0": 420.3,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 298.441,
+      "t1": 298.56
+     },
+     "conf": 0.854
+    },
+    {
+     "file": "leno/phonemes/T_003.ogg",
+     "dur": 0.119,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1051.31,
+      "t1": 1051.43
+     },
+     "conf": 0.741
+    },
+    {
+     "file": "leno/phonemes/T_004.ogg",
+     "dur": 0.14,
+     "rms": 0.095,
+     "f0": null,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 993.8,
+      "t1": 993.94
+     },
+     "conf": 0.731
+    }
+   ],
+   "K": [
+    {
+     "file": "leno/phonemes/K_001.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 752.33,
+      "t1": 752.45
+     },
+     "conf": 0.89
+    },
+    {
+     "file": "leno/phonemes/K_002.ogg",
+     "dur": 0.142,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 35.629,
+      "t1": 35.771
+     },
+     "conf": 0.846
+    },
+    {
+     "file": "leno/phonemes/K_003.ogg",
+     "dur": 0.18,
+     "rms": 0.1,
+     "f0": 275.7,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 360.61,
+      "t1": 360.79
+     },
+     "conf": 0.787
+    }
+   ],
+   "F": [
+    {
+     "file": "leno/phonemes/F_001.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 241.16,
+      "t1": 241.28
+     },
+     "conf": 0.927
+    },
+    {
+     "file": "leno/phonemes/F_002.ogg",
+     "dur": 0.099,
+     "rms": 0.1,
+     "f0": 208.9,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 39.111,
+      "t1": 39.21
+     },
+     "conf": 0.788
+    },
+    {
+     "file": "leno/phonemes/F_003.ogg",
+     "dur": 0.099,
+     "rms": 0.1,
+     "f0": 245.6,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 155.35,
+      "t1": 155.45
+     },
+     "conf": 0.784
+    },
+    {
+     "file": "leno/phonemes/F_004.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 24.18,
+      "t1": 24.28
+     },
+     "conf": 0.776
+    }
+   ],
+   "V": [
+    {
+     "file": "leno/phonemes/V_001.ogg",
+     "dur": 0.08,
+     "rms": 0.1,
+     "f0": 175.2,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 95.75,
+      "t1": 95.83
+     },
+     "conf": 0.791
+    },
+    {
+     "file": "leno/phonemes/V_002.ogg",
+     "dur": 0.101,
+     "rms": 0.1,
+     "f0": 178.8,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 25.199,
+      "t1": 25.3
+     },
+     "conf": 0.781
+    },
+    {
+     "file": "leno/phonemes/V_003.ogg",
+     "dur": 0.07,
+     "rms": 0.1,
+     "f0": 193.3,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 91.79,
+      "t1": 91.859
+     },
+     "conf": 0.76
+    },
+    {
+     "file": "leno/phonemes/V_004.ogg",
+     "dur": 0.099,
+     "rms": 0.1,
+     "f0": 164.4,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1060.82,
+      "t1": 1060.919
+     },
+     "conf": 0.706
+    }
+   ],
+   "S": [
+    {
+     "file": "leno/phonemes/S_001.ogg",
+     "dur": 0.14,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 116.949,
+      "t1": 117.09
+     },
+     "conf": 0.979
+    },
+    {
+     "file": "leno/phonemes/S_002.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 39.93,
+      "t1": 40.05
+     },
+     "conf": 0.973
+    },
+    {
+     "file": "leno/phonemes/S_003.ogg",
+     "dur": 0.14,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 280.99,
+      "t1": 281.13
+     },
+     "conf": 0.881
+    },
+    {
+     "file": "leno/phonemes/S_004.ogg",
+     "dur": 0.124,
+     "rms": 0.1,
+     "f0": 266.3,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 76.58,
+      "t1": 76.703
+     },
+     "conf": 0.854
+    }
+   ],
+   "Z": [
+    {
+     "file": "leno/phonemes/Z_001.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 98.691,
+      "t1": 98.811
+     },
+     "conf": 0.78
+    },
+    {
+     "file": "leno/phonemes/Z_002.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 177.2,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 38.33,
+      "t1": 38.49
+     },
+     "conf": 0.778
+    },
+    {
+     "file": "leno/phonemes/Z_003.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 135.03,
+      "t1": 135.15
+     },
+     "conf": 0.742
+    },
+    {
+     "file": "leno/phonemes/Z_004.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 463.6,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 915.72,
+      "t1": 915.84
+     },
+     "conf": 0.69
+    }
+   ],
+   "SH": [
+    {
+     "file": "leno/phonemes/SH_001.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 98.05,
+      "t1": 98.15
+     },
+     "conf": 0.782
+    },
+    {
+     "file": "leno/phonemes/SH_002.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 111.01,
+      "t1": 111.11
+     },
+     "conf": 0.781
+    },
+    {
+     "file": "leno/phonemes/SH_003.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 73.84,
+      "t1": 73.96
+     },
+     "conf": 0.756
+    },
+    {
+     "file": "leno/phonemes/SH_004.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1105.76,
+      "t1": 1105.86
+     },
+     "conf": 0.696
+    }
+   ],
+   "DH": [
+    {
+     "file": "leno/phonemes/DH_001.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 171.7,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 11.25,
+      "t1": 11.37
+     },
+     "conf": 0.774
+    },
+    {
+     "file": "leno/phonemes/DH_002.ogg",
+     "dur": 0.079,
+     "rms": 0.1,
+     "f0": 266.3,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 249.27,
+      "t1": 249.35
+     },
+     "conf": 0.746
+    },
+    {
+     "file": "leno/phonemes/DH_003.ogg",
+     "dur": 0.05,
+     "rms": 0.1,
+     "f0": 178.8,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 15.13,
+      "t1": 15.18
+     },
+     "conf": 0.658
+    }
+   ],
+   "HH": [
+    {
+     "file": "leno/phonemes/HH_001.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": 313.0,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 8.77,
+      "t1": 8.87
+     },
+     "conf": 0.769
+    },
+    {
+     "file": "leno/phonemes/HH_002.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 36.7,
+      "t1": 36.8
+     },
+     "conf": 0.757
+    },
+    {
+     "file": "leno/phonemes/HH_003.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 229.2,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 295.47,
+      "t1": 295.59
+     },
+     "conf": 0.729
+    },
+    {
+     "file": "leno/phonemes/HH_004.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": 219.4,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 101.89,
+      "t1": 101.99
+     },
+     "conf": 0.696
+    }
+   ],
+   "M": [
+    {
+     "file": "leno/phonemes/M_001.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 302.4,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 990.58,
+      "t1": 990.701
+     },
+     "conf": 0.909
+    },
+    {
+     "file": "leno/phonemes/M_002.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 176.7,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 35.81,
+      "t1": 35.93
+     },
+     "conf": 0.888
+    },
+    {
+     "file": "leno/phonemes/M_003.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 206.5,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 993.96,
+      "t1": 994.08
+     },
+     "conf": 0.795
+    },
+    {
+     "file": "leno/phonemes/M_004.ogg",
+     "dur": 0.14,
+     "rms": 0.1,
+     "f0": 198.3,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 14.39,
+      "t1": 14.53
+     },
+     "conf": 0.732
+    }
+   ],
+   "N": [
+    {
+     "file": "leno/phonemes/N_001.ogg",
+     "dur": 0.14,
+     "rms": 0.1,
+     "f0": 157.4,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 9.73,
+      "t1": 9.87
+     },
+     "conf": 0.969
+    },
+    {
+     "file": "leno/phonemes/N_002.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 227.8,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 10.91,
+      "t1": 11.03
+     },
+     "conf": 0.93
+    },
+    {
+     "file": "leno/phonemes/N_003.ogg",
+     "dur": 0.119,
+     "rms": 0.1,
+     "f0": 272.5,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 109.351,
+      "t1": 109.47
+     },
+     "conf": 0.897
+    },
+    {
+     "file": "leno/phonemes/N_004.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 222.0,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1032.59,
+      "t1": 1032.71
+     },
+     "conf": 0.891
+    }
+   ],
+   "NG": [
+    {
+     "file": "leno/phonemes/NG_001.ogg",
+     "dur": 0.08,
+     "rms": 0.1,
+     "f0": 215.7,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 26.32,
+      "t1": 26.4
+     },
+     "conf": 0.776
+    },
+    {
+     "file": "leno/phonemes/NG_002.ogg",
+     "dur": 0.101,
+     "rms": 0.1,
+     "f0": 218.2,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 11.07,
+      "t1": 11.17
+     },
+     "conf": 0.766
+    },
+    {
+     "file": "leno/phonemes/NG_003.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": 198.9,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 240.36,
+      "t1": 240.46
+     },
+     "conf": 0.724
+    },
+    {
+     "file": "leno/phonemes/NG_004.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 309.4,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 641.24,
+      "t1": 641.36
+     },
+     "conf": 0.473
+    }
+   ],
+   "L": [
+    {
+     "file": "leno/phonemes/L_001.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 261.7,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 110.29,
+      "t1": 110.41
+     },
+     "conf": 0.949
+    },
+    {
+     "file": "leno/phonemes/L_002.ogg",
+     "dur": 0.14,
+     "rms": 0.1,
+     "f0": 220.1,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 751.67,
+      "t1": 751.81
+     },
+     "conf": 0.786
+    },
+    {
+     "file": "leno/phonemes/L_003.ogg",
+     "dur": 0.137,
+     "rms": 0.1,
+     "f0": 314.9,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 766.783,
+      "t1": 766.92
+     },
+     "conf": 0.695
+    },
+    {
+     "file": "leno/phonemes/L_004.ogg",
+     "dur": 0.119,
+     "rms": 0.1,
+     "f0": 203.0,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 45.951,
+      "t1": 46.07
+     },
+     "conf": 0.694
+    }
+   ],
+   "R": [
+    {
+     "file": "leno/phonemes/R_001.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 55.64,
+      "t1": 55.76
+     },
+     "conf": 0.786
+    },
+    {
+     "file": "leno/phonemes/R_002.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 222.6,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 69.32,
+      "t1": 69.44
+     },
+     "conf": 0.761
+    },
+    {
+     "file": "leno/phonemes/R_003.ogg",
+     "dur": 0.14,
+     "rms": 0.1,
+     "f0": 352.4,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 76.84,
+      "t1": 76.98
+     },
+     "conf": 0.756
+    },
+    {
+     "file": "leno/phonemes/R_004.ogg",
+     "dur": 0.161,
+     "rms": 0.1,
+     "f0": 271.0,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 641.699,
+      "t1": 641.86
+     },
+     "conf": 0.651
+    }
+   ],
+   "W": [
+    {
+     "file": "leno/phonemes/W_001.ogg",
+     "dur": 0.101,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 35.16,
+      "t1": 35.26
+     },
+     "conf": 0.903
+    },
+    {
+     "file": "leno/phonemes/W_002.ogg",
+     "dur": 0.099,
+     "rms": 0.1,
+     "f0": 175.7,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 134.671,
+      "t1": 134.77
+     },
+     "conf": 0.886
+    },
+    {
+     "file": "leno/phonemes/W_003.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 249.9,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 941.9,
+      "t1": 942.02
+     },
+     "conf": 0.836
+    },
+    {
+     "file": "leno/phonemes/W_004.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 288.7,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 39.1,
+      "t1": 39.22
+     },
+     "conf": 0.808
+    }
+   ],
+   "Y": [
+    {
+     "file": "leno/phonemes/Y_001.ogg",
+     "dur": 0.121,
+     "rms": 0.1,
+     "f0": 215.7,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 358.449,
+      "t1": 358.57
+     },
+     "conf": 0.826
+    },
+    {
+     "file": "leno/phonemes/Y_002.ogg",
+     "dur": 0.08,
+     "rms": 0.1,
+     "f0": 249.9,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 515.83,
+      "t1": 515.91
+     },
+     "conf": 0.765
+    },
+    {
+     "file": "leno/phonemes/Y_003.ogg",
+     "dur": 0.159,
+     "rms": 0.1,
+     "f0": 255.7,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 107.151,
+      "t1": 107.31
+     },
+     "conf": 0.76
+    },
+    {
+     "file": "leno/phonemes/Y_004.ogg",
+     "dur": 0.16,
+     "rms": 0.1,
+     "f0": 453.1,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1095.02,
+      "t1": 1095.18
+     },
+     "conf": 0.545
+    }
+   ],
+   "CH": [
+    {
+     "file": "leno/phonemes/CH_001.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "w7lBVJwHABM",
+      "t0": 158.61,
+      "t1": 158.71
+     },
+     "conf": 0.72
+    }
+   ],
+   "JH": [
+    {
+     "file": "leno/phonemes/JH_001.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": 227.9,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 358.09,
+      "t1": 358.19
+     },
+     "conf": 0.906
+    },
+    {
+     "file": "leno/phonemes/JH_002.ogg",
+     "dur": 0.101,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 73.339,
+      "t1": 73.44
+     },
+     "conf": 0.745
+    },
+    {
+     "file": "leno/phonemes/JH_003.ogg",
+     "dur": 0.12,
+     "rms": 0.1,
+     "f0": 320.4,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 299.26,
+      "t1": 299.38
+     },
+     "conf": 0.71
+    },
+    {
+     "file": "leno/phonemes/JH_004.ogg",
+     "dur": 0.1,
+     "rms": 0.1,
+     "f0": null,
+     "src": {
+      "video": "ki3ssj466E0",
+      "t0": 1060.98,
+      "t1": 1061.08
+     },
+     "conf": 0.698
+    }
+   ]
+  },
+  "syllables": [
+   {
+    "file": "leno/syllables/bi_001.ogg",
+    "dur": 0.181,
+    "rms": 0.1,
+    "f0": 241.4,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 279.449,
+     "t1": 279.63
+    },
+    "conf": 0.711,
+    "text": "bi",
+    "phones": [
+     "B",
+     "IH"
+    ]
+   },
+   {
+    "file": "leno/syllables/dae_002.ogg",
+    "dur": 0.18,
+    "rms": 0.1,
+    "f0": 245.6,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 53.14,
+     "t1": 53.32
+    },
+    "conf": 0.68,
+    "text": "dae",
+    "phones": [
+     "D",
+     "AE"
+    ]
+   },
+   {
+    "file": "leno/syllables/daet_003.ogg",
+    "dur": 0.2,
+    "rms": 0.1,
+    "f0": 245.6,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 53.14,
+     "t1": 53.34
+    },
+    "conf": 0.671,
+    "text": "daet",
+    "phones": [
+     "D",
+     "AE",
+     "T"
+    ]
+   },
+   {
+    "file": "leno/syllables/dek_004.ogg",
+    "dur": 0.2,
+    "rms": 0.1,
+    "f0": 241.4,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 166.09,
+     "t1": 166.29
+    },
+    "conf": 0.767,
+    "text": "dek",
+    "phones": [
+     "D",
+     "EH",
+     "K"
+    ]
+   },
+   {
+    "file": "leno/syllables/duh_005.ogg",
+    "dur": 0.18,
+    "rms": 0.1,
+    "f0": 182.9,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 259.57,
+     "t1": 259.75
+    },
+    "conf": 0.771,
+    "text": "duh",
+    "phones": [
+     "D",
+     "AH"
+    ]
+   },
+   {
+    "file": "leno/syllables/fe_006.ogg",
+    "dur": 0.199,
+    "rms": 0.1,
+    "f0": 274.1,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 3.85,
+     "t1": 4.05
+    },
+    "conf": 0.764,
+    "text": "fe",
+    "phones": [
+     "F",
+     "EH"
+    ]
+   },
+   {
+    "file": "leno/syllables/fek_007.ogg",
+    "dur": 0.28,
+    "rms": 0.1,
+    "f0": 295.5,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 108.63,
+     "t1": 108.91
+    },
+    "conf": 0.757,
+    "text": "fek",
+    "phones": [
+     "F",
+     "EH",
+     "K"
+    ]
+   },
+   {
+    "file": "leno/syllables/fel_008.ogg",
+    "dur": 0.24,
+    "rms": 0.1,
+    "f0": 266.3,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 3.85,
+     "t1": 4.09
+    },
+    "conf": 0.935,
+    "text": "fel",
+    "phones": [
+     "F",
+     "EH",
+     "L"
+    ]
+   },
+   {
+    "file": "leno/syllables/his_009.ogg",
+    "dur": 0.199,
+    "rms": 0.1,
+    "f0": 181.9,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 87.131,
+     "t1": 87.33
+    },
+    "conf": 0.744,
+    "text": "his",
+    "phones": [
+     "HH",
+     "IH",
+     "S"
+    ]
+   },
+   {
+    "file": "leno/syllables/kae_010.ogg",
+    "dur": 0.18,
+    "rms": 0.1,
+    "f0": 241.4,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 104.03,
+     "t1": 104.21
+    },
+    "conf": 0.678,
+    "text": "kae",
+    "phones": [
+     "K",
+     "AE"
+    ]
+   },
+   {
+    "file": "leno/syllables/kaen_011.ogg",
+    "dur": 0.221,
+    "rms": 0.1,
+    "f0": 240.0,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 104.03,
+     "t1": 104.251
+    },
+    "conf": 0.753,
+    "text": "kaen",
+    "phones": [
+     "K",
+     "AE",
+     "N"
+    ]
+   },
+   {
+    "file": "leno/syllables/kai_012.ogg",
+    "dur": 0.14,
+    "rms": 0.1,
+    "f0": 230.5,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 952.86,
+     "t1": 953.0
+    },
+    "conf": 0.6,
+    "text": "kai",
+    "phones": [
+     "K",
+     "AY"
+    ]
+   },
+   {
+    "file": "leno/syllables/ki_013.ogg",
+    "dur": 0.16,
+    "rms": 0.1,
+    "f0": 258.7,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 89.29,
+     "t1": 89.45
+    },
+    "conf": 0.73,
+    "text": "ki",
+    "phones": [
+     "K",
+     "IH"
+    ]
+   },
+   {
+    "file": "leno/syllables/kuh_014.ogg",
+    "dur": 0.181,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 35.629,
+     "t1": 35.81
+    },
+    "conf": 0.8,
+    "text": "kuh",
+    "phones": [
+     "K",
+     "AH"
+    ]
+   },
+   {
+    "file": "leno/syllables/kuhn_015.ogg",
+    "dur": 0.179,
+    "rms": 0.1,
+    "f0": 193.8,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 4.23,
+     "t1": 4.409
+    },
+    "conf": 0.815,
+    "text": "kuhn",
+    "phones": [
+     "K",
+     "AH",
+     "N"
+    ]
+   },
+   {
+    "file": "leno/syllables/kuhn_016.ogg",
+    "dur": 0.22,
+    "rms": 0.1,
+    "f0": 215.1,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 40.82,
+     "t1": 41.04
+    },
+    "conf": 0.77,
+    "text": "kuhn",
+    "phones": [
+     "K",
+     "AH",
+     "N"
+    ]
+   },
+   {
+    "file": "leno/syllables/lae_017.ogg",
+    "dur": 0.26,
+    "rms": 0.1,
+    "f0": 278.9,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 164.65,
+     "t1": 164.91
+    },
+    "conf": 0.711,
+    "text": "lae",
+    "phones": [
+     "L",
+     "AE"
+    ]
+   },
+   {
+    "file": "leno/syllables/lai_018.ogg",
+    "dur": 0.2,
+    "rms": 0.1,
+    "f0": 194.9,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 98.83,
+     "t1": 99.03
+    },
+    "conf": 0.961,
+    "text": "lai",
+    "phones": [
+     "L",
+     "AY"
+    ]
+   },
+   {
+    "file": "leno/syllables/lai_019.ogg",
+    "dur": 0.201,
+    "rms": 0.1,
+    "f0": 152.1,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 971.929,
+     "t1": 972.13
+    },
+    "conf": 0.675,
+    "text": "lai",
+    "phones": [
+     "L",
+     "AY"
+    ]
+   },
+   {
+    "file": "leno/syllables/lay_020.ogg",
+    "dur": 0.22,
+    "rms": 0.1,
+    "f0": 216.3,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 90.29,
+     "t1": 90.51
+    },
+    "conf": 0.759,
+    "text": "lay",
+    "phones": [
+     "L",
+     "EY"
+    ]
+   },
+   {
+    "file": "leno/syllables/mai_021.ogg",
+    "dur": 0.16,
+    "rms": 0.1,
+    "f0": 223.9,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 258.85,
+     "t1": 259.01
+    },
+    "conf": 0.903,
+    "text": "mai",
+    "phones": [
+     "M",
+     "AY"
+    ]
+   },
+   {
+    "file": "leno/syllables/mai_022.ogg",
+    "dur": 0.179,
+    "rms": 0.1,
+    "f0": 174.7,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 3.631,
+     "t1": 3.81
+    },
+    "conf": 0.869,
+    "text": "mai",
+    "phones": [
+     "M",
+     "AY"
+    ]
+   },
+   {
+    "file": "leno/syllables/may_023.ogg",
+    "dur": 0.2,
+    "rms": 0.1,
+    "f0": 269.4,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 71.14,
+     "t1": 71.34
+    },
+    "conf": 0.756,
+    "text": "may",
+    "phones": [
+     "M",
+     "EY"
+    ]
+   },
+   {
+    "file": "leno/syllables/may_024.ogg",
+    "dur": 0.2,
+    "rms": 0.1,
+    "f0": 215.1,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 234.39,
+     "t1": 234.59
+    },
+    "conf": 0.611,
+    "text": "may",
+    "phones": [
+     "M",
+     "EY"
+    ]
+   },
+   {
+    "file": "leno/syllables/mayn_025.ogg",
+    "dur": 0.34,
+    "rms": 0.1,
+    "f0": 272.5,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 71.14,
+     "t1": 71.48
+    },
+    "conf": 0.702,
+    "text": "mayn",
+    "phones": [
+     "M",
+     "EY",
+     "N"
+    ]
+   },
+   {
+    "file": "leno/syllables/mee_026.ogg",
+    "dur": 0.181,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 902.2,
+     "t1": 902.381
+    },
+    "conf": 0.846,
+    "text": "mee",
+    "phones": [
+     "M",
+     "IY"
+    ]
+   },
+   {
+    "file": "leno/syllables/meeb_027.ogg",
+    "dur": 0.24,
+    "rms": 0.1,
+    "f0": 196.2,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 902.2,
+     "t1": 902.44
+    },
+    "conf": 0.88,
+    "text": "meeb",
+    "phones": [
+     "M",
+     "IY",
+     "B"
+    ]
+   },
+   {
+    "file": "leno/syllables/moo_028.ogg",
+    "dur": 0.223,
+    "rms": 0.1,
+    "f0": 415.5,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 26.618,
+     "t1": 26.841
+    },
+    "conf": 0.815,
+    "text": "moo",
+    "phones": [
+     "M",
+     "UW"
+    ]
+   },
+   {
+    "file": "leno/syllables/moo_029.ogg",
+    "dur": 0.16,
+    "rms": 0.1,
+    "f0": 420.3,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 881.39,
+     "t1": 881.55
+    },
+    "conf": 0.793,
+    "text": "moo",
+    "phones": [
+     "M",
+     "UW"
+    ]
+   },
+   {
+    "file": "leno/syllables/nay_030.ogg",
+    "dur": 0.201,
+    "rms": 0.1,
+    "f0": 371.2,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1033.07,
+     "t1": 1033.271
+    },
+    "conf": 0.786,
+    "text": "nay",
+    "phones": [
+     "N",
+     "EY"
+    ]
+   },
+   {
+    "file": "leno/syllables/ne_031.ogg",
+    "dur": 0.18,
+    "rms": 0.1,
+    "f0": 227.2,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 21.64,
+     "t1": 21.82
+    },
+    "conf": 0.91,
+    "text": "ne",
+    "phones": [
+     "N",
+     "EH"
+    ]
+   },
+   {
+    "file": "leno/syllables/ne_032.ogg",
+    "dur": 0.22,
+    "rms": 0.1,
+    "f0": 297.2,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 293.41,
+     "t1": 293.63
+    },
+    "conf": 0.733,
+    "text": "ne",
+    "phones": [
+     "N",
+     "EH"
+    ]
+   },
+   {
+    "file": "leno/syllables/nee_033.ogg",
+    "dur": 0.199,
+    "rms": 0.1,
+    "f0": 270.2,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 117.65,
+     "t1": 117.85
+    },
+    "conf": 0.948,
+    "text": "nee",
+    "phones": [
+     "N",
+     "IY"
+    ]
+   },
+   {
+    "file": "leno/syllables/nek_034.ogg",
+    "dur": 0.181,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 11.469,
+     "t1": 11.65
+    },
+    "conf": 0.895,
+    "text": "nek",
+    "phones": [
+     "N",
+     "EH",
+     "K"
+    ]
+   },
+   {
+    "file": "leno/syllables/noo_035.ogg",
+    "dur": 0.16,
+    "rms": 0.1,
+    "f0": 226.6,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 27.161,
+     "t1": 27.32
+    },
+    "conf": 0.829,
+    "text": "noo",
+    "phones": [
+     "N",
+     "UW"
+    ]
+   },
+   {
+    "file": "leno/syllables/pee_036.ogg",
+    "dur": 0.17,
+    "rms": 0.1,
+    "f0": 254.3,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 88.14,
+     "t1": 88.31
+    },
+    "conf": 0.747,
+    "text": "pee",
+    "phones": [
+     "P",
+     "IY"
+    ]
+   },
+   {
+    "file": "leno/syllables/ra_037.ogg",
+    "dur": 0.18,
+    "rms": 0.1,
+    "f0": 222.6,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1079.63,
+     "t1": 1079.81
+    },
+    "conf": 0.664,
+    "text": "ra",
+    "phones": [
+     "R",
+     "AA"
+    ]
+   },
+   {
+    "file": "leno/syllables/rai_038.ogg",
+    "dur": 0.24,
+    "rms": 0.1,
+    "f0": 326.0,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 74.94,
+     "t1": 75.18
+    },
+    "conf": 0.723,
+    "text": "rai",
+    "phones": [
+     "R",
+     "AY"
+    ]
+   },
+   {
+    "file": "leno/syllables/rai_039.ogg",
+    "dur": 0.2,
+    "rms": 0.1,
+    "f0": 298.0,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1177.08,
+     "t1": 1177.28
+    },
+    "conf": 0.719,
+    "text": "rai",
+    "phones": [
+     "R",
+     "AY"
+    ]
+   },
+   {
+    "file": "leno/syllables/ray_040.ogg",
+    "dur": 0.16,
+    "rms": 0.1,
+    "f0": 272.5,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 23.94,
+     "t1": 24.099
+    },
+    "conf": 0.773,
+    "text": "ray",
+    "phones": [
+     "R",
+     "EY"
+    ]
+   },
+   {
+    "file": "leno/syllables/ray_041.ogg",
+    "dur": 0.2,
+    "rms": 0.1,
+    "f0": 247.0,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 116.15,
+     "t1": 116.35
+    },
+    "conf": 0.76,
+    "text": "ray",
+    "phones": [
+     "R",
+     "EY"
+    ]
+   },
+   {
+    "file": "leno/syllables/re_042.ogg",
+    "dur": 0.166,
+    "rms": 0.1,
+    "f0": 297.2,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 156.289,
+     "t1": 156.455
+    },
+    "conf": 0.812,
+    "text": "re",
+    "phones": [
+     "R",
+     "EH"
+    ]
+   },
+   {
+    "file": "leno/syllables/re_043.ogg",
+    "dur": 0.18,
+    "rms": 0.1,
+    "f0": 204.2,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 22.001,
+     "t1": 22.181
+    },
+    "conf": 0.809,
+    "text": "re",
+    "phones": [
+     "R",
+     "EH"
+    ]
+   },
+   {
+    "file": "leno/syllables/row_044.ogg",
+    "dur": 0.24,
+    "rms": 0.1,
+    "f0": 213.8,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 55.64,
+     "t1": 55.88
+    },
+    "conf": 0.805,
+    "text": "row",
+    "phones": [
+     "R",
+     "AW"
+    ]
+   },
+   {
+    "file": "leno/syllables/ruhn_045.ogg",
+    "dur": 0.22,
+    "rms": 0.1,
+    "f0": 205.9,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 10.81,
+     "t1": 11.03
+    },
+    "conf": 0.891,
+    "text": "ruhn",
+    "phones": [
+     "R",
+     "AH",
+     "N"
+    ]
+   },
+   {
+    "file": "leno/syllables/say_046.ogg",
+    "dur": 0.26,
+    "rms": 0.1,
+    "f0": 587.5,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1178.001,
+     "t1": 1178.26
+    },
+    "conf": 0.549,
+    "text": "say",
+    "phones": [
+     "S",
+     "EY"
+    ]
+   },
+   {
+    "file": "leno/syllables/see_047.ogg",
+    "dur": 0.261,
+    "rms": 0.1,
+    "f0": 455.7,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 70.08,
+     "t1": 70.341
+    },
+    "conf": 0.907,
+    "text": "see",
+    "phones": [
+     "S",
+     "IY"
+    ]
+   },
+   {
+    "file": "leno/syllables/see_048.ogg",
+    "dur": 0.22,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 344.59,
+     "t1": 344.81
+    },
+    "conf": 0.743,
+    "text": "see",
+    "phones": [
+     "S",
+     "IY"
+    ]
+   },
+   {
+    "file": "leno/syllables/ses_049.ogg",
+    "dur": 0.26,
+    "rms": 0.1,
+    "f0": 121.4,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 39.93,
+     "t1": 40.19
+    },
+    "conf": 0.862,
+    "text": "ses",
+    "phones": [
+     "S",
+     "EH",
+     "S"
+    ]
+   },
+   {
+    "file": "leno/syllables/shay_050.ogg",
+    "dur": 0.218,
+    "rms": 0.1,
+    "f0": 148.6,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1105.76,
+     "t1": 1105.979
+    },
+    "conf": 0.691,
+    "text": "shay",
+    "phones": [
+     "SH",
+     "EY"
+    ]
+   },
+   {
+    "file": "leno/syllables/shoo_051.ogg",
+    "dur": 0.26,
+    "rms": 0.1,
+    "f0": 272.5,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 111.01,
+     "t1": 111.27
+    },
+    "conf": 0.912,
+    "text": "shoo",
+    "phones": [
+     "SH",
+     "UW"
+    ]
+   },
+   {
+    "file": "leno/syllables/shuhn_052.ogg",
+    "dur": 0.26,
+    "rms": 0.1,
+    "f0": 257.2,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 34.78,
+     "t1": 35.04
+    },
+    "conf": 0.76,
+    "text": "shuhn",
+    "phones": [
+     "SH",
+     "AH",
+     "N"
+    ]
+   },
+   {
+    "file": "leno/syllables/so_053.ogg",
+    "dur": 0.19,
+    "rms": 0.1,
+    "f0": 242.8,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 990.27,
+     "t1": 990.46
+    },
+    "conf": 0.705,
+    "text": "so",
+    "phones": [
+     "S",
+     "OW"
+    ]
+   },
+   {
+    "file": "leno/syllables/suhn_054.ogg",
+    "dur": 0.179,
+    "rms": 0.1,
+    "f0": 143.5,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 82.93,
+     "t1": 83.109
+    },
+    "conf": 0.731,
+    "text": "suhn",
+    "phones": [
+     "S",
+     "AH",
+     "N"
+    ]
+   },
+   {
+    "file": "leno/syllables/tae_055.ogg",
+    "dur": 0.171,
+    "rms": 0.1,
+    "f0": 245.6,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 43.219,
+     "t1": 43.39
+    },
+    "conf": 0.689,
+    "text": "tae",
+    "phones": [
+     "T",
+     "AE"
+    ]
+   },
+   {
+    "file": "leno/syllables/taek_056.ogg",
+    "dur": 0.191,
+    "rms": 0.1,
+    "f0": 245.6,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 43.219,
+     "t1": 43.41
+    },
+    "conf": 0.709,
+    "text": "taek",
+    "phones": [
+     "T",
+     "AE",
+     "K"
+    ]
+   },
+   {
+    "file": "leno/syllables/te_057.ogg",
+    "dur": 0.2,
+    "rms": 0.1,
+    "f0": 278.1,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 670.83,
+     "t1": 671.03
+    },
+    "conf": 0.706,
+    "text": "te",
+    "phones": [
+     "T",
+     "EH"
+    ]
+   },
+   {
+    "file": "leno/syllables/tek_058.ogg",
+    "dur": 0.3,
+    "rms": 0.1,
+    "f0": 278.9,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 670.83,
+     "t1": 671.13
+    },
+    "conf": 0.711,
+    "text": "tek",
+    "phones": [
+     "T",
+     "EH",
+     "K"
+    ]
+   },
+   {
+    "file": "leno/syllables/thing_059.ogg",
+    "dur": 0.201,
+    "rms": 0.1,
+    "f0": 211.4,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 240.26,
+     "t1": 240.46
+    },
+    "conf": 0.687,
+    "text": "thing",
+    "phones": [
+     "TH",
+     "IH",
+     "NG"
+    ]
+   },
+   {
+    "file": "leno/syllables/ti_060.ogg",
+    "dur": 0.2,
+    "rms": 0.1,
+    "f0": 551.4,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 38.42,
+     "t1": 38.62
+    },
+    "conf": 0.739,
+    "text": "ti",
+    "phones": [
+     "T",
+     "IH"
+    ]
+   },
+   {
+    "file": "leno/syllables/wai_061.ogg",
+    "dur": 0.2,
+    "rms": 0.1,
+    "f0": 225.2,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 58.18,
+     "t1": 58.38
+    },
+    "conf": 0.827,
+    "text": "wai",
+    "phones": [
+     "W",
+     "AY"
+    ]
+   },
+   {
+    "file": "leno/syllables/wai_062.ogg",
+    "dur": 0.22,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 35.16,
+     "t1": 35.38
+    },
+    "conf": 0.748,
+    "text": "wai",
+    "phones": [
+     "W",
+     "AY"
+    ]
+   },
+   {
+    "file": "leno/syllables/way_063.ogg",
+    "dur": 0.201,
+    "rms": 0.1,
+    "f0": 222.6,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 357.73,
+     "t1": 357.93
+    },
+    "conf": 0.667,
+    "text": "way",
+    "phones": [
+     "W",
+     "EY"
+    ]
+   },
+   {
+    "file": "leno/syllables/wee_064.ogg",
+    "dur": 0.2,
+    "rms": 0.1,
+    "f0": 272.5,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 103.67,
+     "t1": 103.87
+    },
+    "conf": 0.83,
+    "text": "wee",
+    "phones": [
+     "W",
+     "IY"
+    ]
+   },
+   {
+    "file": "leno/syllables/wuh_065.ogg",
+    "dur": 0.18,
+    "rms": 0.1,
+    "f0": 206.5,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 635.499,
+     "t1": 635.68
+    },
+    "conf": 0.761,
+    "text": "wuh",
+    "phones": [
+     "W",
+     "AH"
+    ]
+   },
+   {
+    "file": "leno/syllables/wuhn_066.ogg",
+    "dur": 0.201,
+    "rms": 0.1,
+    "f0": 325.1,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 757.689,
+     "t1": 757.89
+    },
+    "conf": 0.745,
+    "text": "wuhn",
+    "phones": [
+     "W",
+     "AH",
+     "N"
+    ]
+   },
+   {
+    "file": "leno/syllables/zae_067.ogg",
+    "dur": 0.2,
+    "rms": 0.1,
+    "f0": 185.6,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 83.27,
+     "t1": 83.47
+    },
+    "conf": 0.75,
+    "text": "zae",
+    "phones": [
+     "Z",
+     "AE"
+    ]
+   },
+   {
+    "file": "leno/syllables/zaek_068.ogg",
+    "dur": 0.26,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 83.27,
+     "t1": 83.53
+    },
+    "conf": 0.749,
+    "text": "zaek",
+    "phones": [
+     "Z",
+     "AE",
+     "K"
+    ]
+   }
+  ],
+  "mutters": [
+   {
+    "file": "leno/mutters/er_001.ogg",
+    "dur": 0.2,
+    "rms": 0.1,
+    "f0": 152.1,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 885.03,
+     "t1": 885.23
+    },
+    "conf": 0.312,
+    "kind": "er"
+   },
+   {
+    "file": "leno/mutters/er_002.ogg",
+    "dur": 0.38,
+    "rms": 0.1,
+    "f0": 166.8,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 134.77,
+     "t1": 135.15
+    },
+    "conf": 0.244,
+    "kind": "er"
+   },
+   {
+    "file": "leno/mutters/grunt_003.ogg",
+    "dur": 0.325,
+    "rms": 0.1,
+    "f0": 242.8,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 27.5,
+     "t1": 27.825
+    },
+    "conf": 0.794,
+    "kind": "grunt"
+   },
+   {
+    "file": "leno/mutters/grunt_004.ogg",
+    "dur": 1.0,
+    "rms": 0.1,
+    "f0": 166.8,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 299.75,
+     "t1": 300.75
+    },
+    "conf": 0.794,
+    "kind": "grunt"
+   },
+   {
+    "file": "leno/mutters/grunt_005.ogg",
+    "dur": 0.47,
+    "rms": 0.1,
+    "f0": 224.6,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1104.53,
+     "t1": 1105.0
+    },
+    "conf": 0.756,
+    "kind": "grunt"
+   },
+   {
+    "file": "leno/mutters/laugh_006.ogg",
+    "dur": 0.99,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1165.51,
+     "t1": 1166.5
+    },
+    "conf": 0.794,
+    "kind": "laugh"
+   },
+   {
+    "file": "leno/mutters/laugh_007.ogg",
+    "dur": 1.001,
+    "rms": 0.1,
+    "f0": 238.6,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 239.249,
+     "t1": 240.25
+    },
+    "conf": 0.794,
+    "kind": "laugh"
+   },
+   {
+    "file": "leno/mutters/laugh_008.ogg",
+    "dur": 1.0,
+    "rms": 0.1,
+    "f0": 207.7,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 902.25,
+     "t1": 903.25
+    },
+    "conf": 0.794,
+    "kind": "laugh"
+   },
+   {
+    "file": "leno/mutters/laugh_009.ogg",
+    "dur": 1.0,
+    "rms": 0.1,
+    "f0": 442.7,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1118.75,
+     "t1": 1119.75
+    },
+    "conf": 0.597,
+    "kind": "laugh"
+   },
+   {
+    "file": "leno/mutters/laugh_010.ogg",
+    "dur": 1.0,
+    "rms": 0.1,
+    "f0": 277.3,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 278.5,
+     "t1": 279.5
+    },
+    "conf": 0.578,
+    "kind": "laugh"
+   },
+   {
+    "file": "leno/mutters/stammer_011.ogg",
+    "dur": 0.111,
+    "rms": 0.1,
+    "f0": 164.9,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 3.64,
+     "t1": 3.75
+    },
+    "conf": 0.935,
+    "kind": "stammer"
+   },
+   {
+    "file": "leno/mutters/stammer_012.ogg",
+    "dur": 0.18,
+    "rms": 0.1,
+    "f0": 265.5,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 941.9,
+     "t1": 942.08
+    },
+    "conf": 0.79,
+    "kind": "stammer"
+   },
+   {
+    "file": "leno/mutters/stammer_013.ogg",
+    "dur": 0.14,
+    "rms": 0.1,
+    "f0": 272.5,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 670.83,
+     "t1": 670.97
+    },
+    "conf": 0.778,
+    "kind": "stammer"
+   },
+   {
+    "file": "leno/mutters/stammer_014.ogg",
+    "dur": 0.12,
+    "rms": 0.1,
+    "f0": 255.7,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 990.28,
+     "t1": 990.4
+    },
+    "conf": 0.744,
+    "kind": "stammer"
+   },
+   {
+    "file": "leno/mutters/stammer_015.ogg",
+    "dur": 0.09,
+    "rms": 0.1,
+    "f0": 184.0,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 138.2,
+     "t1": 138.289
+    },
+    "conf": 0.719,
+    "kind": "stammer"
+   },
+   {
+    "file": "leno/mutters/stammer_016.ogg",
+    "dur": 0.12,
+    "rms": 0.1,
+    "f0": 242.8,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 53.14,
+     "t1": 53.26
+    },
+    "conf": 0.712,
+    "kind": "stammer"
+   },
+   {
+    "file": "leno/mutters/stammer_017.ogg",
+    "dur": 0.141,
+    "rms": 0.1,
+    "f0": 240.0,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 356.709,
+     "t1": 356.85
+    },
+    "conf": 0.681,
+    "kind": "stammer"
+   },
+   {
+    "file": "leno/mutters/stammer_018.ogg",
+    "dur": 0.14,
+    "rms": 0.1,
+    "f0": 241.4,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 962.42,
+     "t1": 962.56
+    },
+    "conf": 0.656,
+    "kind": "stammer"
+   },
+   {
+    "file": "leno/mutters/stammer_019.ogg",
+    "dur": 0.13,
+    "rms": 0.1,
+    "f0": 463.6,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1173.89,
+     "t1": 1174.02
+    },
+    "conf": 0.583,
+    "kind": "stammer"
+   },
+   {
+    "file": "leno/mutters/stammer_020.ogg",
+    "dur": 0.12,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 990.94,
+     "t1": 991.06
+    },
+    "conf": 0.58,
+    "kind": "stammer"
+   },
+   {
+    "file": "leno/mutters/uh_021.ogg",
+    "dur": 0.2,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 753.93,
+     "t1": 754.13
+    },
+    "conf": 0.947,
+    "kind": "uh"
+   },
+   {
+    "file": "leno/mutters/uh_022.ogg",
+    "dur": 0.2,
+    "rms": 0.1,
+    "f0": 200.7,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1032.51,
+     "t1": 1032.71
+    },
+    "conf": 0.904,
+    "kind": "uh"
+   },
+   {
+    "file": "leno/mutters/uh_023.ogg",
+    "dur": 0.115,
+    "rms": 0.1,
+    "f0": 116.6,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 84.85,
+     "t1": 84.966
+    },
+    "conf": 0.903,
+    "kind": "uh"
+   },
+   {
+    "file": "leno/mutters/uh_024.ogg",
+    "dur": 0.141,
+    "rms": 0.1,
+    "f0": 140.3,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 7.069,
+     "t1": 7.21
+    },
+    "conf": 0.894,
+    "kind": "uh"
+   },
+   {
+    "file": "leno/mutters/uh_025.ogg",
+    "dur": 0.14,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 995.261,
+     "t1": 995.401
+    },
+    "conf": 0.869,
+    "kind": "uh"
+   },
+   {
+    "file": "leno/mutters/uh_026.ogg",
+    "dur": 0.16,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 118.95,
+     "t1": 119.11
+    },
+    "conf": 0.835,
+    "kind": "uh"
+   },
+   {
+    "file": "leno/mutters/uh_027.ogg",
+    "dur": 0.12,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1117.81,
+     "t1": 1117.93
+    },
+    "conf": 0.675,
+    "kind": "uh"
+   },
+   {
+    "file": "leno/mutters/uh_028.ogg",
+    "dur": 0.16,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1051.97,
+     "t1": 1052.13
+    },
+    "conf": 0.519,
+    "kind": "uh"
+   },
+   {
+    "file": "leno/mutters/uh_029.ogg",
+    "dur": 0.281,
+    "rms": 0.1,
+    "f0": 306.8,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 641.699,
+     "t1": 641.98
+    },
+    "conf": 0.433,
+    "kind": "uh"
+   },
+   {
+    "file": "leno/mutters/uh_030.ogg",
+    "dur": 0.161,
+    "rms": 0.1,
+    "f0": 126.4,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 22.259,
+     "t1": 22.42
+    },
+    "conf": 0.361,
+    "kind": "uh"
+   },
+   {
+    "file": "leno/mutters/uh_031.ogg",
+    "dur": 0.121,
+    "rms": 0.1,
+    "f0": 222.6,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 89.489,
+     "t1": 89.611
+    },
+    "conf": 0.312,
+    "kind": "uh"
+   },
+   {
+    "file": "leno/mutters/uh_032.ogg",
+    "dur": 0.12,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 78.86,
+     "t1": 78.98
+    },
+    "conf": 0.224,
+    "kind": "uh"
+   },
+   {
+    "file": "leno/mutters/uh_033.ogg",
+    "dur": 0.12,
+    "rms": 0.1,
+    "f0": 131.6,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 121.5,
+     "t1": 121.621
+    },
+    "conf": 0.12,
+    "kind": "uh"
+   }
+  ],
+  "words": [
+   {
+    "file": "leno/words/again_001.ogg",
+    "dur": 0.55,
+    "rms": 0.1,
+    "f0": 543.5,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1143.13,
+     "t1": 1143.68
+    },
+    "conf": 0.876,
+    "text": "again"
+   },
+   {
+    "file": "leno/words/alright_002.ogg",
+    "dur": 0.205,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1162.935,
+     "t1": 1163.14
+    },
+    "conf": 0.884,
+    "text": "alright"
+   },
+   {
+    "file": "leno/words/am_003.ogg",
+    "dur": 0.254,
+    "rms": 0.1,
+    "f0": 250.9,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 8.466,
+     "t1": 8.72
+    },
+    "conf": 0.978,
+    "text": "am"
+   },
+   {
+    "file": "leno/words/am_004.ogg",
+    "dur": 0.25,
+    "rms": 0.1,
+    "f0": 211.4,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 14.17,
+     "t1": 14.42
+    },
+    "conf": 0.929,
+    "text": "am"
+   },
+   {
+    "file": "leno/words/anyway_005.ogg",
+    "dur": 0.32,
+    "rms": 0.1,
+    "f0": 280.5,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1146.06,
+     "t1": 1146.38
+    },
+    "conf": 0.753,
+    "text": "anyway"
+   },
+   {
+    "file": "leno/words/be_006.ogg",
+    "dur": 0.27,
+    "rms": 0.1,
+    "f0": 186.1,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 46.23,
+     "t1": 46.5
+    },
+    "conf": 0.885,
+    "text": "be"
+   },
+   {
+    "file": "leno/words/beautiful_007.ogg",
+    "dur": 0.591,
+    "rms": 0.1,
+    "f0": 252.1,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 740.77,
+     "t1": 741.361
+    },
+    "conf": 1.0,
+    "text": "beautiful"
+   },
+   {
+    "file": "leno/words/before_008.ogg",
+    "dur": 0.53,
+    "rms": 0.1,
+    "f0": 227.8,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 240.78,
+     "t1": 241.31
+    },
+    "conf": 0.934,
+    "text": "before"
+   },
+   {
+    "file": "leno/words/bit_009.ogg",
+    "dur": 0.49,
+    "rms": 0.1,
+    "f0": 206.5,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 756.45,
+     "t1": 756.94
+    },
+    "conf": 1.0,
+    "text": "bit"
+   },
+   {
+    "file": "leno/words/bit_010.ogg",
+    "dur": 0.53,
+    "rms": 0.1,
+    "f0": 248.5,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 279.13,
+     "t1": 279.66
+    },
+    "conf": 0.92,
+    "text": "bit"
+   },
+   {
+    "file": "leno/words/come_011.ogg",
+    "dur": 0.27,
+    "rms": 0.1,
+    "f0": 235.9,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 166.65,
+     "t1": 166.92
+    },
+    "conf": 0.966,
+    "text": "come"
+   },
+   {
+    "file": "leno/words/course_012.ogg",
+    "dur": 0.365,
+    "rms": 0.1,
+    "f0": 177.2,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 42.535,
+     "t1": 42.9
+    },
+    "conf": 0.883,
+    "text": "course"
+   },
+   {
+    "file": "leno/words/drive_013.ogg",
+    "dur": 0.51,
+    "rms": 0.1,
+    "f0": 207.7,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 742.59,
+     "t1": 743.1
+    },
+    "conf": 0.992,
+    "text": "drive"
+   },
+   {
+    "file": "leno/words/drive_014.ogg",
+    "dur": 0.33,
+    "rms": 0.1,
+    "f0": 298.9,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1177.0,
+     "t1": 1177.33
+    },
+    "conf": 0.746,
+    "text": "drive"
+   },
+   {
+    "file": "leno/words/enough_015.ogg",
+    "dur": 0.395,
+    "rms": 0.1,
+    "f0": 229.2,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 108.145,
+     "t1": 108.54
+    },
+    "conf": 0.999,
+    "text": "enough"
+   },
+   {
+    "file": "leno/words/every_016.ogg",
+    "dur": 0.377,
+    "rms": 0.1,
+    "f0": 255.7,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 82.203,
+     "t1": 82.58
+    },
+    "conf": 0.962,
+    "text": "every"
+   },
+   {
+    "file": "leno/words/everybody_017.ogg",
+    "dur": 0.71,
+    "rms": 0.1,
+    "f0": 269.4,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 354.19,
+     "t1": 354.9
+    },
+    "conf": 0.954,
+    "text": "everybody"
+   },
+   {
+    "file": "leno/words/frog_018.ogg",
+    "dur": 0.411,
+    "rms": 0.1,
+    "f0": 193.8,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1048.17,
+     "t1": 1048.58
+    },
+    "conf": 1.0,
+    "text": "frog"
+   },
+   {
+    "file": "leno/words/frog_019.ogg",
+    "dur": 0.47,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 903.44,
+     "t1": 903.91
+    },
+    "conf": 0.981,
+    "text": "frog"
+   },
+   {
+    "file": "leno/words/god_020.ogg",
+    "dur": 0.57,
+    "rms": 0.1,
+    "f0": 213.8,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 643.56,
+     "t1": 644.13
+    },
+    "conf": 0.829,
+    "text": "god"
+   },
+   {
+    "file": "leno/words/going_021.ogg",
+    "dur": 0.33,
+    "rms": 0.1,
+    "f0": 248.5,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 915.24,
+     "t1": 915.57
+    },
+    "conf": 0.918,
+    "text": "going"
+   },
+   {
+    "file": "leno/words/im_022.ogg",
+    "dur": 0.189,
+    "rms": 0.1,
+    "f0": 211.4,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 20.3,
+     "t1": 20.49
+    },
+    "conf": 0.934,
+    "text": "i'm"
+   },
+   {
+    "file": "leno/words/if_023.ogg",
+    "dur": 0.37,
+    "rms": 0.1,
+    "f0": 218.8,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 155.59,
+     "t1": 155.96
+    },
+    "conf": 0.998,
+    "text": "if"
+   },
+   {
+    "file": "leno/words/its_024.ogg",
+    "dur": 0.18,
+    "rms": 0.1,
+    "f0": 182.9,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 6.02,
+     "t1": 6.2
+    },
+    "conf": 0.977,
+    "text": "it's"
+   },
+   {
+    "file": "leno/words/johnny_025.ogg",
+    "dur": 0.91,
+    "rms": 0.1,
+    "f0": 344.3,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 298.88,
+     "t1": 299.79
+    },
+    "conf": 0.945,
+    "text": "johnny"
+   },
+   {
+    "file": "leno/words/know_026.ogg",
+    "dur": 0.29,
+    "rms": 0.1,
+    "f0": 277.3,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 247.65,
+     "t1": 247.94
+    },
+    "conf": 0.96,
+    "text": "know"
+   },
+   {
+    "file": "leno/words/know_027.ogg",
+    "dur": 0.21,
+    "rms": 0.1,
+    "f0": 200.7,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1078.93,
+     "t1": 1079.14
+    },
+    "conf": 0.894,
+    "text": "know"
+   },
+   {
+    "file": "leno/words/like_028.ogg",
+    "dur": 0.39,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 751.59,
+     "t1": 751.98
+    },
+    "conf": 1.0,
+    "text": "like"
+   },
+   {
+    "file": "leno/words/low_029.ogg",
+    "dur": 0.389,
+    "rms": 0.1,
+    "f0": 178.8,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 43.571,
+     "t1": 43.96
+    },
+    "conf": 0.885,
+    "text": "low"
+   },
+   {
+    "file": "leno/words/me_030.ogg",
+    "dur": 0.47,
+    "rms": 0.1,
+    "f0": 229.2,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 257.35,
+     "t1": 257.82
+    },
+    "conf": 0.954,
+    "text": "me"
+   },
+   {
+    "file": "leno/words/me_031.ogg",
+    "dur": 0.309,
+    "rms": 0.1,
+    "f0": 229.2,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1125.53,
+     "t1": 1125.84
+    },
+    "conf": 0.75,
+    "text": "me"
+   },
+   {
+    "file": "leno/words/mr_032.ogg",
+    "dur": 0.29,
+    "rms": 0.1,
+    "f0": 222.6,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 990.681,
+     "t1": 990.97
+    },
+    "conf": 0.927,
+    "text": "mr"
+   },
+   {
+    "file": "leno/words/my_033.ogg",
+    "dur": 0.47,
+    "rms": 0.1,
+    "f0": 297.2,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 352.15,
+     "t1": 352.62
+    },
+    "conf": 0.994,
+    "text": "my"
+   },
+   {
+    "file": "leno/words/my_034.ogg",
+    "dur": 0.29,
+    "rms": 0.1,
+    "f0": 241.4,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1032.69,
+     "t1": 1032.98
+    },
+    "conf": 0.944,
+    "text": "my"
+   },
+   {
+    "file": "leno/words/new_035.ogg",
+    "dur": 0.21,
+    "rms": 0.1,
+    "f0": 235.9,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 27.14,
+     "t1": 27.35
+    },
+    "conf": 0.99,
+    "text": "new"
+   },
+   {
+    "file": "leno/words/now_036.ogg",
+    "dur": 0.231,
+    "rms": 0.1,
+    "f0": 198.3,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 738.93,
+     "t1": 739.161
+    },
+    "conf": 0.993,
+    "text": "now"
+   },
+   {
+    "file": "leno/words/okay_037.ogg",
+    "dur": 0.39,
+    "rms": 0.1,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 741.39,
+     "t1": 741.78
+    },
+    "conf": 0.963,
+    "text": "okay"
+   },
+   {
+    "file": "leno/words/one_038.ogg",
+    "dur": 0.43,
+    "rms": 0.1,
+    "f0": 221.4,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 669.99,
+     "t1": 670.42
+    },
+    "conf": 0.964,
+    "text": "one"
+   },
+   {
+    "file": "leno/words/one_039.ogg",
+    "dur": 0.331,
+    "rms": 0.1,
+    "f0": 161.1,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 671.85,
+     "t1": 672.181
+    },
+    "conf": 0.961,
+    "text": "one"
+   },
+   {
+    "file": "leno/words/out_040.ogg",
+    "dur": 0.59,
+    "rms": 0.1,
+    "f0": 343.4,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1164.51,
+     "t1": 1165.1
+    },
+    "conf": 0.874,
+    "text": "out"
+   },
+   {
+    "file": "leno/words/please_041.ogg",
+    "dur": 0.505,
+    "rms": 0.1,
+    "f0": 308.6,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 766.565,
+     "t1": 767.07
+    },
+    "conf": 0.879,
+    "text": "please"
+   },
+   {
+    "file": "leno/words/resident_042.ogg",
+    "dur": 0.511,
+    "rms": 0.1,
+    "f0": 184.0,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 21.78,
+     "t1": 22.291
+    },
+    "conf": 0.943,
+    "text": "resident"
+   },
+   {
+    "file": "leno/words/right_043.ogg",
+    "dur": 0.25,
+    "rms": 0.1,
+    "f0": 258.7,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 296.64,
+     "t1": 296.89
+    },
+    "conf": 0.951,
+    "text": "right"
+   },
+   {
+    "file": "leno/words/shit_044.ogg",
+    "dur": 0.57,
+    "rms": 0.1,
+    "f0": 149.9,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 140.99,
+     "t1": 141.56
+    },
+    "conf": 0.945,
+    "text": "shit"
+   },
+   {
+    "file": "leno/words/show_045.ogg",
+    "dur": 0.39,
+    "rms": 0.1,
+    "f0": 223.3,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 752.81,
+     "t1": 753.2
+    },
+    "conf": 0.999,
+    "text": "show"
+   },
+   {
+    "file": "leno/words/skin_046.ogg",
+    "dur": 0.571,
+    "rms": 0.1,
+    "f0": 254.3,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 88.91,
+     "t1": 89.481
+    },
+    "conf": 0.962,
+    "text": "skin"
+   },
+   {
+    "file": "leno/words/something_047.ogg",
+    "dur": 0.39,
+    "rms": 0.1,
+    "f0": 240.0,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 759.75,
+     "t1": 760.14
+    },
+    "conf": 1.0,
+    "text": "something"
+   },
+   {
+    "file": "leno/words/thank_048.ogg",
+    "dur": 0.23,
+    "rms": 0.1,
+    "f0": 258.7,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1159.5,
+     "t1": 1159.73
+    },
+    "conf": 0.904,
+    "text": "thank"
+   },
+   {
+    "file": "leno/words/thats_049.ogg",
+    "dur": 0.237,
+    "rms": 0.1,
+    "f0": 242.8,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 53.118,
+     "t1": 53.355
+    },
+    "conf": 0.943,
+    "text": "that's"
+   },
+   {
+    "file": "leno/words/the_050.ogg",
+    "dur": 0.205,
+    "rms": 0.1,
+    "f0": 160.6,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1057.695,
+     "t1": 1057.9
+    },
+    "conf": 0.832,
+    "text": "the"
+   },
+   {
+    "file": "leno/words/you_051.ogg",
+    "dur": 0.35,
+    "rms": 0.1,
+    "f0": 208.9,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1104.88,
+     "t1": 1105.23
+    },
+    "conf": 0.926,
+    "text": "you"
+   }
+  ]
+ },
+ "sfx": {
+  "vomit": [
+   {
+    "file": "sfx/vomit/vomit_x001.ogg",
+    "dur": 2.801,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "UnDhyWnHPD0",
+     "t0": 0.384,
+     "t1": 3.185
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "sfx/vomit/vomit_x002.ogg",
+    "dur": 0.966,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "UnDhyWnHPD0",
+     "t0": 6.102,
+     "t1": 7.068
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "sfx/vomit/vomit_x003.ogg",
+    "dur": 0.826,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "UnDhyWnHPD0",
+     "t0": 8.122,
+     "t1": 8.948
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "sfx/vomit/vomit_x004.ogg",
+    "dur": 3.17,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "RgJ8wfuDfo4",
+     "t0": 1.26,
+     "t1": 4.431
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "sfx/vomit/vomit_x005.ogg",
+    "dur": 2.749,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "yoD5T0N1SzU",
+     "t0": 6.051,
+     "t1": 8.8
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   }
+  ],
+  "fart": [
+   {
+    "file": "sfx/fart/fart_001.ogg",
+    "dur": 1.0,
+    "rms": 0.143,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 437.0,
+     "t1": 438.0
+    },
+    "conf": 0.535
+   },
+   {
+    "file": "sfx/fart/fart_002.ogg",
+    "dur": 0.6,
+    "rms": 0.1245,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1009.95,
+     "t1": 1010.55
+    },
+    "conf": 0.483
+   }
+  ],
+  "pipe": [
+   {
+    "file": "sfx/pipe/pipe_001.ogg",
+    "dur": 2.605,
+    "rms": 0.0948,
+    "f0": null,
+    "src": {
+     "video": "f8mL0_4GeV0",
+     "t0": 0.135,
+     "t1": 2.745
+    },
+    "conf": 1.0
+   },
+   {
+    "file": "sfx/pipe/pipe_002.ogg",
+    "dur": 1.2,
+    "rms": 0.0969,
+    "f0": null,
+    "src": {
+     "video": "f8mL0_4GeV0",
+     "t0": 0.135,
+     "t1": 1.335
+    },
+    "conf": 1.0
+   },
+   {
+    "file": "sfx/pipe/pipe_003.ogg",
+    "dur": 0.55,
+    "rms": 0.1014,
+    "f0": null,
+    "src": {
+     "video": "f8mL0_4GeV0",
+     "t0": 0.135,
+     "t1": 0.685
+    },
+    "conf": 1.0
+   }
+  ],
+  "splat": [
+   {
+    "file": "sfx/splat/splat_001.ogg",
+    "dur": 0.8,
+    "rms": 0.078,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 390.7,
+     "t1": 391.5
+    },
+    "conf": 0.737
+   },
+   {
+    "file": "sfx/splat/splat_002.ogg",
+    "dur": 0.698,
+    "rms": 0.1238,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 932.451,
+     "t1": 933.149
+    },
+    "conf": 0.721
+   }
+  ],
+  "burp": [
+   {
+    "file": "sfx/burp/burp_001.ogg",
+    "dur": 0.805,
+    "rms": 0.1065,
+    "f0": 392.1,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 605.445,
+     "t1": 606.25
+    },
+    "conf": 0.958
+   },
+   {
+    "file": "sfx/burp/burp_002.ogg",
+    "dur": 0.945,
+    "rms": 0.1169,
+    "f0": 60.0,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 23.0,
+     "t1": 23.945
+    },
+    "conf": 0.905
+   },
+   {
+    "file": "sfx/burp/burp_003.ogg",
+    "dur": 0.994,
+    "rms": 0.0331,
+    "f0": 60.0,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 27.751,
+     "t1": 28.745
+    },
+    "conf": 0.866
+   }
+  ],
+  "retch": [
+   {
+    "file": "sfx/retch/retch_x001.ogg",
+    "dur": 0.265,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "pf93OHsjkQM",
+     "t0": 1.042,
+     "t1": 1.307
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "sfx/retch/retch_x002.ogg",
+    "dur": 2.675,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "A3wzIw1tWkw",
+     "t0": 1.166,
+     "t1": 3.84
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "sfx/retch/retch_x003.ogg",
+    "dur": 0.456,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "jqHViajqnwc",
+     "t0": 0.0,
+     "t1": 0.456
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "sfx/retch/retch_x004.ogg",
+    "dur": 0.939,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "jqHViajqnwc",
+     "t0": 0.79,
+     "t1": 1.729
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "sfx/retch/retch_x005.ogg",
+    "dur": 3.098,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "jqHViajqnwc",
+     "t0": 2.094,
+     "t1": 5.191
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   }
+  ],
+  "honk": [
+   {
+    "file": "sfx/honk/honk_x001.ogg",
+    "dur": 0.519,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "zcDiAD8RGq8",
+     "t0": 0.0,
+     "t1": 0.519
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "sfx/honk/honk_x002.ogg",
+    "dur": 0.363,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "zcDiAD8RGq8",
+     "t0": 2.112,
+     "t1": 2.476
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "sfx/honk/honk_x003.ogg",
+    "dur": 1.839,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "J0WO22NhTK8",
+     "t0": 3.122,
+     "t1": 4.961
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "sfx/honk/honk_x004.ogg",
+    "dur": 0.38,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "A8nqfY3rUKw",
+     "t0": 0.0,
+     "t1": 0.38
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   }
+  ]
+ },
+ "crowd": {
+  "boo": [
+   {
+    "file": "crowd/boo/boo_x001.ogg",
+    "dur": 4.0,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "u0D718AmYTs",
+     "t0": 0.945,
+     "t1": 4.945
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "crowd/boo/boo_x002.ogg",
+    "dur": 3.499,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "u0D718AmYTs",
+     "t0": 5.445,
+     "t1": 8.944
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "crowd/boo/boo_x003.ogg",
+    "dur": 4.0,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hJlxgWYqvR0",
+     "t0": 0.3,
+     "t1": 4.3
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "crowd/boo/boo_x004.ogg",
+    "dur": 3.562,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hJlxgWYqvR0",
+     "t0": 4.8,
+     "t1": 8.362
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "crowd/boo/boo_x005.ogg",
+    "dur": 4.0,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "Dk3OZ4a9m6o",
+     "t0": 4.79,
+     "t1": 8.79
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "crowd/boo/boo_x006.ogg",
+    "dur": 4.0,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "Dk3OZ4a9m6o",
+     "t0": 9.29,
+     "t1": 13.29
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   }
+  ],
+  "gasp": [
+   {
+    "file": "crowd/gasp/gasp_001.ogg",
+    "dur": 0.899,
+    "rms": 0.1675,
+    "f0": 60.0,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 521.152,
+     "t1": 522.051
+    },
+    "conf": 0.483
+   },
+   {
+    "file": "crowd/gasp/gasp_002.ogg",
+    "dur": 1.0,
+    "rms": 0.0924,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 798.25,
+     "t1": 799.25
+    },
+    "conf": 0.436
+   },
+   {
+    "file": "crowd/gasp/gasp_003.ogg",
+    "dur": 1.0,
+    "rms": 0.1413,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 686.7,
+     "t1": 687.7
+    },
+    "conf": 0.386
+   },
+   {
+    "file": "crowd/gasp/gasp_004.ogg",
+    "dur": 0.6,
+    "rms": 0.1556,
+    "f0": 60.0,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 559.45,
+     "t1": 560.05
+    },
+    "conf": 0.343
+   }
+  ],
+  "cheer": [
+   {
+    "file": "crowd/cheer/cheer_x001.ogg",
+    "dur": 4.0,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "barWV7RWkq0",
+     "t0": 1.064,
+     "t1": 5.064
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "crowd/cheer/cheer_x002.ogg",
+    "dur": 4.0,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "barWV7RWkq0",
+     "t0": 5.564,
+     "t1": 9.564
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "crowd/cheer/cheer_x003.ogg",
+    "dur": 4.0,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "barWV7RWkq0",
+     "t0": 10.064,
+     "t1": 14.064
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "crowd/cheer/cheer_x004.ogg",
+    "dur": 4.0,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "Vw9MCNbFggI",
+     "t0": 0.3,
+     "t1": 4.3
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "crowd/cheer/cheer_x005.ogg",
+    "dur": 4.0,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "Vw9MCNbFggI",
+     "t0": 4.8,
+     "t1": 8.8
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "crowd/cheer/cheer_x006.ogg",
+    "dur": 4.0,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "Vw9MCNbFggI",
+     "t0": 9.3,
+     "t1": 13.3
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "crowd/cheer/cheer_x007.ogg",
+    "dur": 4.0,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "JhE6hEgTth0",
+     "t0": 0.3,
+     "t1": 4.3
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   },
+   {
+    "file": "crowd/cheer/cheer_x008.ogg",
+    "dur": 4.0,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "JhE6hEgTth0",
+     "t0": 4.8,
+     "t1": 8.8
+    },
+    "conf": null,
+    "origin": "youtube-sfx"
+   }
+  ],
+  "laugh": [
+   {
+    "file": "crowd/laugh/laugh_001.ogg",
+    "dur": 0.752,
+    "rms": 0.1111,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 561.498,
+     "t1": 562.25
+    },
+    "conf": 0.368
+   }
+  ],
+  "applause": [
+   {
+    "file": "crowd/applause/applause_001.ogg",
+    "dur": 3.0,
+    "rms": 0.1027,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1196.25,
+     "t1": 1199.25
+    },
+    "conf": 1.0
+   },
+   {
+    "file": "crowd/applause/applause_002.ogg",
+    "dur": 2.75,
+    "rms": 0.1014,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 975.0,
+     "t1": 977.75
+    },
+    "conf": 1.0
+   },
+   {
+    "file": "crowd/applause/applause_003.ogg",
+    "dur": 3.5,
+    "rms": 0.1118,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 6.75,
+     "t1": 10.25
+    },
+    "conf": 1.0
+   },
+   {
+    "file": "crowd/applause/applause_004.ogg",
+    "dur": 3.75,
+    "rms": 0.1048,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1132.25,
+     "t1": 1136.0
+    },
+    "conf": 1.0
+   },
+   {
+    "file": "crowd/applause/applause_005.ogg",
+    "dur": 2.25,
+    "rms": 0.1062,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1018.75,
+     "t1": 1021.0
+    },
+    "conf": 0.933
+   },
+   {
+    "file": "crowd/applause/applause_006.ogg",
+    "dur": 3.999,
+    "rms": 0.0989,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 1036.252,
+     "t1": 1040.25
+    },
+    "conf": 0.924
+   },
+   {
+    "file": "crowd/applause/applause_007.ogg",
+    "dur": 2.75,
+    "rms": 0.1054,
+    "f0": null,
+    "src": {
+     "video": "w7lBVJwHABM",
+     "t0": 147.25,
+     "t1": 150.0
+    },
+    "conf": 0.911
+   },
+   {
+    "file": "crowd/applause/applause_008.ogg",
+    "dur": 1.749,
+    "rms": 0.1071,
+    "f0": null,
+    "src": {
+     "video": "ki3ssj466E0",
+     "t0": 47.251,
+     "t1": 49.0
+    },
+    "conf": 0.87
+   }
+  ]
+ }
+}

@@ -768,7 +768,9 @@ $('aboutLink').onclick = (e) => {
     <p><b>Engineered layers (not in the connectome):</b> the phoneme mapping of motor neurons, the action selector
     ("initiative"), the audience, and the stage-edge reflex.</p>
     <p><b>Stage:</b> an original procedural set inspired by the TUURD Talk show of <i>Nightmare Puppeteer</i>.
-    Leno's voice bank comes from Vinesauce videos and belongs to its authors; it is not distributed with this project.</p>
+    Leno's voice bank is cut from Vinesauce's Grey Leno videos (<a href="https://www.youtube.com/watch?v=ki3ssj466E0" target="_blank" rel="noopener">The Grey Leno Show</a>,
+    <a href="https://www.youtube.com/watch?v=w7lBVJwHABM" target="_blank" rel="noopener">Grey Leno announces his candidacy</a>), with thanks to Vinesauce.
+    Crowd and effect sounds are cut from YouTube sound-effect uploads (sources listed in assets/audio/manifest.json).</p>
     <p class="credit"><b>Grey Leno model:</b> ported by <b>huckleberrypie</b> (Nexus Mods: huckpie):
     <a href="https://www.nexusmods.com/deadasdisco/mods/917" target="_blank" rel="noopener">Grey Leno for Dead as Disco (Nexus Mods)</a>.
     Original character and model by Vinesauce. Used in accordance with the mod's terms of use.</p>

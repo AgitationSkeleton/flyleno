@@ -1,5 +1,7 @@
 # FlyLeno: TUURD Talk, hosted by a fruit fly
 
+**Live:** https://agitationskeleton.github.io/flyleno/
+
 A browser simulation in which a **whole-brain spiking model of the adult fruit fly** (*Drosophila
 melanogaster*, FlyWire v783, 138,639 neurons, 15.1M connections) runs live and puppeteers **Grey Leno**
 on a TUURD-Talk-style stage.
@@ -24,11 +26,11 @@ It is a static site with no build step: three.js and Rapier load from a CDN, and
 ## Running locally
 
 ```bash
-# third-party assets (not in git, see "Asset licensing")
+# everything the page needs is in the repo; these only regenerate the assets from their sources
 blender -b assets/_src/leno/DAD_Leno.blend --python tools/export_leno.py -- assets/grey_leno.glb   # + grey_leno_head.glb
 python tools/audio/run_pipeline.sh     # Leno voice/SFX bank from the two Vinesauce videos (venv, GPU); see tools/audio/README.md
 python tools/audio/s09_extra_sfx.py    # boo / cheer / vomit / gag / goose-honk sound effects (YouTube SFX uploads)
-python tools/export_tuurd_stage.py     # optional: the original game stage (?stage=game)
+python tools/export_tuurd_stage.py     # optional, not in git: the original game stage (?stage=game)
 
 python tools/serve.py                  # no-cache dev server (module workers need http://)
 # open http://localhost:8123/   (not 127.0.0.1: YouTube refuses embeds on bare-IP origins; the page redirects)
@@ -316,13 +318,12 @@ All clips are git-ignored.
 
 ## Deploying (GitHub Pages)
 
-The page is static. **Pages sites are public even for private repos** (outside Enterprise).
+The site is published straight from the `main` branch root at **https://agitationskeleton.github.io/flyleno/**. There is no build step; `.nojekyll`
+makes Pages serve every file as-is. Everything it loads is in the repo: the procedural stage, Leno's model,
+the sound bank and the connectome data (`data/`, ~32 MB, decompressed in the browser). YouTube embeds and tab
+capture both work there, since the site is served over HTTPS from a named origin.
 
-What works without the third-party assets:
-- the original stage, the audience, the brain and the music;
-- the sound bank is optional, and is silent without `?synth=1`.
-
-What doesn't: Leno's model is required. Without the Leno GLBs the page shows a message.
+Only the optional Nightmare Puppeteer game stage (`?stage=game`) and its backdrops are not in the repo.
 
 ## Credits
 
@@ -334,7 +335,8 @@ What doesn't: Leno's model is required. Without the Leno GLBs the page shows a m
 |---|---|---|
 | Original TUURD-style stage, robed audience figures | written for this project (procedural geometry/textures; Droid Sans font, Apache-2.0) | yes |
 | Game stage / backdrops (`?stage=game`) | *Nightmare Puppeteer*, © its developer | no |
-| Grey Leno model | port by **huckleberrypie** (Nexus Mods: huckpie): [Grey Leno for Dead as Disco](https://www.nexusmods.com/deadasdisco/mods/917); original character/model by Vinesauce. Used in accordance with the mod's terms of use. | no |
-| Leno voice/SFX bank | cut from Vinesauce videos and YouTube SFX uploads | no |
+| Grey Leno model | port by **huckleberrypie** (Nexus Mods: huckpie): [Grey Leno for Dead as Disco](https://www.nexusmods.com/deadasdisco/mods/917); original character/model by Vinesauce. Used in accordance with the mod's terms of use. | yes |
+| Leno voice bank | cut from Vinesauce's [The Grey Leno Show](https://www.youtube.com/watch?v=ki3ssj466E0) and [Grey Leno announces his candidacy](https://www.youtube.com/watch?v=w7lBVJwHABM), with thanks to Vinesauce | yes |
+| Crowd / effect sounds | cut from YouTube sound-effect uploads (sources in `assets/audio/manifest.json`); mini-alien clips in `assets/audio/sfx/minialien/` supplied for the project | yes |
 | Connectome + LIF model | Shiu et al. 2024 (MIT); FlyWire v783 (Dorkenwald et al. 2024, Schlegel et al. 2024) | yes |
 | Stimulus / motor neuron IDs | [erojasoficial-byte/fly-brain](https://github.com/erojasoficial-byte/fly-brain) (MIT) | yes |

@@ -1,20 +1,15 @@
-# Third-party models: NOT redistributable (see README "Asset licensing").
-# They are regenerated locally with tools/export_*.py from files you own.
-assets/*.glb
+# Source/working files for third-party assets (not published)
 assets/_src/
 assets/*.zip
 assets/*.mhtml
 assets/*.blend
 
+# Nightmare Puppeteer game stage and backdrops (only for the optional ?stage=game; not published)
+assets/tuurd_talk_stage.glb
+assets/show_bg/
 
 __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
 node_modules/
-
-# Game backdrop images exported from Nightmare Puppeteer (not redistributable)
-assets/show_bg/
-
-# Grey Leno voice/SFX bank cut from Vinesauce videos (not redistributable)
-assets/audio/
