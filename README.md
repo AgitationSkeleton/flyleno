@@ -58,7 +58,7 @@ the connectome, labelled as such in the sidebar).
 | startle jump | giant fiber (DNp01) | neural |
 | grooming: hand rubbing (mild) / face wiping (strong) | aDN1 (antennal grooming DN) | neural |
 | voice: babble, mutters, stammers | song/flight DNs DNg02+DNp13 (voicing) + pharyngeal (vowels) and mouthpart (consonants) motor neurons | neural, phoneme mapping engineered |
-| lip-sync | loudness of Leno's own sounds → `MouthOpen` shape key + mouth interior | — |
+| lip-sync | loudness of Leno's own sounds → `MouthOpen` shape key (jaw drop) | — |
 | retch / vomit | pharyngeal-pump motor neurons (PhN, not MN9) while MN9 is quiet; repeated retching → vomit | neural |
 | fart | oviposition DNs (oviDN) | neural |
 | eating | touching food → all 129 sugar taste neurons → the model's MN9 (proboscis motor neuron) decides | neural |
@@ -115,7 +115,7 @@ peak can still reach threshold. That keeps the whole network at about real time 
 `tools/reference_sim.py` (brute-force NumPy) reproduces its results.
 
 Additions (each can be toggled in Brain settings):
-- **Spike-frequency adaptation (default on):** each spike raises that neuron's threshold by 1 mV,
+- **Spike-frequency adaptation (off by default; turn on in Brain settings for a calmer brain):** each spike raises that neuron's threshold by 1 mV,
   decaying with τ = 150 ms. The published model tips into self-sustained runaway activity under broad
   or recurrent input: Or56a, PPL1, any olfactory receptor input, and mechanosensory noise. Adaptation
   contains most of that while keeping the classic responses:
@@ -126,7 +126,8 @@ Additions (each can be toggled in Brain settings):
   | LC4 | giant fiber ~110 Hz |
   | JO | aDN1 grooming ~25 Hz |
 
-- **Runaway guard:** if activity stays above 150k spikes/s for 2.5 s, the brain is reset. With
+- **Runaway guard:** if activity stays above 150k spikes/s for 2.5 s, the brain is reset. Without
+  adaptation runaways are more frequent, so expect more of these resets. With
   autopilot on, this is announced as a "commercial break".
 - **Dopamine-gated plasticity:** see "Learning" above.
 

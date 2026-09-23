@@ -44,7 +44,7 @@ let lastDA = 0, dwAccum = 0;
 // Spike-frequency adaptation (optional, default on): each spike raises the neuron's threshold by
 // ADAPT.dA mV, decaying with ADAPT.tau ms. Not part of Shiu et al.; it keeps broad or recurrent
 // input from igniting the model's self-sustained runaway state. a(t) = aSpike * exp(-(t - tSpike)/tau).
-const ADAPT = { on: true, dA: 1.0, tau: 150 };
+const ADAPT = { on: false, dA: 1.0, tau: 150 };   // off by default (pure Shiu model); toggle in Brain settings
 let aSpike;
 // every spike's neuron index in the current report window (for the neural map), capped
 let spikeBuf = new Int32Array(1 << 16), spikeLen = 0;

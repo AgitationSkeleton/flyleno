@@ -89,23 +89,40 @@ export class FlyLeno {
     const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.1 * S, 0.14 * S, 0.22 * S, 10).rotateX(Math.PI / 2), cuticle);
     neck.position.set(0, 1.0 * S, 0.3 * S);
     this.body.add(neck, this.head);
-    for (const s of [-1, 1]) {
-      const a = new THREE.Group(); a.position.set(0.06 * s, 0.33, 0.22); a.rotation.set(-0.5, 0, 0.35 * s);
-      a.add(new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.12, 6).translate(0, 0.06, 0), legMat));
-      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), legMat); bulb.position.y = 0.14; a.add(bulb);
-      const arista = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.006, 0.28, 4).translate(0, 0.14, 0), legMat);
-      arista.position.y = 0.15; arista.rotation.z = -0.9 * s; a.add(arista);
-      for (let k = 1; k < 6; k++) {                       // feathery side branches
-        const b = new THREE.Mesh(new THREE.CylinderGeometry(0.002, 0.002, 0.07, 3), legMat);
-        b.position.set(0, 0.05 * k, 0); b.rotation.z = 1.2; arista.add(b);
+    // Landmarks on Leno's head (from the face render, metres relative to the head bone, +Z forward), scaled
+    // like the head model: brow between the eyes, and the lip line.
+    const HS = 1.9, HY = -0.05;
+    const L = (x, y, z) => new THREE.Vector3(x * HS, y * HS + HY, z * HS);
+    // antennae: a jointed chain on the brow between the eyes - scape -> pedicel -> funiculus (3rd segment) with a
+    // feathery arista; each joint is its own group so they can twitch and be swept by the front legs
+    const antMat = mat(0x6b4526, { roughness: 0.5 });
+    this.antennae = [-1, 1].map((s) => {
+      const root = new THREE.Group(); root.position.copy(L(0.017 * s, 0.03, 0.085)); root.scale.setScalar(1.45);
+      root.rotation.set(0.75, 0.3 * s, -0.25 * s);                 // forward and up off the face, splayed apart
+      const scape = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.018, 0.05, 6).translate(0, 0.025, 0), antMat);
+      const pedJ = new THREE.Group(); pedJ.position.y = 0.05; pedJ.rotation.x = 0.9;          // bends down-forward
+      const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.016, 0.04, 7).translate(0, 0.02, 0), antMat);
+      const funJ = new THREE.Group(); funJ.position.y = 0.04; funJ.rotation.x = 0.5;
+      const fun = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6).scale(0.8, 1.5, 0.8).translate(0, 0.04, 0), mat(0x8a5a30));
+      const arJ = new THREE.Group(); arJ.position.set(0.012 * s, 0.03, -0.012); arJ.rotation.set(-1.2, 0, -0.7 * s);
+      const arista = new THREE.Mesh(new THREE.CylinderGeometry(0.0025, 0.005, 0.2, 4).translate(0, 0.1, 0), antMat);
+      arJ.add(arista);
+      for (let k = 1; k < 7; k++) {                               // feathery branches above and below
+        for (const d of [1, -1]) {
+          const br = new THREE.Mesh(new THREE.CylinderGeometry(0.0012, 0.0015, 0.045 - k * 0.004, 3).translate(0, 0.02, 0), antMat);
+          br.position.y = 0.025 * k; br.rotation.x = 0.9 * d; arista.add(br);
+        }
       }
-      this.head.add(a);
-    }
-    // proboscis: rostrum + haustellum + labellum (two fleshy lobes), extends from under the chin
-    this.prob = new THREE.Group(); this.prob.position.set(0, -0.3, 0.18);
-    this.probStalk = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 1, 8).translate(0, -0.5, 0), mat(0x8c5e3b));
+      funJ.add(fun, arJ); pedJ.add(ped, funJ); root.add(scape, pedJ);
+      this.head.add(root);
+      return { root, pedJ, funJ, side: s, restPed: pedJ.rotation.x, restFun: funJ.rotation.x };
+    });
+    // proboscis: hinged just under the lips; tucked back under the chin at rest, swings down and telescopes
+    // out to feed (rostrum/haustellum stalk + the two fleshy labellar lobes)
+    this.prob = new THREE.Group(); this.prob.position.copy(L(0, -0.085, 0.07));
+    this.probStalk = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, 1, 8).translate(0, -0.5, 0), mat(0x8c5e3b));
     this.labellum = new THREE.Group();
-    for (const s of [-1, 1]) { const l = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6).scale(0.8, 0.5, 1.1), mat(0x9d6a48)); l.position.x = 0.04 * s; this.labellum.add(l); }
+    this.labLobes = [-1, 1].map((s) => { const l = new THREE.Mesh(new THREE.SphereGeometry(0.06, 9, 7).scale(0.8, 0.55, 1.15), mat(0x9d6a48)); l.position.x = 0.035 * s; this.labellum.add(l); return l; });
     this.prob.add(this.probStalk, this.labellum); this.head.add(this.prob);
     // wings (at rest folded back over the abdomen) and halteres
     const wmat = new THREE.MeshStandardMaterial({ map: wingTexture(), transparent: true, side: THREE.DoubleSide, depthWrite: false, roughness: 0.2, metalness: 0.1 });
@@ -275,9 +292,17 @@ export class FlyLeno {
     // proboscis: extends with the feeding motor output and when eating
     const pTarget = Math.max(P.eat, clamp(c.feed * 0.8, 0, 0.8));
     this.proboscis += (pTarget - this.proboscis) * Math.min(1, dt * 6);
-    const len = 0.06 + 0.55 * this.proboscis;
-    this.probStalk.scale.set(1, len, 1); this.labellum.position.y = -len; this.prob.rotation.x = 0.35 * (1 - this.proboscis);
-    this.labellum.scale.setScalar(0.6 + 0.6 * this.proboscis);
+    const p = this.proboscis, len = 0.05 + 0.5 * p;
+    this.probStalk.scale.set(1, len, 1); this.labellum.position.y = -len;
+    this.prob.rotation.x = 1.25 * (1 - p) - 0.2 * p;               // tucked back under the chin -> down and slightly forward
+    this.labellum.scale.setScalar(0.55 + 0.6 * p);
+    for (const l of this.labLobes) l.rotation.z = (l.position.x > 0 ? -1 : 1) * 0.5 * p;   // lobes open to feed
+    // antennae: small twitches; they flick back when the front legs sweep over the head
+    const sweep = c.groom > 0.5 ? 0.5 + 0.3 * Math.sin(this.t * 12) : 0;
+    for (const a of this.antennae) {
+      a.pedJ.rotation.x = a.restPed + 0.08 * Math.sin(this.t * 3.1 + a.side) + sweep;
+      a.funJ.rotation.x = a.restFun + 0.1 * Math.sin(this.t * 5.3 + a.side * 2);
+    }
     // wings: fold at rest, beat in flight (visually aliased stroke), buzz a little when "singing"
     this.phase += dt * (this.flying ? 55 : 0);
     const song = !this.flying && this.power > 0.12;
