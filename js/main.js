@@ -415,10 +415,11 @@ function crowdDo(kind, intensity = 1) {
 }
 let cueTimer = null;
 function cue(text) {
-  const el = $('cue');
-  el.textContent = text; el.classList.add('on');
-  clearTimeout(cueTimer); cueTimer = setTimeout(() => el.classList.remove('on'), 5200);
-  sidebar.ticker(`Cue card: "${text}"`);
+  // The host's scripted lines are not shown: the fly brain does the talking. (The segments' events still happen.)
+  // const el = $('cue');
+  // el.textContent = text; el.classList.add('on');
+  // clearTimeout(cueTimer); cueTimer = setTimeout(() => el.classList.remove('on'), 5200);
+  // sidebar.ticker(`Cue card: "${text}"`);
 }
 function pushHost(v) {
   if (host === flyHost) flyHost.applyImpulse('pelvis', v);

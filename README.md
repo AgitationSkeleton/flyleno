@@ -97,8 +97,9 @@ him forward over his hands and tip his pelvis. Fly-Leno lowers its head to the f
   show, the later VR, public-access and VHS episodes, and the candidacy speech.
 - **Controls:** the "Tonight's show" panel lists the rundown and has a button for every segment. A
   segment holds the director's random events while it runs.
-- **Cue cards:** the host's lines appear on cue cards at the bottom of the view. The fly can't read
-  them, so Leno says whatever his articulator neurons produce.
+- **No script on screen:** the host's lines from the shows are kept in `js/show.js` as cue cards, but
+  they are not displayed (commented out in `cue()` in `js/main.js`). The fly brain does the talking:
+  Leno says whatever his articulator neurons produce, and only the segment's events happen.
 
 | Segment | What happens | What the fly gets |
 |---|---|---|
