@@ -1,6 +1,6 @@
 # FlyLeno: TUURD Talk, hosted by a fruit fly
 
-**Live:** https://agitationskeleton.github.io/flyleno/
+**Live:** https://flyleno.viosarcade.xyz/
 
 A browser simulation in which a **whole-brain spiking model of the adult fruit fly** (*Drosophila
 melanogaster*, FlyWire v783, 138,639 neurons, 15.1M connections) runs live and puppeteers **Grey Leno**
@@ -318,7 +318,7 @@ All clips are git-ignored.
 
 ## Deploying (GitHub Pages)
 
-The site is published straight from the `main` branch root at **https://agitationskeleton.github.io/flyleno/**. There is no build step; `.nojekyll`
+The site is published straight from the `main` branch root at **https://flyleno.viosarcade.xyz/** (the page upgrades http to https itself). There is no build step; `.nojekyll`
 makes Pages serve every file as-is. Everything it loads is in the repo: the procedural stage, Leno's model,
 the sound bank and the connectome data (`data/`, ~32 MB, decompressed in the browser). YouTube embeds and tab
 capture both work there, since the site is served over HTTPS from a named origin.

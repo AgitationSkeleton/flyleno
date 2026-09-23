@@ -35,6 +35,8 @@ import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 // YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
 if (location.hostname === '127.0.0.1') { location.replace(location.href.replace('//127.0.0.1', '//localhost')); await new Promise(() => {}); }
+// Tab capture (the fly hearing/seeing the tab) needs a secure context: on the published site, always use https.
+if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace(location.href.replace(/^http:/, 'https:')); await new Promise(() => {}); }
 const params = new URLSearchParams(location.search);
 const LITE = params.has('lite');           // no stage point lights, 1x pixel ratio (slow GPUs / headless tests)
 const STAGE = params.get('stage') || 'original';   // 'original' (procedural, default) | 'game' (exported GLB)
