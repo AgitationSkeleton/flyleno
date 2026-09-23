@@ -134,3 +134,5 @@ button.mini { margin-left: auto; font-size: 11px; }
 #screenModes button:first-child { border-radius: 999px 0 0 999px; } #screenModes button:last-child { border-radius: 0 999px 999px 0; }
 #screenModes button.on { border-color: var(--accent); background: #e0263a44; }
 #hud, #cams, #throws, #form, #volume, #loading { z-index: 2; }
+
+.ico { width: 15px; height: 15px; vertical-align: -3px; }
