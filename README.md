@@ -211,13 +211,17 @@ What works without the third-party assets:
 
 What doesn't: Leno's model is required. Without the Leno GLBs the page shows a message.
 
+## Credits
+
+**Grey Leno model:** ported by huckleberrypie: [Grey Leno for Dead as Disco on Nexus Mods](https://www.nexusmods.com/deadasdisco/mods/917). The original character and model are by Vinesauce. Credit is also shown in the page footer and the About dialog.
+
 ## Asset licensing
 
 | Asset | Owner / terms | In git? |
 |---|---|---|
 | Original TUURD-style stage, robed audience figures | written for this project (procedural geometry/textures; Droid Sans font, Apache-2.0) | yes |
 | Game stage / backdrops (`?stage=game`) | *Nightmare Puppeteer*, © its developer | no |
-| Grey Leno model | original by Vinesauce; Dead as Disco port by huckleberrypie ([Nexus mod 917](https://www.nexusmods.com/deadasdisco/mods/917)): no uploading elsewhere, no conversion, asset use only with permission | no |
+| Grey Leno model | port by **huckleberrypie** (Nexus Mods: huckpie): [Grey Leno for Dead as Disco](https://www.nexusmods.com/deadasdisco/mods/917); original character/model by Vinesauce. Port's terms of use: use in your own content is fine with credit and a link to the original download page; modifying/porting allowed; no pornographic, grossly disturbing, or deceptively child-targeted use. | no |
 | Leno voice/SFX bank | cut from Vinesauce videos and YouTube SFX uploads | no |
 | Connectome + LIF model | Shiu et al. 2024 (MIT); FlyWire v783 (Dorkenwald et al. 2024, Schlegel et al. 2024) | yes |
 | Stimulus / motor neuron IDs | [erojasoficial-byte/fly-brain](https://github.com/erojasoficial-byte/fly-brain) (MIT) | yes |

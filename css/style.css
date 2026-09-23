@@ -79,6 +79,8 @@ canvas#raster, canvas#classes { width: 100%; display: block; background: #0b0b0e
 .grp .num { font: 11px var(--mono); text-align: right; }
 footer { margin-top: 8px; color: var(--muted); }
 footer a { color: var(--muted); }
+footer .credits { margin-top: 4px; font-size: 11px; }
+#aboutBody .credit { border-left: 3px solid var(--muted); padding-left: 8px; }
 dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 10px; max-width: 640px; }
 dialog a { color: var(--accent-2); }
 

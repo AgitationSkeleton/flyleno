@@ -558,8 +558,11 @@ $('aboutLink').onclick = (e) => {
     <p><b>Engineered layers (not in the connectome):</b> the phoneme mapping of motor neurons, the action selector
     ("initiative"), the audience, and the stage-edge reflex.</p>
     <p><b>Stage:</b> an original procedural set inspired by the TUURD Talk show of <i>Nightmare Puppeteer</i>.
-    <b>Grey Leno:</b> original character/model by Vinesauce, Dead as Disco port by huckleberrypie; his voice bank comes from
-    Vinesauce videos. Those assets belong to their authors and are not distributed with this project.</p>
+    Leno's voice bank comes from Vinesauce videos and belongs to its authors; it is not distributed with this project.</p>
+    <p class="credit"><b>Grey Leno model:</b> ported by <b>huckleberrypie</b> (Nexus Mods: huckpie):
+    <a href="https://www.nexusmods.com/deadasdisco/mods/917" target="_blank" rel="noopener">Grey Leno for Dead as Disco (Nexus Mods)</a>.
+    Original character and model by Vinesauce. Used under the port's terms of use (credit and a link to the
+    original download page; no pornographic, grossly disturbing, or deceptively child-targeted use).</p>
     <p><b>Music:</b> YouTube embed; the fly hears it through a capture of this tab's audio when you allow it.</p>`;
   $('about').showModal();
 };
