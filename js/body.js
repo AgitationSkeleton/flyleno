@@ -175,11 +175,12 @@ export class PhysicsLeno {
     const down = st.fallen && this.posture.eat < 0.3 && !held;
     this.fallenFor = down ? this.fallenFor + dt : 0;
     if (down && this.fallenFor > 0 && this.fallenFor - dt <= 0) this.onFall?.();
-    this.getUp = this.fallenFor > 4 ? Math.min(1, this.getUp + dt * 0.4) : Math.max(0, this.getUp - dt * 0.8);
-    if (this.getUp > 0) this.rag.applyImpulse('chest', new THREE.Vector3(0, this.getUp * 0.5 * 81 * 9.81 * dt, 0));
+    // (the help comes from the strings, so with the strings off he just lies there: a pure ragdoll)
+    this.getUp = this.fallenFor > 4 && this.support > 0.05 ? Math.min(1, this.getUp + dt * 0.4) : Math.max(0, this.getUp - dt * 0.8);
+    if (this.getUp > 0) this.rag.applyImpulse('chest', new THREE.Vector3(0, this.getUp * Math.min(1, this.support / 0.8) * 0.5 * 81 * 9.81 * dt, 0));
     const p = st.root;
     const lost = this.worldBox && !this.worldBox.containsPoint(p.clone().setY(this.worldBox.min.y + 0.1));
-    if (lost || (this.fallenFor > 5 && this.groundAt(p) === null)) {
+    if (lost) {
       this.fallenFor = 0; this.getUp = 0;
       this.rag.place(this.home, st.heading);
     }
