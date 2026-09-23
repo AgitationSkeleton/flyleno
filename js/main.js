@@ -569,8 +569,7 @@ $('aboutLink').onclick = (e) => {
     Leno's voice bank comes from Vinesauce videos and belongs to its authors; it is not distributed with this project.</p>
     <p class="credit"><b>Grey Leno model:</b> ported by <b>huckleberrypie</b> (Nexus Mods: huckpie):
     <a href="https://www.nexusmods.com/deadasdisco/mods/917" target="_blank" rel="noopener">Grey Leno for Dead as Disco (Nexus Mods)</a>.
-    Original character and model by Vinesauce. Used under the port's terms of use (credit and a link to the
-    original download page; no pornographic, grossly disturbing, or deceptively child-targeted use).</p>
+    Original character and model by Vinesauce. Used in accordance with the mod's terms of use.</p>
     <p><b>Music:</b> YouTube embed; the fly hears it through a capture of this tab's audio when you allow it.</p>`;
   $('about').showModal();
 };

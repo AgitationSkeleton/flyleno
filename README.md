@@ -221,7 +221,7 @@ What doesn't: Leno's model is required. Without the Leno GLBs the page shows a m
 |---|---|---|
 | Original TUURD-style stage, robed audience figures | written for this project (procedural geometry/textures; Droid Sans font, Apache-2.0) | yes |
 | Game stage / backdrops (`?stage=game`) | *Nightmare Puppeteer*, © its developer | no |
-| Grey Leno model | port by **huckleberrypie** (Nexus Mods: huckpie): [Grey Leno for Dead as Disco](https://www.nexusmods.com/deadasdisco/mods/917); original character/model by Vinesauce. Port's terms of use: use in your own content is fine with credit and a link to the original download page; modifying/porting allowed; no pornographic, grossly disturbing, or deceptively child-targeted use. | no |
+| Grey Leno model | port by **huckleberrypie** (Nexus Mods: huckpie): [Grey Leno for Dead as Disco](https://www.nexusmods.com/deadasdisco/mods/917); original character/model by Vinesauce. Used in accordance with the mod's terms of use. | no |
 | Leno voice/SFX bank | cut from Vinesauce videos and YouTube SFX uploads | no |
 | Connectome + LIF model | Shiu et al. 2024 (MIT); FlyWire v783 (Dorkenwald et al. 2024, Schlegel et al. 2024) | yes |
 | Stimulus / motor neuron IDs | [erojasoficial-byte/fly-brain](https://github.com/erojasoficial-byte/fly-brain) (MIT) | yes |
