@@ -98,13 +98,16 @@ export class Projectiles {
     const R = this.host.RAPIER, world = this.host.world;
     const st = this.host.rag.getState();
     let target;
-    if (kind === 'sugar') {
-      const f = new THREE.Vector3(Math.sin(st.heading), 0, Math.cos(st.heading)), side = new THREE.Vector3(f.z, 0, -f.x);
+    const f = new THREE.Vector3(Math.sin(st.heading), 0, Math.cos(st.heading)), side = new THREE.Vector3(f.z, 0, -f.x);
+    if (kind === 'sugar' || (kind === 'rose' && Math.random() < 0.5)) {
+      // a gentle lob to the floor just in front of him
       target = st.root.clone().addScaledVector(f, 0.9 + Math.random() * 0.8).addScaledVector(side, (Math.random() - 0.5) * 1.2);
-    } else target = (Math.random() < 0.6 ? st.headPos : st.root.clone().add(new THREE.Vector3(0, 1.3, 0))).clone();
-    // ballistic aim with a chosen flight time; lead the target a little
+    } else if (kind === 'rose') target = st.root.clone().add(new THREE.Vector3(0, 1.3, 0));   // tossed to his chest, never at his face
+    else target = (Math.random() < 0.6 ? st.headPos : st.root.clone().add(new THREE.Vector3(0, 1.3, 0))).clone();
+    // ballistic aim with a chosen flight time (roses and sugar are slow, arcing lobs); lead the target a little
     const d = target.clone().sub(from);
-    const T = THREE.MathUtils.clamp(d.length() / (kind === 'pipe' ? 13 : kind === 'rose' ? 12 : kind === 'sugar' ? 9 : 16), kind === 'sugar' ? 0.9 : 0.45, 2.2);
+    const gentle = kind === 'sugar' || kind === 'rose';
+    const T = THREE.MathUtils.clamp(d.length() / (kind === 'pipe' ? 13 : kind === 'rose' ? 8 : kind === 'sugar' ? 9 : 16), gentle ? 0.9 : 0.45, 2.2);
     const g = -9.81;
     const v = new THREE.Vector3(d.x / T, (d.y - 0.5 * g * T * T) / T, d.z / T);
     v.x += (Math.random() - 0.5) * 0.8; v.z += (Math.random() - 0.5) * 0.8;   // human inaccuracy
@@ -121,6 +124,7 @@ export class Projectiles {
       return this.add({ kind, body, collider, mesh, v });
     }
     if (kind === 'rose') {
+      // 50 g: even a direct hit is a ~0.4 N·s nudge on an 81 kg body (a pipe is ~30); no knockback, no injury
       bodyDesc.setAngvel({ x: (Math.random() - 0.5) * 8, y: (Math.random() - 0.5) * 4, z: (Math.random() - 0.5) * 8 });
       const body = world.createRigidBody(bodyDesc);
       collider = world.createCollider(R.ColliderDesc.capsule(0.2, 0.03).setMass(0.05).setRestitution(0.1).setFriction(0.8)
@@ -186,7 +190,7 @@ export class Projectiles {
       it.mesh.quaternion.set(r.x, r.y, r.z, r.w);
       const vel = new THREE.Vector3(lv.x, lv.y, lv.z);
       // looming: about to hit the head (for the fly's LC4 looming detectors)
-      if (!it.warned && !it.splatted && it.kind !== 'sugar') {          // (a lobbed sugar cube isn't a threat)
+      if (!it.warned && !it.splatted && it.kind !== 'sugar' && it.kind !== 'rose') {   // (a lobbed sugar cube or rose isn't a threat)
         const toHead = head.clone().sub(it.mesh.position);
         if (toHead.length() < 4 && vel.dot(toHead) > 0) { it.warned = true; this.onApproach?.(it); }
       }

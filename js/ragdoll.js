@@ -394,7 +394,7 @@ export class RagdollLeno {
   // strings: pull-only vertical spring-dampers toward standing height; move the upright anchor
   // (teleported each substep to the pelvis position and heading, so its motors only see tilt and yaw rate)
   /** posture of the puppet strings: drop (0..1 of standing height), lean (m forward of the feet), pitch (rad, pelvis forward) */
-  setStance(drop = 0, lean = 0, pitch = 0) { this.stance = { drop, lean, pitch }; }
+  setStance(drop = 0, lean = 0, pitch = 0, headFree = 0) { this.stance = { drop, lean, pitch, headFree }; }
 
   updateStrings(dt) {
     const S = SUPPORT_TUNING, sag = S.slack * this.scale;
@@ -409,7 +409,8 @@ export class RagdollLeno {
         const vy = lv.y + (av.z * arm.x - av.x * arm.z);      // (w x r).y
         const py = t.y + arm.y;
         const share = S[st.share];
-        const f = share * (this.kLin * (st.groundY + st.bindY * (1 - stance.drop) - sag - py) - this.cLin * vy);
+        const free = st.target === 'head' ? stance.headFree || 0 : 0;        // (the head string can let go: eating, sleeping)
+        const f = share * (1 - free) * (this.kLin * (st.groundY + st.bindY * (1 - stance.drop) - sag - py) - this.cLin * vy);
         let fx = 0, fz = 0;
         if (st.target === 'chest' && S.center > 0) {
           // the puppeteer holds the control bar above the feet: horizontal spring toward the feet midpoint

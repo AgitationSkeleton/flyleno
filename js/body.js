@@ -22,20 +22,29 @@ const GESTURES = {
 };
 
 // sustained postures (weight 0..1, smoothed), e.g. from js/instincts.js
-const POSTURES = {
-  // feeding on all fours: kneel (hips + knees fully bent), pitch the torso forward, arms straight down/forward
-  // to the floor to take the weight, head lowered to the food (like a fly putting its mouthparts on it)
+export const POSTURES = {
+  // feeding: kneel (hips + knees fully bent), pitch the torso forward, down onto his forearms, face to the food on
+  // the floor (like a fly putting its mouthparts on it): his mouth gets to ~0.25 m, right at the food
   eat: { hip_l_pitch_flex: 0.85, hip_r_pitch_flex: 0.85, knee_l_pitch_flex: 0.66, knee_r_pitch_flex: 0.66,
-    ankle_l_pitch_ext: 0.8, ankle_r_pitch_ext: 0.8, spine_pitch_flex: 0.35, neck_pitch_flex: 0.55,
-    shoulder_l_pitch_flex: 0.48, shoulder_r_pitch_flex: 0.48, elbow_l_pitch_flex: 0.05, elbow_r_pitch_flex: 0.05 },
+    ankle_l_pitch_ext: 0.8, ankle_r_pitch_ext: 0.8, spine_pitch_flex: 0.35, neck_pitch_flex: 0.8,
+    shoulder_l_pitch_flex: 0.55, shoulder_r_pitch_flex: 0.55, elbow_l_pitch_flex: 0.8, elbow_r_pitch_flex: 0.8 },
   // fly-like leg rubbing: forearms up in front of the chest, hands together (oscillation added in update)
   rub: { shoulder_l_pitch_flex: 0.45, shoulder_r_pitch_flex: 0.45, shoulder_l_roll_ext: 0.45, shoulder_r_roll_ext: 0.45,
     elbow_l_pitch_flex: 0.75, elbow_r_pitch_flex: 0.75, shoulder_l_yaw_flex: 0.4, shoulder_r_yaw_flex: 0.4, neck_pitch_flex: 0.25 },
-  // asleep (js/sleep.js): kneeling, curled forward over his knees, head down, arms loose; the puppet strings lower
-  // him into it
+  // asleep (js/sleep.js): curled up on his knees, forehead to the floor, arms tucked (a child's pose); the puppet
+  // strings lower him all the way into it
   sleep: { hip_l_pitch_flex: 0.9, hip_r_pitch_flex: 0.9, knee_l_pitch_flex: 0.7, knee_r_pitch_flex: 0.7,
-    ankle_l_pitch_ext: 0.8, ankle_r_pitch_ext: 0.8, spine_pitch_flex: 0.45, neck_pitch_flex: 0.75,
-    shoulder_l_pitch_flex: 0.3, shoulder_r_pitch_flex: 0.3, elbow_l_pitch_flex: 0.4, elbow_r_pitch_flex: 0.4 },
+    ankle_l_pitch_ext: 0.8, ankle_r_pitch_ext: 0.8, spine_pitch_flex: 0.6, neck_pitch_flex: 0.85,
+    shoulder_l_pitch_flex: 0.45, shoulder_r_pitch_flex: 0.45, elbow_l_pitch_flex: 0.55, elbow_r_pitch_flex: 0.55 },
+};
+
+// how the puppet strings hold him in a sustained posture: drop (share of standing height they lower him by), lean
+// (m forward of his feet for the chest), pitch (rad, pelvis tipped forward), headFree (0..1: the head string lets go).
+// For eating and sleeping they lower him all the way and let his head go, so the strings never hold him up out of
+// the posture (at any strength of the support slider)
+export const STANCE = {
+  eat: { drop: 0.66, lean: 0.5, pitch: 1.45, headFree: 1 },
+  sleep: { drop: 0.72, lean: 0.55, pitch: 1.4, headFree: 1 },
 };
 
 export class PhysicsLeno {
@@ -198,7 +207,8 @@ export class PhysicsLeno {
     this.slack += (slackWant - this.slack) * Math.min(1, dt * (slackWant > this.slack ? 25 : 1.8));
     const low = Math.max(P.eat, P.sleep);
     this.rag.setSupport(Math.min(1, this.support * (1 - 0.35 * low) * (1 + 0.6 * this.getUp)) * (1 - this.slack));
-    this.rag.setStance?.(0.36 * P.eat + 0.42 * P.sleep, 0.35 * P.eat + 0.12 * P.sleep, 1.35 * P.eat + 0.9 * P.sleep);
+    const stn = (f) => Object.keys(STANCE).reduce((a, k) => a + (P[k] || 0) * STANCE[k][f], 0);
+    this.rag.setStance?.(stn('drop'), stn('lean'), stn('pitch'), Math.min(1, stn('headFree')));
     this.rag.step(dt);
     this.rag.syncSkin();
 

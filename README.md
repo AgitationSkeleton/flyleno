@@ -150,7 +150,9 @@ are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when bare
 - **Throwing storms:** now and then the audience unleashes a barrage of 14–30 tomatoes and pipes over a few
   seconds.
 - **Roses:** single roses are thrown now and then (also the 🌹 button), and sometimes a whole rose storm.
-  A rose that lands on Leno is a compliment: a little touch and reward dopamine, and cheers.
+  A rose that lands on Leno is a compliment: a little touch and reward dopamine, and cheers. Roses weigh 50 g
+  and are tossed in a slow arc to his chest or his feet, never at his face: no knockback, no injury, and they
+  don't set off the looming alarm (a pipe or tomato flying at his head does).
 - **Sugar cubes:** now and then someone lobs a sugar cube (also the 🧊 button). It's aimed at the floor just in
   front of him, weighs almost nothing and can't hurt or shove him; once it comes to rest it is food he can eat.
   When he's starving the audience sometimes lobs a handful.
@@ -225,8 +227,10 @@ distance from the viewing camera, with 10% hysteresis so seats don't flicker:
 **Hecklers:** a heckler charges the stage, then either rants with both arms raised or pelts Leno with
 3–5 tomatoes and pipes thrown from its hand (only the kinds whose switches are on).
 
-**Eating posture:** humanoid Leno gets down on all fours to eat. The puppet strings lower him, lean
-him forward over his hands and tip his pelvis. Fly-Leno lowers its head to the food.
+**Eating posture:** humanoid Leno kneels and goes down onto his forearms with his face to the food (mouth ~0.25 m
+off the floor). The puppet strings lower him all the way, lean him forward and let go of his head, so they never
+hold him up out of the posture at any support setting. Fly-Leno lowers its head to the food. Sleeping works the
+same way: the strings lower him into a curl, forehead to the floor.
 
 `?quiet` starts the page with autopilot, initiative, goose visits and the show rundown off.
 
