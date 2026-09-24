@@ -242,8 +242,9 @@ him forward over his hands and tip his pelvis. Fly-Leno lowers its head to the f
   segment holds the director's random events while it runs. Each segment also has a switch in the Events panel.
 - **No script on screen:** the host's lines from the shows are kept in `js/show.js` as cue cards, but
   they are not displayed (commented out in `cue()` in `js/main.js`). The fly brain does the talking:
-  Leno says whatever his articulator neurons produce, and only the segment's events happen. Where a segment
-  needs an answer from him (the phone-in, the monologue), it drives his voice neurons and quotes what comes out.
+  Leno says whatever his articulator neurons produce, and only the segment's events happen. Nothing makes him
+  talk: where a segment wants something from him (the phone-in, the monologue) it gives him the floor and listens,
+  and whatever he says on his own is quoted.
 - **No flashing:** lights fade, screens move smoothly, the wheel's colours share one brightness, and the static
   is a soft grey snow redrawn ~12 times a second.
 
@@ -255,8 +256,8 @@ him forward over his hands and tip his pelvis. Fly-Leno lowers its head to the f
 | Take it away, Johnny! | a spotlight swings to the empty band stool; the music drops out, crickets; "Where's Johnny?"; rimshot | sudden silence, crickets (JO-A), spotlight on the eyes |
 | A word from our sponsor | GRONK sponsor card (a slow, throbbing glow; no strobe), then "Buy Grey Leno NFTs" | pulsing light on the eyes (R1-6) |
 | Technical difficulties | screens full of soft grey static; "Dave, can you fix the static?" | visual noise (R1-6), hiss (JO-A) |
-| Phone-in: the fly answers | the desk phone rings and a garbled caller asks e.g. "Why do you puke so much?" or "What do the worms in your brain tell you?" (shown in the ticker). Then the fly answers: a 4.5 s drive on its vocal descending neurons, and whatever its articulators produce is quoted as Leno's answer. Silence gets crickets and the caller hangs up | ring and voice (JO); fictive vocal drive; laughs/applause or silence |
-| Monologue: joke time | spotlight; three "jokes", each a push on his voice neurons followed by a rimshot. The crowd laughs if he said something (his words are quoted), crickets if not ("tough crowd") | spotlight (R1-6), rimshots (JO), reward for talking |
+| Phone-in: the fly answers | the desk phone rings and a garbled caller asks e.g. "Why do you puke so much?" or "What do the worms in your brain tell you?" (shown in the ticker). Then the line goes quiet for up to 9 s: whatever Leno says on his own is quoted as his answer (nothing drives his voice). Silence gets crickets and the caller hangs up | ring and voice (JO); laughs/applause or silence |
+| Monologue: joke time | spotlight; three "jokes": he has the floor for up to 8 s each, and nothing makes him talk. When he has said something and stops, a rimshot and usually a laugh (his words are quoted); if he says nothing, crickets ("tough crowd") | spotlight (R1-6), rimshots (JO), reward for talking |
 | Guest: a goose | "Our next guest… a goose!" The goose waddles on in a follow spot, honks and poops | honks (JO), a spotlit mover (LC4, R1-6), droppings for Fly-Leno |
 | 500 years young (birthday) | "I'm 500 years young, folks": a stagehand carries out a birthday cake with candles, the crowd sings Happy Birthday, balloons and confetti. The cake is food he goes for even when not hungry | the song and applause (JO), sugar taste, reward |
 | The Leno Wave | the audience does a stadium wave three times round, chanting "LE-NO" | a wave of motion across the seats (R1-6), chant (JO), cheers |

@@ -2,9 +2,9 @@
 // from Vinny's Grey Leno appearances (the 2022 Nightmare Puppeteer show, the VR / public-access / VHS follow-ups,
 // the candidacy speech) and ends with the UFO sign-off. Every segment is a set of stimuli for the fly (sounds it
 // hears, light and screen pictures it sees, touch, looming, fictive drives) plus crowd reactions that reach its
-// dopamine neurons. The host's scripted lines are not shown (the fly brain does the talking): where a segment
-// needs an answer from Leno (the phone-in, the monologue) it drives the fly's own voice neurons and quotes whatever
-// comes out.
+// dopamine neurons. The host's scripted lines are not shown (the fly brain does the talking). Nothing here makes
+// him talk: where a segment wants something from Leno (the phone-in, the monologue) it gives him the floor and
+// listens, and whatever his voice neurons say on their own (js/behavior.js) is quoted.
 //
 // Pacing: an episode alternates calm segments with busy ones (a guest, a party), prefers segments it didn't run
 // last time, and may end on the late late show's lullaby. Between segments there is room to wander; the show waits
@@ -27,8 +27,8 @@ const V = { EY: [480, 1900], EH: [560, 1750], OW: [520, 900], AE: [700, 1700], I
 export const SEGMENTS = {
   open: { title: 'Opening', dur: 16 },
   clip: { title: '"Take a look at this next one"', dur: 32, pace: 'calm' },
-  monologue: { title: 'Monologue: joke time', dur: 30, pace: 'calm' },
-  phonein: { title: 'Phone-in: the fly answers', dur: 18, pace: 'calm' },
+  monologue: { title: 'Monologue: joke time', dur: 36, pace: 'calm' },
+  phonein: { title: 'Phone-in: the fly answers', dur: 20, pace: 'calm' },
   johnny: { title: '"Take it away, Johnny!"', dur: 13, pace: 'calm' },
   sponsor: { title: 'A word from our sponsor', dur: 14, pace: 'calm' },
   static: { title: 'Technical difficulties', dur: 11, pace: 'calm' },
@@ -47,7 +47,8 @@ export const SEGMENTS = {
 };
 const MIDDLE = Object.keys(SEGMENTS).filter((k) => SEGMENTS[k].pace === 'calm' || SEGMENTS[k].pace === 'big');
 
-// callers (the questions are heard as a garbled voice on the line and shown in the ticker; the answer is the fly's)
+// callers (the questions are heard as a garbled voice on the line and shown in the ticker; the answer, if any,
+// is whatever the fly says)
 const CALLS = [
   'Why do you puke so much?',
   'Can you address the elephant in the room: who are the hooded chaps in the back?',
@@ -216,13 +217,17 @@ export class Show {
     return out;
   }
 
-  // ---------------------------------------------------------------- the fly answers
-  /** open the fly's voice for `sec` seconds (a fictive drive onto its vocal descending neurons) */
-  speakUp(s) { s.vOn = true; s.v = 0; s.w0 = this.ctx.said(); this.ctx.setStim('vocal', true); }
-  /** close it again; returns what he said in the meantime ('' if nothing) and how loud he got */
-  speakDone(s) {
-    if (!s.vOn) return { said: '', v: 0 };
-    s.vOn = false; this.ctx.setStim('vocal', false);
+  // ---------------------------------------------------------------- listening to the fly
+  // Nothing drives his voice here: a segment gives him the floor and listens. Whatever his voice neurons produce
+  // on their own in that time (the usual route, js/behavior.js) is his answer; silence is an answer too.
+  /** start listening */
+  listen(s) { s.listening = true; s.v = 0; s.w0 = this.ctx.said(); s.listenT = 0; s.quietT = 0; }
+  /** has he finished? (he said something and then went quiet for a second, or `maxT` seconds have passed) */
+  heardEnough(s, maxT) { return s.listenT > maxT || (this.ctx.said() > s.w0 && s.quietT > 1); }
+  /** stop listening: what he said ('' if nothing) and how loud he got */
+  heard(s) {
+    if (!s.listening) return { said: '', v: 0 };
+    s.listening = false;
     const n = Math.min(12, this.ctx.said() - s.w0);
     return { said: n > 0 ? this.ctx.transcript().slice(-n).join(' ') : '', v: s.v };
   }
@@ -325,7 +330,7 @@ export class Show {
 
   step(key, s, t, dt, C) {
     const ctx = this.ctx;
-    if (s.vOn) s.v = Math.max(s.v, ctx.voice());
+    if (s.listening) { const v = ctx.voice(); s.v = Math.max(s.v, v); s.listenT += dt; s.quietT = v < 0.2 ? s.quietT + dt : 0; }
     if (key === 'open') {
       this.at(C, 4, () => { ctx.cue('Today we have a show.'); ctx.crowd('applause', 1); ctx.crowd('cheer', 0.8); ctx.ticker('The audience bursts into applause at nothing'); });
       this.at(C, 8, () => ctx.cue("We have a whole cavalcade of different material that you will enjoy to your heart's consent!"));
@@ -345,36 +350,35 @@ export class Show {
       return t > SEGMENTS.clip.dur;
     }
     if (key === 'monologue') {
-      // three "jokes": his voice neurons get a push, then a rimshot; the crowd laughs if he said something
+      // three "jokes": he has the floor for up to 8 s each (nothing makes him talk). When he has said something
+      // and stops, a rimshot and usually a laugh; if he says nothing, crickets
       s.next -= dt;
-      if (!s.vOn && s.next <= 0 && s.jokes < 3) { this.speakUp(s); s.tellT = 0; }
-      if (s.vOn) {
-        s.tellT += dt;
-        if (s.tellT > 2.8) {
-          const { said, v } = this.speakDone(s);
-          s.jokes++; s.next = 4;
-          if (said || v > 0.35) {
-            if (said) ctx.ticker(`Leno: "${said}"`);
-            this.ctx.sfx.sting('rimshot', { gain: 0.7 });
-            setTimeout(() => ctx.crowd(Math.random() < 0.7 ? 'laugh' : 'applause', 0.8), 900);
-          } else { this.ctx.sfx.sting('crickets', { gain: 0.7 }); ctx.ticker('…nothing. Tough crowd.'); }
-        }
+      if (!s.listening && s.next <= 0 && s.jokes < 3) this.listen(s);
+      if (s.listening && this.heardEnough(s, 8)) {
+        const { said, v } = this.heard(s);
+        s.jokes++; s.next = 3;
+        if (said || v > 0.35) {
+          if (said) ctx.ticker(`Leno: "${said}"`);
+          this.ctx.sfx.sting('rimshot', { gain: 0.7 });
+          setTimeout(() => ctx.crowd(Math.random() < 0.7 ? 'laugh' : 'applause', 0.8), 900);
+        } else { this.ctx.sfx.sting('crickets', { gain: 0.7 }); ctx.ticker('…nothing. Tough crowd.'); }
       }
-      if (s.jokes >= 3 && s.next <= 1.5) { this.spot.off(); return true; }
+      if (s.jokes >= 3 && s.next <= 1) { this.spot.off(); return true; }
       return false;
     }
     if (key === 'phonein') {
       this.at(C, 3.2, () => { this.ctx.sfx.sting('caller', { gain: 0.8 }); ctx.ticker(`Caller: "${s.call}"`); });
-      // the answer comes from the fly: a push onto its voice neurons, and whatever they say is the reply
-      this.at(C, 7, () => { this.speakUp(s); ctx.ticker('Leno answers the caller…'); });
-      this.at(C, 11.5, () => {
-        const { said, v } = this.speakDone(s);
+      // over to Leno: whatever he says on his own in the next few seconds is his answer (nothing makes him talk)
+      this.at(C, 6.5, () => { this.listen(s); ctx.ticker('The line goes quiet: over to Leno…'); });
+      if (s.listening && this.heardEnough(s, 9)) {
+        const { said, v } = this.heard(s);
+        s.answered = t;
         if (said || v > 0.35) {
           ctx.ticker(said ? `Leno answers: "${said}"` : 'Leno mumbles an answer');
           ctx.crowd(Math.random() < 0.6 ? 'laugh' : 'applause', 0.8);
         } else { this.ctx.sfx.sting('crickets', { gain: 0.7 }); ctx.ticker('…silence. The caller hangs up.'); }
-      });
-      return t > SEGMENTS.phonein.dur;
+      }
+      return s.answered !== undefined ? t > s.answered + 4 : t > 30;
     }
     if (key === 'guest') {
       this.at(C, 3, () => { ctx.cue('Give it up for Mr. Frog!'); ctx.crowd('applause', 1); this.frog.enter(ctx.getHost, 48); this.spot.on(() => this.frog.headPos() ?? ctx.hostHead(), 700); });
@@ -501,7 +505,7 @@ export class Show {
 
   stop(key, s) {
     const ctx = this.ctx;
-    this.speakDone(s);
+    this.heard(s);
     if (key === 'clip' && !s.back && ctx.screens?.available && s.prevMode && s.prevMode !== 'video') ctx.screens.setMode(s.prevMode);
     if (key === 'guest') this.frog.leave('done');
     if (key === 'drive' && this.car.present) this.car.active.phase = 'out';
