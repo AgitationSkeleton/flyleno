@@ -400,6 +400,7 @@ function seatGeometriesLow(level) {
     for (const s of [-1, 1]) add(black, new THREE.BoxGeometry(0.07, 0.8, 0.7), M(s * 0.37, 0.42, -0.24));
   } else {
     add(black, new THREE.BoxGeometry(0.8, 0.8, 0.7), M(0, 0.4, -0.26));                        // sides + pedestal as one block
+    add(black, new THREE.BoxGeometry(0.62, 0.74, 0.05), M(0, 1.0, -0.6, 0, -0.14));             // back shell: the back stays black from behind
   }
   return [mergeGeometries(blue), mergeGeometries(black)];
 }

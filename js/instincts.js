@@ -84,8 +84,12 @@ export class Instincts {
         if (!this.eating) this.onEvent?.('eatStart', near.item);
         this.eating = true;
         posture.eat = 1;
-        out.forward = reach > 1.1 ? 0.22 : 0; out.backward = 0;       // shuffle closer if the crouch drifted back
-        out.turn = clamp(ang * 1.5, -0.6, 0.6);                    // keep facing the food
+        // down at the food: steer by where it is relative to his mouth (his body can end up right over it, where
+        // the angle from the body swings about), and only when it's clearly off to one side or out ahead
+        const toM = near.item.pos.clone().sub(mouth).setY(0);
+        const side = -(fwd.x * toM.z - fwd.z * toM.x), ahead = fwd.x * toM.x + fwd.z * toM.z;   // side > 0: turn + (as ang above)
+        out.forward = ahead > 0.6 ? 0.2 : 0; out.backward = 0;        // shuffle closer if the crouch drifted back
+        out.turn = Math.abs(side) > 0.35 ? clamp(side, -0.3, 0.3) : 0;
         this.biteT -= dt;
         if (this.biteT <= 0) { this.biteT = 0.6 + Math.random() * 0.5; this.onEvent?.('bite', near.item); }
         const done = this.food.eat(near.item, dt * 0.09 * (0.5 + this.feedEMA / 60));

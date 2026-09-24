@@ -215,7 +215,8 @@ distance from the viewing camera, with 10% hysteresis so seats don't flicker:
 **Other levels of detail** (`js/lod.js`):
 - **Instanced set pieces:** seats, toilets, truss bays and light cans each get one or two simpler geometries and
   are re-bucketed by camera distance whenever the camera moves:
-  - seats: 516 → 36 → 24 fabric triangles; toilets: coarse lathe and boxes; truss: just the four chords far away;
+  - seats: 516 → 36 → 24 fabric triangles (every level keeps the black back shell, so the seat backs don't change
+    colour with distance); toilets: coarse lathe and boxes; truss: just the four chords far away;
     light cans: 8 instead of 20 segments.
 - **One-off props:** the frog, car, goose, stagehand/heckler, spider, glove, mushroom, bandstand, balloons, UFO
   and the mini aliens swap each mesh to automatically simplified copies (three.js `SimplifyModifier`) as they get

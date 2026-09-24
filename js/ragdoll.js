@@ -104,6 +104,7 @@ export async function initPhysics() {
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _q = new THREE.Quaternion(), _q2 = new THREE.Quaternion();
 const _v3 = new THREE.Vector3(), _q3 = new THREE.Quaternion(), _X = new THREE.Vector3(1, 0, 0);
+const _qh = new THREE.Quaternion(), _qh2 = new THREE.Quaternion(), _vh = new THREE.Vector3();
 const _m = new THREE.Matrix4(), _m2 = new THREE.Matrix4(), _s = new THREE.Vector3();
 const UP = new THREE.Vector3(0, 1, 0);
 
@@ -427,9 +428,8 @@ export class RagdollLeno {
         if (fy || fx || fz) b.applyImpulseAtPoint({ x: fx * dt, y: fy * dt, z: fz * dt }, { x: t.x + arm.x, y: py, z: t.z + arm.z }, true);
       }
     }
-    const pb = this.bodies.pelvis, t = pb.translation(), r = pb.rotation();
-    const fwd = _v2.set(0, 0, 1).applyQuaternion(_q.set(r.x, r.y, r.z, r.w));
-    _q2.setFromAxisAngle(UP, Math.atan2(fwd.x, fwd.z));
+    const pb = this.bodies.pelvis, t = pb.translation();
+    _q2.setFromAxisAngle(UP, this.pelvisHeading(stance.pitch));
     if (stance.pitch) _q2.multiply(_q3.setFromAxisAngle(_X, stance.pitch));        // lean the pelvis forward
     this.uprightAnchor.setTranslation(t, true);
     this.uprightAnchor.setRotation({ x: _q2.x, y: _q2.y, z: _q2.z, w: _q2.w }, true);
@@ -481,11 +481,21 @@ export class RagdollLeno {
     return out.copy(local).applyQuaternion(_q.set(r.x, r.y, r.z, r.w)).add(t);
   }
 
+  /** which way the pelvis faces (yaw), measured with the posture's own forward tilt taken out: when the strings
+   *  tip him forward (eating, sleeping) the pelvis points nearly straight down, and its raw forward direction would
+   *  swing wildly with every wobble (and the strings, following it, would spin him round) */
+  pelvisHeading(pitch = 0) {
+    const r = this.bodies.pelvis.rotation();
+    _qh.set(r.x, r.y, r.z, r.w);
+    if (pitch) _qh.multiply(_qh2.setFromAxisAngle(_X, -pitch));
+    const f = _vh.set(0, 0, 1).applyQuaternion(_qh);
+    return Math.atan2(f.x, f.z);
+  }
+
   getState() {
     const pel = this.bodies.pelvis.translation(), chestR = this.bodies.chest.rotation(), pelR = this.bodies.pelvis.rotation();
     const g = this.groundHeightAt(pel.x, pel.z, pel.y + 0.1 * this.scale) ?? Math.min(this.bodies.foot_l.translation().y, this.bodies.foot_r.translation().y) - 0.035 * this.scale;
-    const fwd = _v.set(0, 0, 1).applyQuaternion(_q.set(pelR.x, pelR.y, pelR.z, pelR.w));
-    const heading = Math.atan2(fwd.x, fwd.z);
+    const heading = this.pelvisHeading(this.stance?.pitch || 0);
     const up = _v2.set(0, 1, 0).applyQuaternion(_q.set(chestR.x, chestR.y, chestR.z, chestR.w));
     const upright = Math.max(0, up.y);
     const pelvisH = pel.y - g;
