@@ -190,7 +190,7 @@ export class Frog {
     const tip = A.head.localToWorld(new THREE.Vector3(0, -0.04, 0.18));
     const reach = target.distanceTo(tip);
     A.tongueT -= dt * (hostIsFly ? 2.2 : 1);          // a fly-sized host is much more interesting
-    if (!A.strike && A.tongueT <= 0 && reach < 6.5) { A.tongueT = 6 + Math.random() * 9; this.strike(); }
+    if (!A.strike && A.tongueT <= 0 && reach < 6.5) { A.tongueT = 6 + Math.random() * 9; if (this.tongueOn !== false) this.strike(); }   // (switch: the tongue can be off)
     if (A.strike) {
       const T = A.strike; T.t += dt;
       const out = T.t < 0.12 ? T.t / 0.12 : T.t < 0.27 ? 1 : Math.max(0, 1 - (T.t - 0.27) / 0.2);

@@ -69,11 +69,16 @@ const CARDS = {
     ctx.fillStyle = '#1b2a6b'; fitText(ctx, 'feet will always be free', W * 0.9, 44, 'Georgia, serif', 'italic bold');
     ctx.fillText('feet will always be free', W / 2, H - 40);
   },
-  /** technical difficulties: "Dave, can you fix the static?" */
+  /** technical difficulties: "Dave, can you fix the static?" (soft grey snow, redrawn ~12 times a second, so the
+   *  picture shimmers rather than strobes) */
   static(ctx, t, s) {
     if (!s.img) s.img = ctx.createImageData(W / 4, H / 4);
-    const d = s.img.data;
-    for (let i = 0; i < d.length; i += 4) { const v = Math.random() * 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
+    const frame = Math.floor(t * 12);
+    if (frame !== s.frame) {
+      s.frame = frame;
+      const d = s.img.data;
+      for (let i = 0; i < d.length; i += 4) { const v = 70 + Math.random() * 110; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
+    }
     ctx.putImageData(s.img, 0, 0); ctx.imageSmoothingEnabled = false;
     ctx.drawImage(ctx.canvas, 0, 0, W / 4, H / 4, 0, 0, W, H);
     const roll = (t * 180) % H;
@@ -100,8 +105,55 @@ const CARDS = {
   },
 };
 
-export function makeCard(kind) {
-  const canvas = makeCanvas(), ctx = canvas.getContext('2d'), state = {};
+// The prize wheel: eight wedges in soft colours of about the same brightness (so the spinning pattern never
+// flashes), at most about one turn a second, easing to a stop on the chosen prize under the pointer.
+const WHEEL_COLORS = ['#c9828a', '#c99a6b', '#b5ad6a', '#86b07e', '#72aeb0', '#7f9cc4', '#9f8ac2', '#c083ad'];
+function drawWheel(ctx, t, s) {
+  const { labels = ['?'], pick = 0, spin = 6.5 } = s.opts || {};
+  const n = labels.length, wedge = (Math.PI * 2) / n;
+  // the pointer is at the top (angle -PI/2); wedge i spans [i*wedge, (i+1)*wedge) from the wheel's zero angle
+  const base = -Math.PI / 2 - (pick + 0.5) * wedge;
+  s.final ??= Math.PI * 4 + base - Math.PI * 2 * Math.floor(base / (Math.PI * 2));      // two full turns, then onto the prize
+  const u = Math.min(1, t / spin), ang = s.final * (1 - (1 - u) * (1 - u));             // eases out: at most ~0.9 turns/s
+  ctx.fillStyle = '#1d1a24'; ctx.fillRect(0, 0, W, H);
+  const cx = W * 0.36, cy = H / 2, R = H * 0.44;
+  for (let i = 0; i < n; i++) {
+    ctx.fillStyle = WHEEL_COLORS[i % WHEEL_COLORS.length];
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, R, ang + i * wedge, ang + (i + 1) * wedge); ctx.closePath(); ctx.fill();
+    // labels read outward from the hub, turned round on the left half so they're never upside down
+    const a = ang + (i + 0.5) * wedge, flip = Math.cos(a) < 0;
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(flip ? a + Math.PI : a);
+    ctx.fillStyle = '#2a2530'; ctx.textAlign = flip ? 'left' : 'right'; ctx.textBaseline = 'middle';
+    fitText(ctx, labels[i], R * 0.62, 22, 'Impact, "Arial Black", sans-serif'); ctx.fillText(labels[i], flip ? -(R - 12) : R - 12, 0);
+    ctx.restore();
+  }
+  ctx.fillStyle = '#e8e2d6'; ctx.beginPath(); ctx.arc(cx, cy, R * 0.12, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#e8e2d6'; ctx.beginPath(); ctx.moveTo(cx - 16, cy - R - 14); ctx.lineTo(cx + 16, cy - R - 14); ctx.lineTo(cx, cy - R + 16); ctx.closePath(); ctx.fill();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#e8e2d6';
+  fitText(ctx, 'SPIN THE WHEEL', W * 0.34, 56); ctx.fillText('SPIN THE WHEEL', W * 0.79, H * 0.3);
+  fitText(ctx, 'OF LENO', W * 0.3, 48); ctx.fillText('OF LENO', W * 0.79, H * 0.44);
+  if (u >= 1) {
+    ctx.fillStyle = '#f2d98a'; fitText(ctx, labels[pick], W * 0.34, 52); ctx.fillText(labels[pick], W * 0.79, H * 0.68);
+  }
+}
+CARDS.wheel = drawWheel;
+
+/** "I'm 500 years young, folks" */
+CARDS.birthday = (ctx, t) => {
+  ctx.fillStyle = '#2b1633'; ctx.fillRect(0, 0, W, H);
+  for (let k = 0; k < 14; k++) {                                // slowly drifting balloons
+    const x = (k * 83 + 40) % W, y = H + 40 - ((t * 22 + k * 53) % (H + 120));
+    ctx.fillStyle = ['#c9828a', '#86b07e', '#7f9cc4', '#c99a6b'][k % 4];
+    ctx.beginPath(); ctx.ellipse(x, y, 20, 25, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#f3e3b0';
+  fitText(ctx, 'HAPPY BIRTHDAY GREY LENO', W * 0.88, 72); ctx.fillText('HAPPY BIRTHDAY GREY LENO', W / 2, H * 0.38);
+  ctx.fillStyle = '#e8d6ee'; fitText(ctx, '500 years young', W * 0.6, 44, 'Georgia, serif', 'italic');
+  ctx.fillText('500 years young', W / 2, H * 0.62);
+};
+
+export function makeCard(kind, opts = null) {
+  const canvas = makeCanvas(), ctx = canvas.getContext('2d'), state = { opts };
   const fn = CARDS[kind] || CARDS.title;
   return { kind, canvas, draw: (t) => fn(ctx, t, state) };
 }

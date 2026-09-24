@@ -162,9 +162,11 @@ button.mini { margin-left: auto; font-size: 11px; }
   .hud-title { font-size: 20px; }
   .hud-sub { display: none; }
   #onair { font-size: 10px; }
-  /* top right: throw buttons in a column, then the form and screen-mode toggles below them */
-  #throws { top: 8px; right: 8px; flex-direction: column; align-items: flex-end; gap: 4px; }
-  #throws button { padding: 4px 10px; font-size: 12px; }
+  /* top right: the four throw buttons in a 2x2 grid (short labels), then the form and screen-mode toggles below */
+  #throws { top: 8px; right: 8px; display: grid; grid-template-columns: auto auto; gap: 4px; }
+  #throws button { padding: 4px 9px; font-size: 12px; text-align: left; }
+  #throws .long { display: none; }
+  #hud { max-width: calc(100% - 200px); }
   #form { top: 108px; right: 8px; }
   #screenModes { top: 142px; right: 8px; }
   #form button, #screenModes button { padding: 4px 8px; font-size: 12px; }
@@ -184,6 +186,9 @@ button.mini { margin-left: auto; font-size: 11px; }
    graphics memory on the long stacked sidebar) */
 #sidebar .panel { content-visibility: auto; contain-intrinsic-size: auto 240px; }
 
+/* a medium-width 3D view: the four throw buttons use their short labels so they clear the title */
+@container view (max-width: 900px) { #throws .long { display: none; } }
+
 /* first-person view caption (under the title) */
 #eyeNote { font: 11px/1.3 system-ui, sans-serif; color: #d6f5ea; text-shadow: 0 1px 2px #000; max-width: min(360px, 55vw); }
 #eyeNote:empty { display: none; }
@@ -193,3 +198,17 @@ button.mini { margin-left: auto; font-size: 11px; }
 .meter.wb .bar i.good { background: var(--good); }
 .meter.wb .bar i.bad { background: var(--accent); }
 .meter.wb .bar i.neutral { background: var(--accent-2); }
+
+/* Events panel: switches by group, Peaceful Mode */
+.ev-head { margin: 8px 0 2px; font: 600 10.5px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: #8d8a96; }
+.ev-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px 6px; }
+.ev-grid .chk { margin-left: 0; font-size: 12px; line-height: 1.25; align-items: flex-start; }
+.ev-grid .chk input { margin-top: 2px; }
+.chk.ev.harm::after, .harm-dot { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin: 5px 0 0 3px; flex: none; }
+.harm-dot { margin: 0 2px 1px 0; }
+.chk.peaceful { margin: 0 0 4px; color: var(--text); font-weight: 600; }
+.ev-row { margin: 4px 0 2px; gap: 4px; }
+.ev-row button.mini { margin-left: 0; }
+.grayed { opacity: .38; filter: grayscale(1); }
+button:disabled { cursor: not-allowed; }
+@media (max-width: 420px) { .ev-grid { grid-template-columns: 1fr; } }

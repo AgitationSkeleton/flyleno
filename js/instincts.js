@@ -11,10 +11,12 @@
 //   * food taxis: when hungry, a steering bias toward the nearest food (the model's olfactory pathway
 //     ignites runaway activity under any odour input, so smell can't be used for navigation)
 // Engineered input onto real neurons:
-//   * homing: the starting mark on the stage is home. A home vector (path integration, which real flies do in
-//     the central complex, not modelled here) drives the brain's own steering (DNa01/02 left or right) and
-//     walking (P9) descending neurons, more strongly the farther and the longer he's been away, so the fly
-//     brain itself turns and walks him back, gradually. Food, eating and getting up come first.
+//   * homing: the starting mark on the stage is home, but he's free to wander. Near home (most of the stage top)
+//     there's no pull at all. Farther out, homesickness builds slowly (minutes; faster the farther away, fastest
+//     off the stage); when it's full he sets off on a trip home, and now and then he heads back on a whim. On a
+//     trip, a home vector (path integration, which real flies do in the central complex, not modelled here)
+//     drives the brain's own steering (DNa01/02 left or right) and walking (P9) descending neurons, so the fly
+//     brain itself turns and walks him back; the trip ends when he's near his mark. Food and eating come first.
 import * as THREE from 'three';
 
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
@@ -22,7 +24,8 @@ const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 export class Instincts {
   constructor({ food, stimRate, stimAlias, pulse, reinforce, audio, onEvent, home = null }) {
     Object.assign(this, { food, stimRate, stimAlias, pulse, reinforce, audio, onEvent, home });
-    this.awayT = 0; this.homeUrge = 0;
+    this.homesick = 0; this.homeUrge = 0; this.trip = false;
+    this.asleep = false;               // set by js/sleep.js: no seeking food, no homing, no walking
     this.hunger = 0.4;
     this.eating = false;
     this.feedEMA = 0;
@@ -39,7 +42,14 @@ export class Instincts {
     this.host = host;
     const out = { ...cmd };
     const posture = { eat: 0, rub: 0 };
-    this.hunger = clamp(this.hunger + dt / 90, 0, 1);
+    this.hunger = clamp(this.hunger + dt / (this.asleep ? 240 : 90), 0, 1);      // slower while he sleeps
+    if (this.asleep) {
+      // asleep: still (the body settles into its sleeping posture); no taste, no homing drive
+      this.eating = false; this.taxis = false; this.status = 'asleep';
+      this.stimRate('sugarTaste', 0);
+      this.homing(dt, host.position ?? host.root.position, host.forward(), true, out);
+      return { cmd: { ...out, forward: 0, backward: 0, turn: 0, groom: 0 }, posture };
+    }
     this.feedEMA += ((rates?.['m:feed'] ?? 0) - this.feedEMA) * Math.min(1, dt * 4);
     const pos = host.position ?? host.root.position;
     const fwd = host.forward();
@@ -64,7 +74,8 @@ export class Instincts {
         this.taxis = true;
         if (Math.abs(ang) > 0.35) { out.turn = Math.sign(ang); out.forward = 0; }
         else { out.turn = clamp(ang * 2, -0.5, 0.5); out.forward = Math.max(out.forward ?? 0, near.dist > 2 ? 0.7 : 0.35); }
-        this.status = eager ? (near.item.kind === 'mushroom' ? 'spots the mushroom - going for it' : 'smells goose droppings - buzzing over') : `hungry (${(this.hunger * 100) | 0}%): heading for the ${near.item.kind}`;
+        this.status = eager ? (near.item.kind === 'mushroom' ? 'spots the mushroom - going for it' : near.item.kind === 'cake' ? 'birthday cake! going for it'
+          : 'smells goose droppings - buzzing over') : `hungry (${(this.hunger * 100) | 0}%): heading for the ${near.item.kind}`;
       }
       // taste: legs/mouth on the food -> sugar receptor neurons
       this.stimRate('sugarTaste', inReach ? 45 * near.item.sweet : 0);
@@ -128,13 +139,21 @@ export class Instincts {
     return { cmd: out, posture };
   }
 
-  homing(dt, pos, fwd, busyWithFood, out) {
+  homing(dt, pos, fwd, busy, out) {
     if (!this.home || !this.stimAlias) return;
     const to = this.home.clone().sub(pos).setY(0), d = to.length();
-    // the pull builds up while he's away (short wanderings aren't corrected at once) and grows with distance
-    this.awayT = d > 1.5 ? Math.min(12, this.awayT + dt) : Math.max(0, this.awayT - dt * 3);
-    const want = busyWithFood || this.enabled.homing === false ? 0 : clamp((d - 1.2) / 2.3, 0, 1) * clamp(this.awayT / 8, 0, 1);
-    this.homeUrge += (want - this.homeUrge) * Math.min(1, dt * 2);
+    const FREE = 4.5;                                   // m: roaming range with no pull at all
+    const off = this.enabled.homing === false;
+    // homesickness: builds slowly beyond the free range (faster the farther out: ~4 min just outside it, under
+    // 2 min off the stage), fades while he's near home
+    if (off) { this.homesick = 0; this.trip = false; }
+    else if (d > FREE) this.homesick = Math.min(1, this.homesick + dt * (0.004 + 0.007 * clamp((d - FREE) / 6, 0, 1)));
+    else this.homesick = Math.max(0, this.homesick - dt * 0.01);
+    // a trip home: when homesickness is full, or now and then on a whim (about every 5 minutes on average)
+    if (!off && !this.trip && (this.homesick >= 1 || (d > 2.5 && Math.random() < dt / 300))) this.trip = true;
+    if (this.trip && d < 1.8) { this.trip = false; this.homesick = 0; }
+    const want = busy || off || !this.trip ? 0 : 0.65;
+    this.homeUrge += (want - this.homeUrge) * Math.min(1, dt * 1.5);
     const u = this.homeUrge;
     // signed angle to home (> 0: home is to his left)
     const ang = -Math.atan2(fwd.x * to.z - fwd.z * to.x, fwd.x * to.x + fwd.z * to.z);
@@ -149,8 +168,9 @@ export class Instincts {
       out.turn = clamp((out.turn ?? 0) + Math.sign(ang) * u, -1, 1);
     }
     // the ragdoll's own walking is weak and drifts, so the puppeteer also leads him home gently by his strings
-    this.host?.guide?.(u > 0.05 ? to.normalize() : null, u);
-    if (u > 0.1 && d > 2.5 && !this.status) this.status = `heading home (${d.toFixed(1)} m)`;
+    this.host?.guide?.(u > 0.05 ? to.normalize() : null, u * 0.85);
+    if (u > 0.1 && d > 2 && !this.status) this.status = `heading home (${d.toFixed(1)} m)`;
+    else if (this.homesick > 0.5 && !this.status) this.status = `homesick (${d.toFixed(1)} m from his mark)`;
   }
 
   finishMeal(item) {

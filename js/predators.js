@@ -1,7 +1,10 @@
 // Things that hunt the host (both engineered, both random, neither lethal):
-//   SpiderLeno - rarely, a spider with Grey Leno's head rappels down from the ceiling on a silk thread,
-//                dangles after the host, lunges, and sometimes grabs him and reels him up for a few seconds
-//                (the audience gasps) before letting go. It climbs back up after a while.
+//   SpiderLeno - rarely, a spider with Grey Leno's head rappels down on a silk thread somewhere over the stage and
+//                searches for the host, creeping along the ceiling. Movement gets him noticed (keeping still hides
+//                him); once it has spotted him it stalks him, slower than he walks, rears back as a warning and
+//                lunges at where he was: if he has moved it misses. A hit may grab him and reel him up for a few
+//                seconds (the audience gasps). It loses him if he gets far away or off the stage, and climbs back
+//                up after a while.
 //   Swatter    - now and then a floating white cartoon glove brings a fly swatter and swats at the host,
 //                knocking him around. Rarely it is an electric bug-zapper racket that zaps on contact.
 // For the fly: approaching / swinging objects drive the LC4 looming neurons; hits and zaps drive
@@ -76,20 +79,35 @@ async function spiderModel() {
 export class SpiderLeno {
   constructor(scene, sfx) { this.scene = scene; this.sfx = sfx; this.active = null; }
 
-  async spawn(hostHead, ceilY) {
+  /** a random point over the stage (on the ceiling), preferably at least `minDist` from `avoid` */
+  spot(center, radius, avoid = null, minDist = 3.5) {
+    let best = null;
+    for (let k = 0; k < 12; k++) {
+      const a = Math.random() * 6.28, r = Math.sqrt(Math.random()) * radius * 0.85;
+      const p = V(center.x + Math.cos(a) * r, 0, center.z + Math.sin(a) * r);
+      const d = avoid ? Math.hypot(p.x - avoid.x, p.z - avoid.z) : 99;
+      if (!best || d > best.d) best = { p, d };
+      if (d >= minDist) break;
+    }
+    return best.p;
+  }
+
+  /** drop in somewhere over the stage (not on top of him) and start searching */
+  async spawn(hostHead, ceilY, center, radius) {
     if (this.active || this.loading) return false;
     this.loading = true;
     let m;
     try { m = await spiderModel(); } catch (e) { console.warn('spider-Leno: head model unavailable', e); this.loading = false; return false; }
     this.loading = false;
-    const a = Math.random() * 6.28;
-    const anchor = V(hostHead.x + Math.cos(a) * 1.5, ceilY, hostHead.z + Math.sin(a) * 1.5);
+    const at = this.spot(center, radius, hostHead, 4);
+    const anchor = V(at.x, ceilY, at.z);
     m.root.position.copy(anchor).add(V(0, -0.6, 0));
     const thread = new THREE.Line(new THREE.BufferGeometry().setFromPoints([anchor, anchor.clone()]),
       new THREE.LineBasicMaterial({ color: 0xe8e8f0, transparent: true, opacity: 0.8 }));
     thread.frustumCulled = false;
     this.scene.add(m.root, thread); propLOD.track(m.root);
-    this.active = { ...m, anchor, thread, state: 'descend', t: 0, life: 38 + Math.random() * 10, lungeT: 2, len: 0.6, hang: 0, lunge: null, grab: null, mouth: 0 };
+    this.active = { ...m, anchor, thread, state: 'descend', t: 0, life: 45 + Math.random() * 15, lungeT: 1.5, len: 0.6, lunge: null, grab: null, mouth: 0,
+      center: center.clone(), radius, way: null, lostT: 0, searchY: center.y + 3.7, hostPrev: null, hostSpeed: 0, windT: 0, look: Math.random() * 6.28 };
     this.sfx.sting('skitter', { gain: 0.6 });
     return true;
   }
@@ -102,69 +120,105 @@ export class SpiderLeno {
 
   leave() { if (this.active && this.active.state !== 'ascend') { this.active.state = 'ascend'; this.active.grab = null; } }
 
-  /** returns an event string or null: 'lunge' | 'grab' | 'release' | 'miss' | 'gone' */
+  /**
+   * States: descend (from a random spot) -> search (wanders the ceiling, looking) -> stalk (it has spotted him:
+   * creeps toward him, slower than he walks) -> windup (rears back: the warning) -> lunge (at where he was when it
+   * committed) -> grab, bump or miss. It loses him if he gets away (far off, or off the stage where it can't reach).
+   * Returns an event string or null: 'spotted' | 'lost' | 'windup' | 'lunge' | 'grab' | 'release' | 'bump' | 'miss' | 'gone'
+   */
   update(dt, head, chest) {
     const A = this.active;
     if (!A || !dt) return null;
     A.t += dt;
     let ev = null;
     const r = A.root;
-    // the anchor creeps along the ceiling to stay above the host (not while climbing away)
-    if (A.state !== 'ascend') {
-      const above = V(head.x, A.anchor.y, head.z), d = above.sub(A.anchor);
-      const step = Math.min(d.length(), 1.1 * dt);
-      if (step > 1e-4) A.anchor.addScaledVector(d.normalize(), step);
+    // how fast he's moving: movement is what gets him noticed, keeping still hides him
+    const hv = A.hostPrev ? Math.hypot(head.x - A.hostPrev.x, head.z - A.hostPrev.z) / dt : 0;
+    A.hostPrev = head.clone();
+    A.hostSpeed += (Math.min(5, hv) - A.hostSpeed) * Math.min(1, dt * 3);
+    const dh = Math.hypot(head.x - A.anchor.x, head.z - A.anchor.z);
+    const reachR = A.radius * 1.05;                                // the ceiling it can creep along: over the stage
+    const headFromC = Math.hypot(head.x - A.center.x, head.z - A.center.z);
+    // the anchor creeps along the ceiling: wandering while it searches, toward him while it stalks
+    const creep = (goal, speed) => {
+      const d = V(goal.x - A.anchor.x, 0, goal.z - A.anchor.z), l = d.length();
+      if (l > 1e-3) A.anchor.addScaledVector(d.normalize(), Math.min(l, speed * dt));
+      const fromC = V(A.anchor.x - A.center.x, 0, A.anchor.z - A.center.z);
+      if (fromC.length() > reachR) { fromC.setLength(reachR); A.anchor.x = A.center.x + fromC.x; A.anchor.z = A.center.z + fromC.z; }
+    };
+    if (A.state === 'search') {
+      if (!A.way || Math.hypot(A.way.x - A.anchor.x, A.way.z - A.anchor.z) < 0.4) A.way = this.spot(A.center, A.radius, null, 0);
+      creep(A.way, 0.5);
+      A.look += dt * 0.8 * Math.sin(A.t * 0.4);
+      const p = dh < 6 ? dt * (A.hostSpeed > 0.25 ? 0.35 : dh < 2.5 ? 0.15 : 0.03) : 0;
+      if (Math.random() < p) { A.state = 'stalk'; A.lostT = 0; A.lungeT = Math.max(A.lungeT, 1.2); ev = 'spotted'; this.sfx.sting('skitter', { gain: 0.7 }); }
+    } else if (A.state === 'stalk') {
+      creep(head, 0.65);
+      A.lostT = dh > 7.5 || headFromC > reachR + 2 ? A.lostT + dt : 0;
+      if (A.lostT > 2.5) { A.state = 'search'; A.way = null; ev = 'lost'; }
     }
-    const hangY = head.y + 0.9;
+    // thread length: dangling high while searching, down to his head height while stalking
+    const hangY = A.state === 'search' || A.state === 'descend' ? A.searchY : head.y + 0.9;
     if (A.state === 'descend') {
       A.len += 2.4 * dt;
-      if (A.anchor.y - A.len <= hangY) { A.state = 'hunt'; A.len = A.anchor.y - hangY; }
-    }
-    if (A.state === 'ascend') {
+      if (A.anchor.y - A.len <= hangY) { A.state = 'search'; A.len = A.anchor.y - hangY; }
+    } else if (A.state === 'ascend') {
       A.len -= 3 * dt;
       if (A.len < 0.4) { this.clear(); return 'gone'; }
+    } else if (A.state === 'search' || A.state === 'stalk') {
+      A.len += THREE.MathUtils.clamp(A.anchor.y - hangY - A.len, -1.5 * dt, 1.5 * dt);
     }
-    if (A.t > A.life && A.state === 'hunt') this.leave();
-    // where the body wants to be: below the anchor, swung toward the host
+    if (A.t > A.life && (A.state === 'search' || A.state === 'stalk')) this.leave();
+    // where the body wants to be: below the anchor; swung toward him when it's after him
     let target = A.anchor.clone().add(V(0, -A.len, 0));
-    if (A.state === 'hunt' || A.state === 'grab') {
+    const after = A.state === 'stalk' || A.state === 'windup' || A.state === 'grab';
+    if (after) {
       const toHost = chest.clone().sub(target).setY(0), dist = toHost.length();
       target.addScaledVector(toHost.normalize(), Math.min(dist, 1.6) * 0.8);
       target.y = A.anchor.y - A.len + 0.25 * Math.sin(A.t * 1.7);
-    }
-    if (A.state === 'hunt') {
+    } else if (A.state === 'search') target.y += 0.2 * Math.sin(A.t * 1.3);
+    if (A.state === 'stalk') {
       A.lungeT -= dt;
       if (A.lungeT <= 0 && r.position.distanceTo(chest) < 2.8) {
-        A.state = 'lunge'; A.lunge = { t: 0, from: r.position.clone() }; ev = 'lunge';
-        this.sfx.sting('skitter', { gain: 0.8 });
+        A.state = 'windup'; A.windT = 0; ev = 'windup';
+        this.sfx.sting('skitter', { gain: 0.9 });
       }
     }
-    if (A.state === 'lunge') {
+    if (A.state === 'windup') {
+      // it rears back for a moment before striking: the warning, and his chance to get out of the way
+      A.windT += dt;
+      target.y += 0.45 * Math.min(1, A.windT / 0.6);
+      r.position.lerp(target, Math.min(1, dt * 4));
+      if (A.windT > 0.75) { A.state = 'lunge'; A.lunge = { t: 0, from: r.position.clone(), to: chest.clone().add(V(0, 0.55, 0)) }; ev = 'lunge'; }
+    } else if (A.state === 'lunge') {
+      // strikes at where he was when it committed: if he has moved, it misses
       const L = A.lunge; L.t += dt;
       const u = Math.min(1, L.t / 0.3);
-      r.position.lerpVectors(L.from, chest.clone().add(V(0, 0.55, 0)), u * u);
+      r.position.lerpVectors(L.from, L.to, u * u);
       if (u >= 1) {
-        if (r.position.distanceTo(chest) < 1.4 && Math.random() < 0.6) {
-          A.state = 'grab'; A.grab = { t: 0, dur: 3 + Math.random() * 1.5 }; ev = 'grab';
+        const d = r.position.distanceTo(chest.clone().add(V(0, 0.55, 0)));
+        if (d < 1.0 && Math.random() < 0.75) {
+          A.state = 'grab'; A.grab = { t: 0, dur: 2.5 + Math.random() * 1.5 }; ev = 'grab';
           A.len = A.anchor.y - r.position.y;                   // thread length at the grab
-        } else { A.state = 'hunt'; A.lungeT = 2.5 + Math.random() * 2; ev = 'miss'; }
+        } else { A.state = 'stalk'; A.lungeT = 3 + Math.random() * 2.5; ev = d < 1.6 ? 'bump' : 'miss'; }
       }
     } else if (A.state === 'grab') {
       const G = A.grab; G.t += dt;
       A.len = Math.max(1.2, A.len - 0.55 * dt);               // reels him up
       r.position.lerp(target, Math.min(1, dt * 3));
-      if (G.t > G.dur) { A.state = 'hunt'; A.lungeT = 5 + Math.random() * 3; A.grab = null; A.len = A.anchor.y - hangY; ev = 'release'; }
+      // after letting go it climbs back up and goes back to searching (it has to find him again)
+      if (G.t > G.dur) { A.state = 'search'; A.way = null; A.lungeT = 5 + Math.random() * 3; A.grab = null; ev = 'release'; }
     } else {
       r.position.lerp(target, Math.min(1, dt * (A.state === 'descend' || A.state === 'ascend' ? 8 : 2.5)));
     }
-    // face the host, body tilted head-down while hanging
-    const look = chest.clone().sub(r.position);
-    r.rotation.y = Math.atan2(look.x, look.z);
-    A.body.rotation.x = A.state === 'descend' || A.state === 'ascend' ? 0.9 : A.state === 'lunge' ? 0.2 : 0.55;
+    // face him when it's after him, otherwise look around; body tilted head-down while hanging
+    if (A.state === 'search' || A.state === 'descend' || A.state === 'ascend') r.rotation.y = A.look;
+    else { const look = chest.clone().sub(r.position); r.rotation.y = Math.atan2(look.x, look.z); A.look = r.rotation.y; }
+    A.body.rotation.x = A.state === 'descend' || A.state === 'ascend' ? 0.9 : A.state === 'lunge' ? 0.2 : A.state === 'windup' ? 0.25 : 0.55;
     // legs: tucked on the thread, pedalling while hunting, spread wide to grab
-    const spread = A.state === 'lunge' || A.state === 'grab' ? 1 : A.state === 'hunt' ? 0.5 : 0.1;
+    const spread = A.state === 'lunge' || A.state === 'grab' || A.state === 'windup' ? 1 : A.state === 'stalk' ? 0.5 : A.state === 'search' ? 0.3 : 0.1;
     for (const l of A.legs) {
-      const w = Math.sin(A.t * 9 + l.k * 1.3 + (l.side > 0 ? 0 : 1.5)) * (A.state === 'hunt' ? 0.25 : 0.08);
+      const w = Math.sin(A.t * 9 + l.k * 1.3 + (l.side > 0 ? 0 : 1.5)) * (A.state === 'stalk' ? 0.25 : A.state === 'search' ? 0.12 : 0.08);
       l.femur.rotation.z = -(0.5 + 0.5 * spread + w);
       l.tibia.rotation.z = -(1.1 + 0.8 * (1 - spread));
     }
@@ -173,7 +227,7 @@ export class SpiderLeno {
     const pa = A.thread.geometry.attributes.position;
     pa.setXYZ(0, A.anchor.x, A.anchor.y, A.anchor.z); pa.setXYZ(1, spin.x, spin.y, spin.z); pa.needsUpdate = true;
     // Leno's mouth: agape when lunging / holding
-    A.mouth += ((A.state === 'lunge' || A.state === 'grab' ? 1 : 0.1 + 0.1 * Math.sin(A.t * 3)) - A.mouth) * Math.min(1, dt * 6);
+    A.mouth += ((A.state === 'lunge' || A.state === 'grab' || A.state === 'windup' ? 1 : 0.1 + 0.1 * Math.sin(A.t * 3)) - A.mouth) * Math.min(1, dt * 6);
     for (const [o, i] of A.morphs) o.morphTargetInfluences[i] = A.mouth;
     return ev;
   }
@@ -318,17 +372,25 @@ export class Swatter {
       if (A.t > A.life + 5) { this.clear(); return 'gone'; }
     }
     A.wrist.rotation.x = A.angle;
-    // the racket hums blue while armed; zap bolts flicker
-    if (A.frameMat) A.frameMat.emissiveIntensity = 0.3 + 0.25 * Math.sin(A.t * 20) + (A.bolts.length ? 2 : 0);
+    // the racket hums blue while armed (a slow glow); a zap's arcs crackle in shape but glow steadily and fade out,
+    // so nothing flickers (photosensitivity)
+    const glow = A.bolts.reduce((m, b) => Math.max(m, b.life / b.life0), 0);
+    if (A.frameMat) A.frameMat.emissiveIntensity = 0.3 + 0.12 * Math.sin(A.t * 4) + 1.6 * glow;
+    A.jitT = (A.jitT ?? 0) - dt;
+    const jitter = A.jitT <= 0;
+    if (jitter) A.jitT = 0.07;
     for (const b of A.bolts) {
       b.life -= dt;
-      const p = b.line.geometry.attributes.position;
-      for (let i = 1; i < p.count - 1; i++) p.setXYZ(i, b.base[i].x + (Math.random() - 0.5) * 0.25, b.base[i].y + (Math.random() - 0.5) * 0.25, b.base[i].z + (Math.random() - 0.5) * 0.25);
-      p.needsUpdate = true; b.line.visible = Math.random() < 0.8;
+      if (jitter) {
+        const p = b.line.geometry.attributes.position;
+        for (let i = 1; i < p.count - 1; i++) p.setXYZ(i, b.base[i].x + (Math.random() - 0.5) * 0.2, b.base[i].y + (Math.random() - 0.5) * 0.2, b.base[i].z + (Math.random() - 0.5) * 0.2);
+        p.needsUpdate = true;
+      }
+      b.line.material.opacity = Math.max(0, b.life / b.life0);
       if (b.life <= 0) disposeObject(b.line);
     }
     A.bolts = A.bolts.filter((b) => b.life > 0);
-    this.flash.intensity = A.bolts.length ? 30 + Math.random() * 40 : 0;
+    this.flash.intensity = 45 * glow;
     return ev;
   }
 
@@ -339,9 +401,10 @@ export class Swatter {
     for (let k = 0; k < 4; k++) {
       const n = 9, base = [];
       for (let i = 0; i < n; i++) base.push(from.clone().lerp(to.clone().add(V((Math.random() - 0.5) * 0.8, (Math.random() - 0.5) * 1.2, (Math.random() - 0.5) * 0.8)), i / (n - 1)));
-      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(base), new THREE.LineBasicMaterial({ color: 0xbfe6ff, toneMapped: false }));
+      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(base), new THREE.LineBasicMaterial({ color: 0xbfe6ff, toneMapped: false, transparent: true }));
       line.frustumCulled = false; this.scene.add(line);
-      A.bolts.push({ line, base, life: 0.35 + Math.random() * 0.2 });
+      const life = 0.4 + Math.random() * 0.2;
+      A.bolts.push({ line, base, life, life0: life });
     }
   }
 }
@@ -349,8 +412,8 @@ export class Swatter {
 // ------------------------------------------------------------------------------------------------ scheduler
 export class Predators {
   /**
-   * ctx: { scene, sfx, hostHead(), hostChest(), hostVel(), isFly(), ceilY, knock(v), hold(p|null), convulse(sec),
-   *        pulse, reinforce, crowd, react, ticker }
+   * ctx: { scene, sfx, hostHead(), hostChest(), hostVel(), isFly(), ceilY, center, stageRadius, knock(v), hold(p|null),
+   *        convulse(sec), pulse, reinforce, crowd, react, ticker, allowed(switch), pacer }
    */
   constructor(ctx) {
     this.ctx = ctx;
@@ -365,8 +428,8 @@ export class Predators {
   get busy() { return !!(this.spider.active || this.swatter.active || this.spider.loading); }
 
   async dropSpider() {
-    const ok = await this.spider.spawn(this.ctx.hostHead(), this.ctx.ceilY);
-    if (ok) { this.ctx.ticker('Something is coming down from the ceiling on a thread…'); this.ctx.pulse('spiderLoom', 'heckler', 120, 0.6); }
+    const ok = await this.spider.spawn(this.ctx.hostHead(), this.ctx.ceilY, this.ctx.center, this.ctx.stageRadius);
+    if (ok) this.ctx.ticker('Something is coming down from the ceiling on a thread…');
     return ok;
   }
 
@@ -380,20 +443,32 @@ export class Predators {
     if (!dt) return;
     const ctx = this.ctx;
     if (this.enabled && showOn && !this.busy) {
+      // each waits for its turn (nothing else big going on, a calm spell first); switched off, it checks back later
+      const P = ctx.pacer;
       this.spiderT -= dt; this.swatT -= dt;
-      if (this.spiderT <= 0) { this.spiderT = 240 + Math.random() * 300; this.swatT = Math.max(this.swatT, 40); this.dropSpider(); }
-      else if (this.swatT <= 0) { this.swatT = 90 + Math.random() * 150; this.sendSwatter(); }
+      if (this.spiderT <= 0) {
+        if (!ctx.allowed('spider')) this.spiderT = 60 + Math.random() * 60;
+        else if (P.canMajor('spider')) { this.spiderT = 240 + Math.random() * 300; this.swatT = Math.max(this.swatT, 40); this.dropSpider(); P.started(); }
+      } else if (this.swatT <= 0) {
+        const plain = ctx.allowed('swatter'), zap = ctx.allowed('racket');
+        if (!plain && !zap) this.swatT = 60 + Math.random() * 60;
+        else if (P.canMajor('swatter')) { this.swatT = 90 + Math.random() * 150; this.sendSwatter(zap && (!plain || Math.random() < 0.25)); P.started(); }
+      }
     }
     const head = ctx.hostHead(), chest = ctx.hostChest();
     // spider
     const sev = this.spider.update(dt, head, chest);
+    if (sev === 'spotted') ctx.ticker('Spider-Leno has spotted him!');
+    if (sev === 'lost') ctx.ticker('…he got away. Spider-Leno lost track of him');
+    if (sev === 'windup') ctx.pulse('spiderLoom', 'heckler', 160, 0.5);
     if (sev === 'lunge') ctx.pulse('spiderLoom', 'heckler', 220, 0.35);
+    if (sev === 'miss') { ctx.ticker('Spider-Leno lunges… and misses'); ctx.react('dodge'); }
     if (sev === 'grab') {
       this.holding = true;
       ctx.crowd('gasp', 1); ctx.pulse('spiderGrab', 'ambientTouch', 90, 0.8); ctx.reinforce(-0.6, 1.2);
       ctx.ticker('Spider-Leno grabs him!');
     }
-    if (sev === 'miss') { ctx.knock(chest.clone().sub(this.spider.pos() ?? chest).setY(0.3).normalize().multiplyScalar(150)); ctx.pulse('spiderBump', 'ambientTouch', 40, 0.3); }
+    if (sev === 'bump') { ctx.knock(chest.clone().sub(this.spider.pos() ?? chest).setY(0.3).normalize().multiplyScalar(150)); ctx.pulse('spiderBump', 'ambientTouch', 40, 0.3); }
     if (sev === 'release') { this.holding = false; ctx.hold(null); ctx.ticker('…and drops him'); ctx.react('spiderDrop'); }
     if (sev === 'gone') ctx.ticker('Spider-Leno climbs back into the rafters');
     if (this.holding) {
@@ -422,11 +497,19 @@ export class Predators {
   loomers() {
     const out = [];
     const sp = this.spider.active;
-    if (sp && (sp.state === 'descend' || sp.state === 'lunge')) out.push({ p: sp.root.position, r: 0.9 });
+    if (sp && (sp.state === 'windup' || sp.state === 'lunge')) out.push({ p: sp.root.position, r: 0.9 });
     const sw = this.swatter.active;
     if (sw && (sw.state === 'windup' || sw.state === 'swing')) out.push({ p: this.swatter.headPos(), r: 0.5 });
     return out;
   }
 
   clear() { this.spider.clear(); this.swatter.clear(); if (this.holding) { this.holding = false; this.ctx.hold(null); } }
+
+  /** Peaceful Mode switched on: both leave now (the spider climbs away, the glove floats off) */
+  calmDown() {
+    this.spider.leave();
+    const sw = this.swatter.active;
+    if (sw && sw.state !== 'leave') { sw.state = 'leave'; sw.life = Math.min(sw.life, sw.t); }
+    if (this.holding) { this.holding = false; this.ctx.hold(null); }
+  }
 }

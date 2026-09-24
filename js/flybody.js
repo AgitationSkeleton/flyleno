@@ -60,7 +60,7 @@ export class FlyLeno {
     this.root = new THREE.Group(); this.root.name = 'FlyLeno';
     this.cmd = { forward: 0, backward: 0, turn: 0, startle: 0, groom: 0, feed: 0 };
     this.rates = {};
-    this.posture = { eat: 0, rub: 0 }; this.postureTarget = { eat: 0, rub: 0 };
+    this.posture = { eat: 0, rub: 0, sleep: 0 }; this.postureTarget = { eat: 0, rub: 0, sleep: 0 };
     this.heading = 0; this.yawRate = 0; this.speed = 0;
     this.vel = new THREE.Vector3();
     this.flying = false; this.flyT = 0; this.power = 0; this.quietT = 0; this.knockT = 0; this.tumble = null;
@@ -287,7 +287,7 @@ export class FlyLeno {
     // wing power: flight/song DNs (DNg02, DNp13); escape: giant fiber
     const pw = clamp((this.rates['m:vocal'] ?? 0) / 30, 0, 1);
     this.power += (pw - this.power) * Math.min(1, dt * 3);
-    if (!this.flying && (c.startle > 0.6 || this.power > 0.35) && this.posture.eat < 0.3) {
+    if (!this.flying && (c.startle > 0.6 || this.power > 0.35) && this.posture.eat < 0.3 && this.posture.sleep < 0.3) {
       this.flying = true; this.flyT = 0;
       if (c.startle > 0.6) this.vel.y = 6;           // escape jump
     }
@@ -387,9 +387,10 @@ export class FlyLeno {
   pose(dt, grounded) {
     const P = this.posture, c = this.cmd;
     // body: crouch to eat, bob with the gait, pitch up in flight
-    const eatDip = P.eat * 0.35 * S;
+    // asleep: the body sinks low on folded legs, head bowed, antennae still
+    const eatDip = P.eat * 0.35 * S + (P.sleep || 0) * 0.3 * S;
     this.body.position.y = -eatDip;
-    this.body.rotation.x = this.flying ? -0.25 : P.eat * 0.25;
+    this.body.rotation.x = this.flying ? -0.25 : P.eat * 0.25 + (P.sleep || 0) * 0.12;
     // gestures
     let headNod = 0;
     if (this.gesture) {
@@ -398,11 +399,12 @@ export class FlyLeno {
       else headNod = 0.5 * e * (0.8 + 0.2 * Math.sin(g.t * 30));
       if (g.t >= g.dur) { this.gesture = null; this.abdomen.rotation.x = 0.18; }
     }
-    this.head.rotation.set(0.35 * P.eat + headNod + 0.15 * P.rub, clamp(this.yawRate * 0.15, -0.4, 0.4), 0);
+    this.head.rotation.set(0.35 * P.eat + headNod + 0.15 * P.rub + 0.3 * (P.sleep || 0), clamp(this.yawRate * 0.15, -0.4, 0.4), 0);
     // antennae: small twitches; they flick back when the front legs sweep over the head
     const sweep = c.groom > 0.5 ? 0.35 + 0.25 * Math.sin(this.t * 12) : 0;
     for (const a of this.antennae) {
-      a.g.rotation.set(-sweep + 0.06 * Math.sin(this.t * 3.1 + a.side), 0.05 * Math.sin(this.t * 4.7 + 2 * a.side), 0);
+      const tw = 1 - 0.9 * (P.sleep || 0);
+      a.g.rotation.set(-sweep + 0.06 * tw * Math.sin(this.t * 3.1 + a.side) + 0.25 * (P.sleep || 0), 0.05 * tw * Math.sin(this.t * 4.7 + 2 * a.side), 0);
     }
     // wings: fold at rest, beat in flight (visually aliased stroke), buzz a little when "singing"
     this.phase += dt * (this.flying ? 55 : 0);

@@ -1,4 +1,4 @@
-// Tomatoes and metal pipes thrown at Leno: Rapier rigid bodies in the ragdoll's physics world, so they
+// Tomatoes, metal pipes, roses and sugar cubes thrown at Leno: Rapier rigid bodies in the ragdoll's physics world, so they
 // knock his body parts around. Impacts are detected from sudden velocity changes; a hit on Leno is an
 // impact within reach of one of his bodies.
 import * as THREE from 'three';
@@ -84,15 +84,27 @@ export class Projectiles {
     return g;
   }
 
-  /** throw `kind` ('tomato' | 'pipe' | 'rose') from `from` (THREE.Vector3) at Leno's head/chest */
+  /** a sugar cube (the audience being kind): light, lobbed, lands on the floor as food */
+  sugarMesh() {
+    this.sugarGeo ||= keep(new THREE.BoxGeometry(0.15, 0.15, 0.15));
+    this.sugarMat ||= keep(new THREE.MeshStandardMaterial({ color: 0xfbfbf6, roughness: 0.6 }));
+    return new THREE.Mesh(this.sugarGeo, this.sugarMat);
+  }
+
+  /** throw `kind` ('tomato' | 'pipe' | 'rose' | 'sugar') from `from` (THREE.Vector3): at Leno's head/chest, or for a
+   *  sugar cube a gentle lob to the floor just in front of him */
   throw(kind, from) {
     if (!this.ready) return null;
     const R = this.host.RAPIER, world = this.host.world;
     const st = this.host.rag.getState();
-    const target = (Math.random() < 0.6 ? st.headPos : st.root.clone().add(new THREE.Vector3(0, 1.3, 0))).clone();
+    let target;
+    if (kind === 'sugar') {
+      const f = new THREE.Vector3(Math.sin(st.heading), 0, Math.cos(st.heading)), side = new THREE.Vector3(f.z, 0, -f.x);
+      target = st.root.clone().addScaledVector(f, 0.9 + Math.random() * 0.8).addScaledVector(side, (Math.random() - 0.5) * 1.2);
+    } else target = (Math.random() < 0.6 ? st.headPos : st.root.clone().add(new THREE.Vector3(0, 1.3, 0))).clone();
     // ballistic aim with a chosen flight time; lead the target a little
     const d = target.clone().sub(from);
-    const T = THREE.MathUtils.clamp(d.length() / (kind === 'pipe' ? 13 : kind === 'rose' ? 12 : 16), 0.45, 1.8);
+    const T = THREE.MathUtils.clamp(d.length() / (kind === 'pipe' ? 13 : kind === 'rose' ? 12 : kind === 'sugar' ? 9 : 16), kind === 'sugar' ? 0.9 : 0.45, 2.2);
     const g = -9.81;
     const v = new THREE.Vector3(d.x / T, (d.y - 0.5 * g * T * T) / T, d.z / T);
     v.x += (Math.random() - 0.5) * 0.8; v.z += (Math.random() - 0.5) * 0.8;   // human inaccuracy
@@ -114,6 +126,14 @@ export class Projectiles {
       collider = world.createCollider(R.ColliderDesc.capsule(0.2, 0.03).setMass(0.05).setRestitution(0.1).setFriction(0.8)
         .setCollisionGroups(groups(G_GROUND, 0xffff)), body);
       return this.add({ kind, body, collider, mesh: this.roseMesh(), v });
+    }
+    if (kind === 'sugar') {
+      // feather-light (it can't hurt or shove him); it tumbles a little and settles
+      bodyDesc.setAngvel({ x: (Math.random() - 0.5) * 6, y: (Math.random() - 0.5) * 4, z: (Math.random() - 0.5) * 6 }).setLinearDamping(0.8).setAngularDamping(2);
+      const body = world.createRigidBody(bodyDesc);
+      collider = world.createCollider(R.ColliderDesc.cuboid(0.075, 0.075, 0.075).setMass(0.02).setRestitution(0.15).setFriction(0.9)
+        .setCollisionGroups(groups(G_GROUND, 0xffff)), body);
+      return this.add({ kind, body, collider, mesh: this.sugarMesh(), v });
     }
     const body = world.createRigidBody(bodyDesc);
     collider = world.createCollider(R.ColliderDesc.ball(0.11).setMass(0.2).setRestitution(0.05).setFriction(0.9)
@@ -140,6 +160,12 @@ export class Projectiles {
     this.items.splice(this.items.indexOf(item), 1);
   }
 
+  /** stop simulating `item` but leave its mesh in the scene (a sugar cube handed over to the food) */
+  detach(item) {
+    try { this.host.world.removeRigidBody(item.body); } catch { /* already gone */ }
+    this.items.splice(this.items.indexOf(item), 1);
+  }
+
   nearestLenoBody(p) {
     let best = null, bd = Infinity;
     for (const [name, b] of Object.entries(this.host.rag.bodies)) {
@@ -160,7 +186,7 @@ export class Projectiles {
       it.mesh.quaternion.set(r.x, r.y, r.z, r.w);
       const vel = new THREE.Vector3(lv.x, lv.y, lv.z);
       // looming: about to hit the head (for the fly's LC4 looming detectors)
-      if (!it.warned && !it.splatted) {
+      if (!it.warned && !it.splatted && it.kind !== 'sugar') {          // (a lobbed sugar cube isn't a threat)
         const toHead = head.clone().sub(it.mesh.position);
         if (toHead.length() < 4 && vel.dot(toHead) > 0) { it.warned = true; this.onApproach?.(it); }
       }
@@ -169,17 +195,28 @@ export class Projectiles {
       const speed = it.prevVel.length();
       if (dv > 2.5 && speed > 2) {
         const near = this.nearestLenoBody(it.mesh.position);
-        const hitLeno = near.dist < (it.kind === 'tomato' || it.kind === 'rose' ? 0.6 : it.kind === 'pipe' ? 0.8 : 0.95);
+        const hitLeno = near.dist < (it.kind === 'tomato' || it.kind === 'rose' || it.kind === 'sugar' ? 0.6 : it.kind === 'pipe' ? 0.8 : 0.95);
         if (it.kind === 'tomato' && !it.splatted) {
           it.splatted = true;
           this.splat(it, hitLeno ? near.name : null);
           this.onImpact?.(it, { hitLeno, bodyName: near.name, speed });
-        } else if (it.kind !== 'tomato' && it.clangs < (it.kind === 'rose' ? 1 : 4)) {
+        } else if (it.kind !== 'tomato' && it.clangs < (it.kind === 'rose' || it.kind === 'sugar' ? 1 : 4)) {
           it.clangs++;
           this.onImpact?.(it, { hitLeno, bodyName: near.name, speed });
         }
       }
       it.prevVel.copy(vel);
+      // a sugar cube that has come to rest becomes food on the floor (the body goes, the mesh stays)
+      if (it.kind === 'sugar' && it.age > 0.6) {
+        it.still = vel.length() < 0.25 ? (it.still || 0) + dt : 0;
+        if (it.still > 0.35 || it.age > 8) {
+          const p = it.mesh.position.clone(), g = this.groundBelow(p);
+          if (g && p.y - g.y < 0.4) p.y = g.y + 0.075;
+          this.detach(it);
+          this.onRest?.(it, p);
+          continue;
+        }
+      }
       if (it.age > 45 || t.y < -20) this.remove(it);
     }
     for (const s of [...this.splats]) {

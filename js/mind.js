@@ -59,7 +59,7 @@ export class Mind {
       this.current.keys.forEach((k) => this.setStim(k, false));
       this.current = null;
     }
-    if (!this.initiative || this.current || this.t < this.next) return;
+    if (!this.initiative || this.suspended || this.current || this.t < this.next) return;   // suspended: asleep
     // softmax choice
     const T = this.temperature();
     const ex = ACTIONS.map((a) => Math.exp(this.Q[a.key] / T));

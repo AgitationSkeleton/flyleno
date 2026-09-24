@@ -171,6 +171,55 @@ export class ShowSfx {
     };
   }
 
+  /** the audience sings Happy Birthday ("la la la"), then claps; returns its length in s */
+  birthday({ gain = 0.55 } = {}) {
+    if (!this.ctx) return 0;
+    const ctx = this.ctx, out = this.out(gain), beat = 0.42, t0 = ctx.currentTime + 0.1;
+    const G4 = 392, A4 = 440, B4 = 494, C5 = 523, D5 = 587, E5 = 659, F5 = 698, G5 = 784;
+    const tune = [[G4, 0.75], [G4, 0.25], [A4, 1], [G4, 1], [C5, 1], [B4, 2], [G4, 0.75], [G4, 0.25], [A4, 1], [G4, 1], [D5, 1], [C5, 2],
+      [G4, 0.75], [G4, 0.25], [G5, 1], [E5, 1], [C5, 1], [B4, 1], [A4, 2], [F5, 0.75], [F5, 0.25], [E5, 1], [C5, 1], [D5, 1], [C5, 2.5]];
+    let tt = t0;
+    for (const [f, b] of tune) {
+      const d = b * beat;
+      for (let v = 0; v < 7; v++) {                               // a room full of slightly out-of-tune voices, "laa"
+        const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f * (v % 3 === 0 ? 0.5 : 1) * rand(0.985, 1.015);
+        const b1 = ctx.createBiquadFilter(); b1.type = 'bandpass'; b1.frequency.value = 750 * rand(0.92, 1.08); b1.Q.value = 3;
+        const b2 = ctx.createBiquadFilter(); b2.type = 'bandpass'; b2.frequency.value = 1150 * rand(0.92, 1.08); b2.Q.value = 4;
+        const g = ctx.createGain(), st = tt + rand(0, 0.04);
+        o.connect(b1).connect(g); o.connect(b2).connect(g); g.connect(out);
+        this.env(g.gain, st, 0.05, 0.06, Math.max(0.05, d - 0.15), 0.1);
+        o.start(st); o.stop(st + d + 0.2);
+      }
+      tt += d;
+    }
+    this.claps(tt + 0.2, 4, gain, out);
+    return tt - t0 + 2;
+  }
+
+  /** a music-box lullaby (Brahms' Wiegenlied), looped for `dur` seconds: returns { stop() } */
+  musicBox({ dur = 28, gain = 0.5 } = {}) {
+    if (!this.ctx) return { stop() {} };
+    const ctx = this.ctx, out = this.out(gain), beat = 0.42;
+    const midi = (m) => 440 * Math.pow(2, (m - 69) / 12);
+    const tune = [[64, 0.5], [64, 0.5], [67, 1.5], [64, 0.5], [64, 0.5], [67, 1.5], [64, 0.5], [67, 0.5], [72, 1], [71, 1], [69, 1], [69, 1], [67, 2],
+      [62, 0.5], [64, 0.5], [65, 1], [62, 1], [62, 0.5], [64, 0.5], [65, 2], [62, 0.5], [65, 0.5], [71, 0.5], [69, 0.5], [67, 1], [71, 1], [72, 3]];
+    let tt = ctx.currentTime + 0.1;
+    const end = tt + dur, nodes = [];
+    while (tt < end - 1) {
+      for (const [m, b] of tune) {
+        if (tt >= end - 1) break;
+        for (const [mul, type, amp] of [[2, 'sine', 0.22], [4, 'triangle', 0.05]]) {        // a plucked comb: bright, then a long fade
+          const o = ctx.createOscillator(); o.type = type; o.frequency.value = midi(m) * mul / 2;
+          const g = ctx.createGain(); o.connect(g).connect(out);
+          g.gain.setValueAtTime(0.0001, tt); g.gain.exponentialRampToValueAtTime(amp, tt + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, tt + 1.6);
+          o.start(tt); o.stop(tt + 1.7); nodes.push(o);
+        }
+        tt += b * beat;
+      }
+    }
+    return { stop: () => { out.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.4); } };
+  }
+
   claps(t, n = 1, gain = 0.5, dest = null) {
     const ctx = this.ctx, out = dest || this.out(gain);
     for (let k = 0; k < n; k++) for (let v = 0; v < 12; v++) {
@@ -367,6 +416,17 @@ export class ShowSfx {
         o.start(st); o.stop(st + 0.07);
       }
       return 2.5;
+    }
+    if (kind === 'wheel') {                                   // a prize wheel's pointer clicking over the pegs, slowing down
+      const spin = 6.5, F = Math.PI * 5, wedge = Math.PI / 4;
+      for (let k = 1; k * wedge < F; k++) {
+        const st = t + spin * (1 - Math.sqrt(1 - (k * wedge) / F));
+        const n = ctx.createBufferSource(); n.buffer = this.audio.noise;
+        const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2800; bp.Q.value = 6;
+        const g = ctx.createGain(); n.connect(bp).connect(g).connect(out);
+        this.env(g.gain, st, 0.001, 0.8, 0.005, 0.03); n.start(st, Math.random()); n.stop(st + 0.05);
+      }
+      return spin;
     }
     if (kind === 'pop') {
       const n = this.noise(), bp = ctx.createBiquadFilter(); bp.type = 'lowpass'; bp.frequency.value = 2500;

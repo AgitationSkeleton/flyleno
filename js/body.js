@@ -31,6 +31,11 @@ const POSTURES = {
   // fly-like leg rubbing: forearms up in front of the chest, hands together (oscillation added in update)
   rub: { shoulder_l_pitch_flex: 0.45, shoulder_r_pitch_flex: 0.45, shoulder_l_roll_ext: 0.45, shoulder_r_roll_ext: 0.45,
     elbow_l_pitch_flex: 0.75, elbow_r_pitch_flex: 0.75, shoulder_l_yaw_flex: 0.4, shoulder_r_yaw_flex: 0.4, neck_pitch_flex: 0.25 },
+  // asleep (js/sleep.js): kneeling, curled forward over his knees, head down, arms loose; the puppet strings lower
+  // him into it
+  sleep: { hip_l_pitch_flex: 0.9, hip_r_pitch_flex: 0.9, knee_l_pitch_flex: 0.7, knee_r_pitch_flex: 0.7,
+    ankle_l_pitch_ext: 0.8, ankle_r_pitch_ext: 0.8, spine_pitch_flex: 0.45, neck_pitch_flex: 0.75,
+    shoulder_l_pitch_flex: 0.3, shoulder_r_pitch_flex: 0.3, elbow_l_pitch_flex: 0.4, elbow_r_pitch_flex: 0.4 },
 };
 
 export class PhysicsLeno {
@@ -52,7 +57,7 @@ export class PhysicsLeno {
     this.activation = {};
     this.onFall = null;
     this.keepOnStage = false;         // true: body reflex keeps Leno on the platform top
-    this.posture = { eat: 0, rub: 0 }; this.postureTarget = { eat: 0, rub: 0 };
+    this.posture = { eat: 0, rub: 0, sleep: 0 }; this.postureTarget = { eat: 0, rub: 0, sleep: 0 };
     this.t = 0;
   }
 
@@ -168,8 +173,9 @@ export class PhysicsLeno {
       for (const k in POSTURES) pose += (POSTURES[k][name] || 0) * P[k];
       if (P.rub > 0.05 && /elbow_[lr]_pitch_flex/.test(name)) pose += rubOsc * (name.includes('_l_') ? 1 : -1) * P.rub;
       // postures take over from the gait pattern while they are held
-      const vncW = this.vncWeight * (1 - 0.8 * Math.max(P.eat, P.rub * 0.5));
-      act[name] = clamp01(vncW * (vnc[name] || 0) + this.directWeight * direct + (g?.[name] || 0) * env + pose);
+      // (asleep, his muscles relax: the brain's descending drive reaches them only weakly)
+      const vncW = this.vncWeight * (1 - 0.8 * Math.max(P.eat, P.rub * 0.5, P.sleep));
+      act[name] = clamp01(vncW * (vnc[name] || 0) + this.directWeight * direct * (1 - 0.8 * P.sleep) + (g?.[name] || 0) * env + pose);
     }
     this.rag.setActivations(act);
     // the puppet strings let him crouch down to eat
@@ -190,8 +196,9 @@ export class PhysicsLeno {
     // slack: drops fast when he's hit, comes back over about a second
     const slackWant = performance.now() < this.slackUntil ? this.slackAmt : 0;
     this.slack += (slackWant - this.slack) * Math.min(1, dt * (slackWant > this.slack ? 25 : 1.8));
-    this.rag.setSupport(Math.min(1, this.support * (1 - 0.35 * P.eat) * (1 + 0.6 * this.getUp)) * (1 - this.slack));
-    this.rag.setStance?.(0.36 * P.eat, 0.35 * P.eat, 1.35 * P.eat);
+    const low = Math.max(P.eat, P.sleep);
+    this.rag.setSupport(Math.min(1, this.support * (1 - 0.35 * low) * (1 + 0.6 * this.getUp)) * (1 - this.slack));
+    this.rag.setStance?.(0.36 * P.eat + 0.42 * P.sleep, 0.35 * P.eat + 0.12 * P.sleep, 1.35 * P.eat + 0.9 * P.sleep);
     this.rag.step(dt);
     this.rag.syncSkin();
 
@@ -199,7 +206,10 @@ export class PhysicsLeno {
     // strings help him up gradually, physically. Being low on all fours while eating, or dangling in a predator's
     // grip, isn't a fall. Only if he has left the set entirely is he put back on stage.
     const held = this.heldUntil > performance.now();
-    const down = st.fallen && this.posture.eat < 0.3 && !held;
+    // waking up curled on the floor isn't a fall: the strings start helping him up straight away
+    if (this.posture.sleep > 0.3) this.sleptLow = st.fallen;
+    else if (this.sleptLow) { this.sleptLow = false; if (st.fallen) this.fallenFor = 4.01; }
+    const down = st.fallen && this.posture.eat < 0.3 && this.posture.sleep < 0.3 && !held;
     this.fallenFor = down ? this.fallenFor + dt : 0;
     if (down && this.fallenFor > 0 && this.fallenFor - dt <= 0) this.onFall?.();
     // (the help comes from the strings, so with the strings off he just lies there: a pure ragdoll)

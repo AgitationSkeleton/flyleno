@@ -109,12 +109,32 @@ export class Npcs {
     return g;
   }
 
-  /** stagehand brings a sugar cube (or the rotten éclair) and sets it on the floor in front of Leno */
+  /** a birthday cake: two tiers of white frosting with a pink band, and candles whose flames sway (size only: no flicker) */
+  cakeMesh() {
+    const S = FIGURE_SCALE, g = new THREE.Group();
+    const frost = new THREE.MeshStandardMaterial({ color: 0xf6f0e6, roughness: 0.7 }), pink = new THREE.MeshStandardMaterial({ color: 0xe79ab2, roughness: 0.6 });
+    const t1 = new THREE.Mesh(new THREE.CylinderGeometry(0.2 * S, 0.2 * S, 0.12 * S, 24), frost); t1.position.y = 0.06 * S; g.add(t1);
+    const b1 = new THREE.Mesh(new THREE.CylinderGeometry(0.203 * S, 0.203 * S, 0.025 * S, 24), pink); b1.position.y = 0.05 * S; g.add(b1);
+    const t2 = new THREE.Mesh(new THREE.CylinderGeometry(0.13 * S, 0.13 * S, 0.09 * S, 20), frost); t2.position.y = 0.165 * S; g.add(t2);
+    const wax = new THREE.MeshStandardMaterial({ color: 0x9fc6e8, roughness: 0.5 }), flameMat = new THREE.MeshBasicMaterial({ color: 0xffc766, toneMapped: false });
+    for (let k = 0; k < 7; k++) {
+      const a = (k / 7) * Math.PI * 2, r = k ? 0.085 * S : 0;
+      const c = new THREE.Mesh(new THREE.CylinderGeometry(0.008 * S, 0.008 * S, 0.06 * S, 6), wax);
+      c.position.set(Math.cos(a) * r, 0.24 * S, Math.sin(a) * r); g.add(c);
+      const f = new THREE.Mesh(new THREE.ConeGeometry(0.009 * S, 0.028 * S, 6), flameMat);
+      f.position.set(c.position.x, 0.285 * S, c.position.z); g.add(f);
+      f.onBeforeRender = () => { const w = performance.now() / 1000; f.scale.set(1, 1 + 0.12 * Math.sin(w * 7 + k * 1.7), 1); f.rotation.z = 0.08 * Math.sin(w * 3 + k); };
+    }
+    g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+    return g;
+  }
+
+  /** stagehand brings a sugar cube (or the rotten éclair, or a birthday cake) and sets it on the floor in front of Leno */
   deliverSnack(getLeno, kind = 'sugar') {
     const side = Math.random() < 0.5 ? -1 : 1;
     const wing = this.center.clone().add(new THREE.Vector3(side * 11, 0, -4));
     const n = new Npc(this, PALETTES.stagehand).at(wing);
-    const cube = kind === 'eclair' ? this.eclairMesh() : new THREE.Mesh(this.cubeGeo, this.cubeMat);
+    const cube = kind === 'eclair' ? this.eclairMesh() : kind === 'cake' ? this.cakeMesh() : new THREE.Mesh(this.cubeGeo, this.cubeMat);
     n.fig.armL.add(cube); cube.position.copy(n.fig.handOffset).add(new THREE.Vector3(0, -0.08, 0.06));
     n.carrying = true;
     const drop = () => {
@@ -129,8 +149,9 @@ export class Npcs {
         then: () => {
           const p = new THREE.Vector3(); cube.getWorldPosition(p);
           n.fig.armL.remove(cube); n.carrying = false;
-          p.y = (this.groundAt(p) ?? p.y) + (kind === 'eclair' ? 0.05 : 0.075) * FIGURE_SCALE;
+          p.y = (this.groundAt(p) ?? p.y) + (kind === 'eclair' ? 0.05 : kind === 'cake' ? 0 : 0.075) * FIGURE_SCALE;
           if (kind === 'eclair') { this.food.addEclair(p, cube); this.onEvent?.('A stagehand sets down an éclair. It smells a little off.'); }
+          else if (kind === 'cake') { this.food.addCake(p, cube); this.onEvent?.('A stagehand sets down a birthday cake'); }
           else { this.food.addSugar(p, cube); this.onEvent?.('A stagehand sets down a sugar cube'); }
         } },
       { type: 'pose', dur: 0.6, pose: (f) => { f.armR.rotation.z = -0.4; f.armR.rotation.x = -1.4; } },     // a little wave
@@ -138,7 +159,7 @@ export class Npcs {
       { type: 'pose', dur: 0.1, then: () => n.remove() },
     );
     this.list.push(n);
-    this.onEvent?.(kind === 'eclair' ? 'A stagehand walks on with an éclair' : 'A stagehand walks on with a sugar cube');
+    this.onEvent?.(kind === 'eclair' ? 'A stagehand walks on with an éclair' : kind === 'cake' ? 'A stagehand carries out a birthday cake' : 'A stagehand walks on with a sugar cube');
   }
 
   /** a red-robed audience member storms toward Leno, shakes a fist and yells, then goes back to their seat */

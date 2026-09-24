@@ -1,9 +1,15 @@
-// The Grey Leno Show, as a running order. Each episode opens with the greeting, runs a few segments drawn
-// from Vinny's Grey Leno appearances (the 2022 Nightmare Puppeteer show, the VR / public-access / VHS
-// follow-ups, the candidacy speech), and ends with the UFO sign-off. Every segment is a set of stimuli for
-// the fly (sounds it hears, light and screen pictures it sees, touch, looming, fictive drives) plus crowd
-// reactions that reach its dopamine neurons. The host's lines appear on cue cards: the fly can't read them,
-// so Leno says whatever his articulator neurons produce.
+// The Grey Leno Show, as a running order. Each episode opens with the greeting, runs a handful of segments drawn
+// from Vinny's Grey Leno appearances (the 2022 Nightmare Puppeteer show, the VR / public-access / VHS follow-ups,
+// the candidacy speech) and ends with the UFO sign-off. Every segment is a set of stimuli for the fly (sounds it
+// hears, light and screen pictures it sees, touch, looming, fictive drives) plus crowd reactions that reach its
+// dopamine neurons. The host's scripted lines are not shown (the fly brain does the talking): where a segment
+// needs an answer from Leno (the phone-in, the monologue) it drives the fly's own voice neurons and quotes whatever
+// comes out.
+//
+// Pacing: an episode alternates calm segments with busy ones (a guest, a party), prefers segments it didn't run
+// last time, and may end on the late late show's lullaby. Between segments there is room to wander; the show waits
+// for the stage to be clear of big random events (js/events.js) and gives way to one that is waiting its turn.
+// Nothing here flashes: lights fade, screens move smoothly (photosensitivity).
 import * as THREE from 'three';
 import { Frog } from './frog.js';
 import { Car } from './car.js';
@@ -16,36 +22,49 @@ const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = (Mat
 // syllable formants (F1, F2) for crowd chants
 const V = { EY: [480, 1900], EH: [560, 1750], OW: [520, 900], AE: [700, 1700], IH: [420, 2000] };
 
+// pace: 'calm' (talk, screens) or 'big' (a guest, props, a party); major: fills the stage (no big random event
+// alongside it); harmful: switched off in Peaceful Mode
 export const SEGMENTS = {
   open: { title: 'Opening', dur: 16 },
-  clip: { title: '"Take a look at this next one"', dur: 32 },
-  guest: { title: 'Guest: Mr. Frog', dur: 60 },
-  drive: { title: 'Sunday drive', dur: 55 },
-  johnny: { title: '"Take it away, Johnny!"', dur: 13 },
-  sponsor: { title: 'A word from our sponsor', dur: 14 },
-  static: { title: 'Technical difficulties', dur: 11 },
-  callin: { title: 'Call-in', dur: 16 },
-  telethon: { title: 'Space scabies telethon', dur: 24 },
-  dance: { title: 'Grey Leno dance party', dur: 22 },
-  rally: { title: 'Vote Leno', dur: 32 },
-  eclair: { title: 'The rotten éclair', dur: 30 },
-  signoff: { title: 'Sign-off (UFO)', dur: 26 },
+  clip: { title: '"Take a look at this next one"', dur: 32, pace: 'calm' },
+  monologue: { title: 'Monologue: joke time', dur: 30, pace: 'calm' },
+  phonein: { title: 'Phone-in: the fly answers', dur: 18, pace: 'calm' },
+  johnny: { title: '"Take it away, Johnny!"', dur: 13, pace: 'calm' },
+  sponsor: { title: 'A word from our sponsor', dur: 14, pace: 'calm' },
+  static: { title: 'Technical difficulties', dur: 11, pace: 'calm' },
+  telethon: { title: 'Space scabies telethon', dur: 24, pace: 'calm' },
+  eclair: { title: 'The rotten éclair', dur: 30, pace: 'calm', harmful: true },
+  guest: { title: 'Guest: Mr. Frog', dur: 60, pace: 'big', major: true },
+  gooseguest: { title: 'Guest: a goose', dur: 40, pace: 'big', major: true },
+  drive: { title: 'Sunday drive', dur: 55, pace: 'big', major: true },
+  dance: { title: 'Grey Leno dance party', dur: 22, pace: 'big' },
+  rally: { title: 'Vote Leno', dur: 32, pace: 'big' },
+  birthday: { title: '500 years young (birthday)', dur: 42, pace: 'big' },
+  wave: { title: 'The Leno Wave', dur: 17, pace: 'big' },
+  wheel: { title: 'Spin the Wheel of Leno', dur: 24, pace: 'big' },
+  lullaby: { title: 'The late late show: lullaby', dur: 36, pace: 'late' },
+  signoff: { title: 'Sign-off (UFO)', dur: 26, major: true },
 };
-const MIDDLE = ['clip', 'guest', 'drive', 'johnny', 'sponsor', 'static', 'callin', 'telethon', 'dance', 'rally', 'eclair'];
+const MIDDLE = Object.keys(SEGMENTS).filter((k) => SEGMENTS[k].pace === 'calm' || SEGMENTS[k].pace === 'big');
 
+// callers (the questions are heard as a garbled voice on the line and shown in the ticker; the answer is the fly's)
 const CALLS = [
-  { q: 'Why do you puke so much?', a: "I don't puke, I'm frankly offended." },
-  { q: 'Can you address the elephant in the room: who are the hooded chaps in the back?', a: "That's my staff." },
-  { q: 'I really love how incredibly unfunny you are. Clone Orion is so much better.', a: 'Clone Orion is a two-bit hack, I\'m the best. Up yours, huh!' },
-  { q: 'Tell me, what do you drive?', a: "I drive a UFO, huh. Beautiful. Beautiful." },
-  { q: 'Is it true you are 500 years old?', a: "I'm 500 years young, folks." },
+  'Why do you puke so much?',
+  'Can you address the elephant in the room: who are the hooded chaps in the back?',
+  'I really love how incredibly unfunny you are. Clone Orion is so much better.',
+  'Tell me, what do you drive?',
+  'Is it true you are 500 years old?',
+  'What do the worms in your brain tell you?',
+  'Are feet really going to be free?',
+  "Where's Johnny?",
 ];
 
 export class Show {
   /**
    * ctx: { scene, stage, audio, sfx, screens, npcs, getHost, isFly, hostPos, hostHead, impulse, backflip,
    *        stimAlias, pulse, reinforce, setStim, crowd, react, ticker, cue, motor, duckMusic, voice, mouthOpen,
-   *        deliverSnack, onChange }
+   *        deliverSnack, onChange, allowed(switch), pacer, said() (words spoken so far), transcript(),
+   *        happen(kind) (a prize), gooseVisit(), gooseHead(), wave(laps), dim(level), lullaby(on), asleep() }
    */
   constructor(ctx) {
     this.ctx = ctx;
@@ -64,8 +83,10 @@ export class Show {
     this.balloons = new Balloons(scene); this.balloons.floorY = this.floorY;
     this.ufo = new Ufo(scene);
     this.enabled = true;
+    this.gentle = false;             // Peaceful Mode: the tractor beam only lifts him a little
     this.episode = 0;
     this.rundown = [];
+    this.recent = [];                // last episode's segments (the next one prefers others)
     this.idx = -1;
     this.cur = null;                 // { key, t, s (segment state) }
     this.gap = 6;
@@ -73,10 +94,27 @@ export class Show {
   }
 
   get active() { return !!this.cur; }
+  /** a segment that fills the stage is on (for the pacer) */
+  get busy() { return !!this.cur || this.ufo.state !== 'off' || this.frog.present || this.car.present; }
+
+  allowed(key) { return this.ctx.allowed?.('seg:' + key) ?? true; }
 
   newEpisode() {
     this.episode++;
-    this.rundown = ['open', ...shuffle([...MIDDLE]).slice(0, 5), 'signoff'];
+    // alternate calm and busy segments, preferring ones that weren't on last time
+    const pool = MIDDLE.filter((k) => this.allowed(k));
+    const order = [...shuffle(pool.filter((k) => !this.recent.includes(k))), ...shuffle(pool.filter((k) => this.recent.includes(k)))];
+    const calm = order.filter((k) => SEGMENTS[k].pace === 'calm'), big = order.filter((k) => SEGMENTS[k].pace === 'big');
+    const mid = [];
+    let wantBig = Math.random() < 0.5;
+    while (mid.length < 5 && (calm.length || big.length)) {
+      mid.push(((wantBig && big.length) || !calm.length ? big : calm).shift());
+      wantBig = !wantBig;
+    }
+    // the late late show: sometimes the lullaby closes the episode, just before the sign-off
+    const late = this.allowed('lullaby') && Math.random() < 0.35 ? ['lullaby'] : [];
+    this.rundown = [...(this.allowed('open') ? ['open'] : []), ...mid, ...late, ...(this.allowed('signoff') ? ['signoff'] : [])];
+    this.recent = mid;
     this.idx = -1;
     this.ctx.onChange?.();
   }
@@ -95,7 +133,8 @@ export class Show {
     if (!C) return;
     this.stop(C.key, C.s);
     this.cur = null;
-    this.gap = 8 + Math.random() * 10;
+    // room to wander between segments; a longer intermission between episodes
+    this.gap = this.idx >= this.rundown.length - 1 ? 50 + Math.random() * 50 : 14 + Math.random() * 16;
     this.ctx.onChange?.();
   }
 
@@ -120,8 +159,15 @@ export class Show {
       this.gap -= dt;
       if (this.gap <= 0) {
         if (!this.rundown.length || this.idx >= this.rundown.length - 1) this.newEpisode();
-        this.idx++;
-        this.run(this.rundown[this.idx]);
+        // skip segments that have been switched off since the rundown was made
+        while (this.idx < this.rundown.length - 1 && !this.allowed(this.rundown[this.idx + 1])) this.idx++;
+        const next = this.rundown[this.idx + 1];
+        // wait until the stage is clear (and let a random event that's waiting go first)
+        if (next && (!ctx.pacer || ctx.pacer.canMajor('show', SEGMENTS[next].major ? 15 : 6))) {
+          this.idx++;
+          this.run(next);
+          if (SEGMENTS[next].major) ctx.pacer?.started();
+        }
       }
     }
     // props
@@ -143,8 +189,9 @@ export class Show {
     // tractor beam: light + lift
     const beam = this.ufo.inBeam(hp);
     if (beam > 0) {
-      // lift him a few metres and hold him there (about his own weight at the top) until the beam lets go
-      const room = THREE.MathUtils.clamp((this.floorY + 5.5 - head.y) / 1.5, 0, 1);
+      // lift him a few metres and hold him there (about his own weight at the top) until the beam lets go;
+      // in Peaceful Mode only a little way, so the drop is nothing
+      const room = THREE.MathUtils.clamp((this.floorY + (this.gentle ? 1.6 : 5.5) - head.y) / 1.5, 0, 1);
       ctx.impulse(new THREE.Vector3(0, (ctx.isFly() ? 900 * room : 850 + 1800 * room) * beam * dt, 0));
     }
     // light falling on the eyes (spotlight, strobe, beam)
@@ -169,6 +216,17 @@ export class Show {
     return out;
   }
 
+  // ---------------------------------------------------------------- the fly answers
+  /** open the fly's voice for `sec` seconds (a fictive drive onto its vocal descending neurons) */
+  speakUp(s) { s.vOn = true; s.v = 0; s.w0 = this.ctx.said(); this.ctx.setStim('vocal', true); }
+  /** close it again; returns what he said in the meantime ('' if nothing) and how loud he got */
+  speakDone(s) {
+    if (!s.vOn) return { said: '', v: 0 };
+    s.vOn = false; this.ctx.setStim('vocal', false);
+    const n = Math.min(12, this.ctx.said() - s.w0);
+    return { said: n > 0 ? this.ctx.transcript().slice(-n).join(' ') : '', v: s.v };
+  }
+
   // ---------------------------------------------------------------- segments
   /** run `fn` once when segment time passes `at` */
   at(C, at, fn) { if (C.t >= at && !C.fired.has(at)) { C.fired.add(at); fn(); } }
@@ -187,7 +245,13 @@ export class Show {
       s.prevMode = ctx.screens?.mode;
       if (ctx.screens?.available) ctx.screens.setMode('video');
     }
+    if (key === 'monologue') { this.spot.on(() => ctx.hostHead()); s.jokes = 0; s.next = 1.5; ctx.ticker('The spotlight finds Leno: joke time'); }
+    if (key === 'phonein') { this.ctx.sfx.sting('ring', { gain: 0.8 }); s.call = pick(CALLS); ctx.ticker('📞 The phone on the desk rings'); }
     if (key === 'guest') ctx.cue("We're gonna have a guest, Mr. Frog. Mr. Frog will be on… at some point.");
+    if (key === 'gooseguest') {
+      s.ok = ctx.gooseVisit();
+      if (s.ok) { ctx.ticker('Our next guest… a goose!'); ctx.crowd('applause', 0.9); this.spot.on(() => ctx.gooseHead() ?? ctx.hostHead(), 700); }
+    }
     if (key === 'drive') { ctx.cue("This next one is really beautiful, okay? It's like a Sunday drive."); this.car.enter(); }
     if (key === 'johnny') { ctx.cue('Here we go, here we go, everybody. Take it away, Johnny!'); this.spot.on(this.bandAt.clone().add(new THREE.Vector3(0, 1.5, 0))); }
     if (key === 'sponsor') {
@@ -198,7 +262,6 @@ export class Show {
       ctx.screens?.showCard(makeCard('static'), 8); this.ctx.sfx.sting('static', { gain: 0.8 });
       ctx.ticker('The screens dissolve into static');
     }
-    if (key === 'callin') { this.ctx.sfx.sting('ring', { gain: 0.8 }); s.call = pick(CALLS); ctx.cue("Caller number one, you're on the air."); }
     if (key === 'telethon') {
       ctx.screens?.showCard(makeCard('telethon'), 22);
       ctx.cue("Help us find the cure for space scabies, which I definitely don't have.");
@@ -213,6 +276,28 @@ export class Show {
       ctx.screens?.showCard(makeCard('vote'), 30);
       ctx.cue("My fellow contrarians, it's me, Grey Leno. I am here today to announce that I will be running.");
     }
+    if (key === 'birthday') {
+      // "I'm 500 years young, folks": a cake, a song, balloons
+      ctx.ticker("It's Leno's birthday: 500 years young!");
+      s.ok = ctx.deliverSnack('cake');
+      ctx.screens?.showCard(makeCard('birthday'), 16);
+      this.balloons.drop(this.center, 14); ctx.crowd('cheer', 0.9);
+    }
+    if (key === 'wave') { ctx.ticker('Everybody do the Leno Wave!'); ctx.crowd('cheer', 0.7); }
+    if (key === 'wheel') {
+      // the prize is decided up front; the wheel is drawn to land on it
+      const prizes = this.prizes();
+      s.prize = pick(prizes);
+      s.card = makeCard('wheel', { labels: prizes.map((p) => p.label), pick: prizes.indexOf(s.prize), spin: 6.5 });
+      ctx.screens?.showCard(s.card, 15);
+      this.ctx.sfx.sting('wheel', { gain: 0.6 });
+      ctx.ticker('Spin the Wheel of Leno!');
+    }
+    if (key === 'lullaby') {
+      ctx.ticker('The late late show: the lights go down…');
+      ctx.dim(0.45); ctx.duckMusic(0.3); ctx.lullaby(true);
+      s.box = this.ctx.sfx.musicBox({ dur: 28, gain: 0.5 });
+    }
     if (key === 'eclair') {
       ctx.cue('Mmm. An éclair, huh? Beautiful.');
       s.ok = ctx.deliverSnack('eclair');
@@ -223,8 +308,24 @@ export class Show {
     }
   }
 
+  /** the wheel's prizes (all harmless except the tomatoes, which only appear when tomato storms are allowed) */
+  prizes() {
+    const ctx = this.ctx, ok = (k) => ctx.allowed?.(k) ?? true;
+    return [
+      { label: 'SUGAR SHOWER', run: () => ctx.happen('sugar'), ok: ok('sugar') },
+      { label: 'ROSES', run: () => ctx.happen('roses'), ok: ok('roseStorms') },
+      { label: 'OVATION', run: () => ctx.happen('ovation'), ok: ok('ovations') },
+      { label: 'CONFETTI', run: () => { this.confetti.drop(this.center); this.balloons.drop(this.center, 12); this.confettiSaid = false; this.ctx.sfx.sting('pop', { gain: 0.8 }); }, ok: true },
+      { label: 'A GOOSE', run: () => ctx.gooseVisit(), ok: ok('goose') },
+      { label: 'MUSHROOM', run: () => ctx.happen('mushroom'), ok: ok('mushroom') },
+      { label: 'NOTHING', run: () => { this.ctx.sfx.sting('crickets', { gain: 0.7 }); ctx.ticker('…nothing. Better luck next time.'); }, ok: true },
+      { label: 'TOMATOES!', run: () => ctx.happen('storm'), ok: ok('storms') },
+    ].filter((p) => p.ok);
+  }
+
   step(key, s, t, dt, C) {
     const ctx = this.ctx;
+    if (s.vOn) s.v = Math.max(s.v, ctx.voice());
     if (key === 'open') {
       this.at(C, 4, () => { ctx.cue('Today we have a show.'); ctx.crowd('applause', 1); ctx.crowd('cheer', 0.8); ctx.ticker('The audience bursts into applause at nothing'); });
       this.at(C, 8, () => ctx.cue("We have a whole cavalcade of different material that you will enjoy to your heart's consent!"));
@@ -243,6 +344,38 @@ export class Show {
       }
       return t > SEGMENTS.clip.dur;
     }
+    if (key === 'monologue') {
+      // three "jokes": his voice neurons get a push, then a rimshot; the crowd laughs if he said something
+      s.next -= dt;
+      if (!s.vOn && s.next <= 0 && s.jokes < 3) { this.speakUp(s); s.tellT = 0; }
+      if (s.vOn) {
+        s.tellT += dt;
+        if (s.tellT > 2.8) {
+          const { said, v } = this.speakDone(s);
+          s.jokes++; s.next = 4;
+          if (said || v > 0.35) {
+            if (said) ctx.ticker(`Leno: "${said}"`);
+            this.ctx.sfx.sting('rimshot', { gain: 0.7 });
+            setTimeout(() => ctx.crowd(Math.random() < 0.7 ? 'laugh' : 'applause', 0.8), 900);
+          } else { this.ctx.sfx.sting('crickets', { gain: 0.7 }); ctx.ticker('…nothing. Tough crowd.'); }
+        }
+      }
+      if (s.jokes >= 3 && s.next <= 1.5) { this.spot.off(); return true; }
+      return false;
+    }
+    if (key === 'phonein') {
+      this.at(C, 3.2, () => { this.ctx.sfx.sting('caller', { gain: 0.8 }); ctx.ticker(`Caller: "${s.call}"`); });
+      // the answer comes from the fly: a push onto its voice neurons, and whatever they say is the reply
+      this.at(C, 7, () => { this.speakUp(s); ctx.ticker('Leno answers the caller…'); });
+      this.at(C, 11.5, () => {
+        const { said, v } = this.speakDone(s);
+        if (said || v > 0.35) {
+          ctx.ticker(said ? `Leno answers: "${said}"` : 'Leno mumbles an answer');
+          ctx.crowd(Math.random() < 0.6 ? 'laugh' : 'applause', 0.8);
+        } else { this.ctx.sfx.sting('crickets', { gain: 0.7 }); ctx.ticker('…silence. The caller hangs up.'); }
+      });
+      return t > SEGMENTS.phonein.dur;
+    }
     if (key === 'guest') {
       this.at(C, 3, () => { ctx.cue('Give it up for Mr. Frog!'); ctx.crowd('applause', 1); this.frog.enter(ctx.getHost, 48); this.spot.on(() => this.frog.headPos() ?? ctx.hostHead(), 700); });
       if (this.frog.active?.state === 'sit') {
@@ -255,6 +388,12 @@ export class Show {
         }
       }
       if (t > 3.5 && !this.frog.active) { this.spot.off(); return true; }
+    }
+    if (key === 'gooseguest') {
+      if (!s.ok) return true;
+      this.at(C, 12, () => ctx.crowd('laugh', 0.8));
+      if (t > 3 && !ctx.gooseHead()) { this.spot.off(); ctx.crowd('applause', 0.8); return true; }
+      return t > SEGMENTS.gooseguest.dur;
     }
     if (key === 'drive') {
       this.at(C, 12, () => ctx.cue('Tell me, do you drive a car? What do you drive?'));
@@ -276,12 +415,6 @@ export class Show {
       this.at(C, 2.5, () => ctx.cue('Dave, can you fix the static? Huh? Dave?'));
       this.at(C, 9, () => ctx.cue('Beautiful. Beautiful.'));
       return t > SEGMENTS.static.dur;
-    }
-    if (key === 'callin') {
-      this.at(C, 3.2, () => { this.ctx.sfx.sting('caller', { gain: 0.8 }); ctx.ticker(`Caller: "${s.call.q}"`); });
-      this.at(C, 7.5, () => ctx.cue(s.call.a));
-      this.at(C, 12, () => ctx.crowd(Math.random() < 0.6 ? 'laugh' : 'applause', 0.8));
-      return t > SEGMENTS.callin.dur;
     }
     if (key === 'telethon') {
       // space scabies: itching bristles and antennae -> the fly grooms
@@ -322,6 +455,33 @@ export class Show {
       this.at(C, 27, () => ctx.cue('Vote Leno in the fall, and may all your ambidextrances come true.'));
       return t > SEGMENTS.rally.dur;
     }
+    if (key === 'birthday') {
+      this.at(C, 6, () => { this.ctx.sfx.birthday({ gain: 0.55 }); ctx.ticker('The audience sings Happy Birthday'); });
+      this.at(C, 17, () => { ctx.crowd('applause', 1); ctx.crowd('cheer', 0.8); this.confetti.drop(this.center, 5, 16, 400); this.confettiSaid = false; });
+      this.at(C, 20, () => { if (s.ok) ctx.ticker('The cake is on the floor in front of him. Five hundred candles, give or take.'); });
+      return t > SEGMENTS.birthday.dur;
+    }
+    if (key === 'wave') {
+      // the audience does a stadium wave, three times round, chanting his name
+      this.at(C, 1.5, () => { ctx.wave(3); this.ctx.sfx.chant({ n: 6, period: 1.6, gain: 0.5, vowels: [V.EH, V.OW] }); });
+      this.at(C, 13, () => ctx.crowd('applause', 0.9));
+      return t > SEGMENTS.wave.dur;
+    }
+    if (key === 'wheel') {
+      this.at(C, 7.4, () => {
+        ctx.ticker(`The wheel lands on: ${s.prize.label}!`);
+        this.ctx.sfx.sting('fanfare', { gain: 0.6 });
+        setTimeout(() => s.prize.run(), 900);
+      });
+      this.at(C, 12, () => ctx.crowd(s.prize.label === 'NOTHING' ? 'laugh' : 'applause', 0.8));
+      return t > SEGMENTS.wheel.dur;
+    }
+    if (key === 'lullaby') {
+      // the audience hushes; if he nods off, a soft "aww"
+      if (!s.aww && ctx.asleep()) { s.aww = true; ctx.ticker('Leno dozes off. The audience whispers "aww"'); ctx.crowd('applause', 0.25); }
+      this.at(C, 29, () => { ctx.dim(1); ctx.duckMusic(1); ctx.lullaby(false); ctx.ticker('The lights come back up, slowly'); });
+      return t > SEGMENTS.lullaby.dur;
+    }
     if (key === 'eclair') {
       if (!s.ok) return true;
       return t > SEGMENTS.eclair.dur;
@@ -341,14 +501,16 @@ export class Show {
 
   stop(key, s) {
     const ctx = this.ctx;
+    this.speakDone(s);
     if (key === 'clip' && !s.back && ctx.screens?.available && s.prevMode && s.prevMode !== 'video') ctx.screens.setMode(s.prevMode);
     if (key === 'guest') this.frog.leave('done');
     if (key === 'drive' && this.car.present) this.car.active.phase = 'out';
     if (key === 'johnny' && s.ducked) ctx.duckMusic(1);
     if (key === 'dance') { this.disco.stop(); s.beat?.stop(); ctx.setStim('turnL', false); ctx.setStim('turnR', false); ctx.crowd('cheer', 0.8); }
+    if (key === 'lullaby') { s.box?.stop(); ctx.dim(1); ctx.duckMusic(1); ctx.lullaby(false); }
     if (key === 'signoff') { s.hum?.stop(); if (this.ufo.state !== 'off') this.ufo.state = 'leave'; }
-    if (['open', 'johnny', 'guest'].includes(key)) this.spot.off();
-    if (['sponsor', 'static', 'telethon', 'rally', 'open'].includes(key)) ctx.screens?.clearCard();
+    if (['open', 'johnny', 'guest', 'monologue', 'gooseguest'].includes(key)) this.spot.off();
+    if (['sponsor', 'static', 'telethon', 'rally', 'open', 'birthday', 'wheel'].includes(key)) ctx.screens?.clearCard();
   }
 
   // ---------------------------------------------------------------- guests

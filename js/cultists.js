@@ -51,6 +51,17 @@ export class Cultists {
 
   setHidden(i, on) { if (on) this.hidden.add(i); else this.hidden.delete(i); }
 
+  /** a stadium wave: a band of people standing up sweeps across the seats `laps` times (smoothly, ~3 s a sweep) */
+  wave(laps = 3, period = 3.2) {
+    if (!this.waveU) {
+      // each seat's place across the audience, 0..1 along its widest horizontal extent
+      const box = new THREE.Box3(); for (const s of this.seats) box.expandByPoint(s.p);
+      const size = box.getSize(new THREE.Vector3()), ax = size.x >= size.z ? 'x' : 'z';
+      this.waveU = this.seats.map((s) => (s.p[ax] - box.min[ax]) / Math.max(1e-3, size[ax]));
+    }
+    this.waveT = 0; this.waveDur = laps * period; this.wavePeriod = period;
+  }
+
   /** a random cultist stands up (to throw); returns the throw origin */
   standRandom() {
     const s = this.seats[(Math.random() * this.seats.length) | 0];
@@ -66,6 +77,11 @@ export class Cultists {
       this.ovation -= dt;
       for (const s of this.seats) s.stand = 1;
       if (m.level < 0.8) this.react('applause', 1);
+    }
+    if (this.waveT !== undefined && this.waveT < this.waveDur) {
+      this.waveT += dt;
+      const front = ((this.waveT / this.wavePeriod) % 1) * 1.3 - 0.15;
+      this.seats.forEach((s, i) => { const d = (this.waveU[i] - front) / 0.08; s.stand = Math.max(s.stand, Math.exp(-d * d)); });
     }
     const { _m, _q, _e, _s } = this;
     const counts = [0, 0, 0];

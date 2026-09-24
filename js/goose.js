@@ -95,7 +95,8 @@ export class Goose {
     if (!this.active) {
       if (!this.enabled || !showOn) return;
       this.nextT -= dt;
-      if (this.nextT <= 0) { this.nextT = 70 + Math.random() * 110; this.spawn(); }
+      // it waits for its turn (js/events.js: the switch is on, and nothing else big is happening)
+      if (this.nextT <= 0 && (!this.gate || this.gate())) { this.nextT = 70 + Math.random() * 110; this.spawn(); }
       return;
     }
     const A = this.active, g = A.g;

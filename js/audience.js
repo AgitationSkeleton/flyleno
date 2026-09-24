@@ -36,6 +36,8 @@ const TABLE = {
   rigHit:     [0.05, 0.30, 0.02, 0.20, 1.00],
   powerUp:    [1.00, 0.30, 0.90, 0.02, 0.20],
   roseHit:    [1.00, 0.20, 1.00, 0.02, 0.20],
+  dodge:      [0.90, 0.30, 0.80, 0.02, 0.20],     // a predator's lunge misses him
+  doze:       [0.10, 0.50, 0.30, 0.05, 0.02],     // he nods off on stage
 };
 const KINDS = ['cheer', 'laugh', 'applause', 'boo', 'gasp'];
 const VALENCE = { cheer: 1, laugh: 0.7, applause: 1, boo: -1, gasp: -0.5 };
@@ -66,13 +68,17 @@ export class Audience {
     if (act === 'speak' && detail.lesson?.complete) w = TABLE.word;
     const novelty = 1 - (this.bored[act] ?? 0);
     this.bored[act] = Math.min(1, (this.bored[act] ?? 0) + 0.25);
-    const p = this.chance * (act === 'speak' ? 0.25 + (detail.lesson?.score ?? 0) * 0.6 : 1) * (0.4 + 0.6 * novelty);
+    // (hush: the audience keeps quiet during the lullaby)
+    const p = this.chance * (this.hush ?? 1) * (act === 'speak' ? 0.25 + (detail.lesson?.score ?? 0) * 0.6 : 1) * (0.4 + 0.6 * novelty);
     if (Math.random() > p) return null;
-    // temperament and novelty tilt the weights: bored/hostile crowds boo more
+    // temperament and novelty tilt the weights: bored/hostile crowds boo more; kinds that are switched off
+    // (js/events.js: boos, gasps, cheers) are never picked
     const weights = w.map((x, i) => {
+      if (this.allowKind && !this.allowKind(KINDS[i])) return 0;
       const val = VALENCE[KINDS[i]];
       return Math.max(0.001, x * (1 + 0.8 * this.temper * val) * (val > 0 ? novelty + 0.2 : 1.2 - novelty * 0.5));
     });
+    if (!weights.some((x) => x > 0)) return null;
     let r = Math.random() * weights.reduce((a, b) => a + b, 0), kind = KINDS[0];
     for (let i = 0; i < KINDS.length; i++) { if ((r -= weights[i]) <= 0) { kind = KINDS[i]; break; } }
     const intensity = 0.5 + 0.5 * Math.random();

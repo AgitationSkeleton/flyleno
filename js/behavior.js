@@ -101,6 +101,7 @@ export class Behavior {
       }
       this.syllableTimer = gap;
       this.transcript.push(text); if (this.transcript.length > 24) this.transcript.shift();
+      this.said = (this.said || 0) + 1;                // running count (the show quotes what he said in a window)
       this.onEvent?.('speak', { text, phones, loud: this.voiceEMA, lesson: this.checkLesson(phones) });
     }
     // ------------------------------------------------ body

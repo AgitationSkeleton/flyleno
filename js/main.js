@@ -35,7 +35,13 @@ import { disposeObject } from './dispose.js';
 import { NesGlitch } from './glitch.js';
 import { FlyEyeView, humanFov, EgoVision } from './eyeview.js';
 import { Wellbeing } from './wellbeing.js';
+import { EventSwitches, Pacer, buildEventsPanel } from './events.js';
+import { Sleep } from './sleep.js';
 const wellbeing = new Wellbeing();                  // state of mind and body (read-outs for the Mind panel)
+const switches = new EventSwitches();               // an on/off switch per event, and Peaceful Mode (the Events panel)
+const pacer = new Pacer();                          // big events one at a time, with calm spells between them
+const sleep = new Sleep();                          // sleep pressure; dozing off when tired and safe
+const allowed = (k) => switches.allowed(k);
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 // YouTube embeds fail (error 150) on bare-IP origins such as 127.0.0.1, but work on localhost.
@@ -232,8 +238,15 @@ function reinforce(valence, seconds) {
 }
 // short stimulus pulse on a named group under its own key (so it does not clash with UI-managed stimuli)
 const pulseTimers = {};
+// how much a sensory pulse jolts him when he's asleep (and what woke him)
+const JOLT = { hitTouch: [1.5, 'a hit'], hitTaste: [0.4, 'a splat'], rigTouch: [2, 'a crash'], swatHit: [2, 'a swat'], zapTouch: [2, 'a zap'],
+  spiderGrab: [2, 'a grab'], spiderBump: [1.5, 'a bump'], alienKick: [1, 'a kick'], frogHit: [1.5, "the frog's tongue"], fallTouch: [1.5, 'a fall'],
+  rainTouch: [0.25, 'the rain'], boltTouch: [1.2, 'thunder'], contactTouch: [0.1, 'a nudge'], confettiTouch: [0.05, 'confetti'], roseTouch: [0.15, 'a rose'],
+  sugarTouch: [0.05, 'a sugar cube'], itch: [0.2, 'an itch'], loom: [0.9, 'something flying at him'], spiderLoom: [0.9, 'a spider'],
+  swatLoom: [0.9, 'a swatter'], frogLoom: [0.9, "the frog's tongue"] };
 function pulse(alias, group, rate, seconds) {
   wellbeing.sensed(alias, rate);
+  const j = JOLT[alias]; if (j && sleep.asleep) { sleep.disturbWhy = j[1]; sleep.jolt(j[0]); }
   worker.postMessage({ type: 'stim', key: alias, indices: stimByKey[group].indices, rate });
   clearTimeout(pulseTimers[alias]);
   pulseTimers[alias] = setTimeout(() => worker.postMessage({ type: 'stim', key: alias, rate: 0 }), seconds * 1000);
@@ -251,9 +264,12 @@ function setAmbience(x) { stimRate('ambientTaste', 5 * x); stimRate('ambientTouc
 
 const getLeno = () => ({ pos: hostAt().clone() });
 const director = new Director((k, on) => sidebar?.setAuto(k, on), (text) => sidebar?.ticker(text), {
-  snack: () => { if (npcs.busy) return false; npcs.deliverSnack(getLeno, Math.random() < 0.25 ? 'eclair' : 'sugar'); return true; },
+  snack: () => { if (npcs.busy) return false; npcs.deliverSnack(getLeno, allowed('eclairs') && Math.random() < 0.25 ? 'eclair' : 'sugar'); return true; },
   heckler: () => { if (npcs.busy || audienceAway) return false; npcs.heckle(getLeno); return true; },
 });
+// the director's events, by switch
+const DIRECTOR_SWITCH = { applause: 'cueApplause', snack: 'snacks', heckler: 'hecklers', tomato: 'cueBitter', walk: 'cueDrives', reverse: 'cueDrives' };
+director.allow = (k) => allowed(DIRECTOR_SWITCH[k] ?? k);
 const mind = new Mind((k, on) => sidebar?.setAuto(k, on));
 sidebar = new Sidebar({
   meta,
@@ -287,13 +303,14 @@ const audience = new Audience(audio, reinforce, {
     const what = { speak: 'babbling', stroll: 'stroll', startle: 'flinch', groom: 'grooming', tomatoHit: 'tomato hit', pipeHit: 'pipe hit', eat: 'meal', burp: 'burp', fall: 'fall',
       eatPoop: 'goose-dropping snack', lay: 'egg', hatch: 'hatching', goose: 'goose', frogTongue: "frog's tongue", frogSpit: 'spit-out', frogBite: 'ankle bite',
       frogKicked: 'frog getting kicked out', backflip: 'backflip', backflipFail: 'missing backflip', spiderDrop: 'spider dropping him', swatHit: 'swat', zap: 'zap',
-      alienKick: 'shin kick', rigHit: 'falling rig', powerUp: 'power-up', roseHit: 'rose' }[e.act] || e.act;
+      alienKick: 'shin kick', rigHit: 'falling rig', powerUp: 'power-up', roseHit: 'rose', dodge: 'narrow escape', doze: 'host dozing off' }[e.act] || e.act;
     sidebar.ticker(`Audience ${verb} at the ${what}`);
     cultists.react(e.kind, e.intensity);
     // an unhappy crowd throws things
     if (e.kind === 'boo' && Math.random() < 0.35) setTimeout(() => throwThing(Math.random() < 0.15 ? 'pipe' : 'tomato'), 400 + Math.random() * 900);
   },
 });
+audience.allowKind = (kind) => allowed(kind === 'boo' ? 'boos' : kind === 'gasp' ? 'gasps' : 'cheers');
 
 // ------------------------------------------------------------------ projectiles (tomatoes, pipes)
 const projectiles = host !== leno ? new Projectiles(scene, host, {
@@ -301,6 +318,12 @@ const projectiles = host !== leno ? new Projectiles(scene, host, {
   onSplat: (p, onLeno, rest) => { fx.splash(p); if (!onLeno) food.addTomato(rest ?? p); },              // looming object -> LC4 looming detectors
   onImpact: (it, { hitLeno, speed }) => {
     const p = it.mesh.position.clone().project(camera), pan = Math.max(-1, Math.min(1, p.x));
+    if (it.kind === 'sugar') {
+      // a sugar cube can't hurt him: a soft tick, and on him just a light touch
+      showSfx.sting('thwack', { gain: 0.05 });
+      if (hitLeno && !it.hitLeno) { it.hitLeno = true; pulse('sugarTouch', 'ambientTouch', 12, 0.2); }
+      return;
+    }
     if (hitLeno && host !== flyHost && !it.knocked && (it.kind === 'pipe' || it.kind === 'camera' || it.kind === 'light')) {
       it.knocked = true; loosenHost(it.kind === 'pipe' ? 150 : 300);
     }
@@ -344,16 +367,26 @@ const projectiles = host !== leno ? new Projectiles(scene, host, {
     }
   },
 }) : null;
-if (projectiles) projectiles.ground = stage.ground;          // where missed tomatoes end up
+if (projectiles) {
+  projectiles.ground = stage.ground;                           // where missed tomatoes end up
+  // a sugar cube that has landed becomes food on the floor
+  projectiles.onRest = (it, p) => { if (it.kind === 'sugar') food.addSugar(p, it.mesh); };
+}
 let audienceAway = false;                         // the seats are empty (after the Rapture): no reactions, no throws
-function throwThing(kind) {
+const THROW_SWITCH = { tomato: 'tomatoes', pipe: 'pipes', rose: 'roses', sugar: 'sugar' };
+/** a cultist throws `kind`; `force`: from a button or a storm/segment that has checked its own switch already
+ *  (Peaceful Mode still stops the harmful ones) */
+function throwThing(kind, force = false) {
+  const sw = THROW_SWITCH[kind];
+  if (sw && (force ? switches.blocked(sw) : !allowed(sw))) { if (force) sidebar.ticker('Peaceful Mode: nothing harmful gets thrown'); return; }
   if (!projectiles) { sidebar.ticker('Throwing needs the physics body (not ?body=kinematic)'); return; }
   if (audienceAway) { sidebar.ticker('Nobody is in the seats to throw anything'); return; }
   projectiles.throw(kind, cultists.standRandom());
 }
-$('throwTomato').onclick = () => throwThing('tomato');
-$('throwPipe').onclick = () => throwThing('pipe');
-$('throwRose').onclick = () => throwThing('rose');
+$('throwTomato').onclick = () => throwThing('tomato', true);
+$('throwPipe').onclick = () => throwThing('pipe', true);
+$('throwRose').onclick = () => throwThing('rose', true);
+$('throwSugar').onclick = () => throwThing('sugar', true);
 const behavior = new Behavior(meta, audio, {
   onEvent: (type, d) => {
     if (type === 'vomit') { wellbeing.vomited(); host.trigger('vomit'); setTimeout(() => fx.vomit(() => host.mouth(), () => host.headDown(), 1.1), 500); }
@@ -416,7 +449,7 @@ function setWorms(on) {
 }
 $('optWorms').onchange = (e) => setWorms(e.target.checked);
 $('wormsHeal').onclick = () => worker.postMessage({ type: 'worms', heal: true });
-$('ambience').oninput = (e) => setAmbience(+e.target.value);
+$('ambience').oninput = (e) => { ambBase = +e.target.value; setAmbience(ambBase * (1 - 0.5 * (1 - sleepGate))); };
 $('hearGain').oninput = (e) => (hearing.gain = +e.target.value);
 $('sfxVol').oninput = (e) => audio.setVolume(+e.target.value * masterVol);
 // master volume (viewport): scales the show's sounds and the music together
@@ -428,7 +461,8 @@ $('initiative').onchange = (e) => { mind.initiative = e.target.checked; if (!e.t
 
 // ------------------------------------------------------------------ food, stagehand / heckler, fly instincts
 const food = new Food(scene);
-const npcs = new Npcs(scene, stage, { food, cultists, audio, onEvent: (t) => sidebar.ticker(t), throwFrom: (kind, p) => projectiles?.throw(kind, p) });
+const npcs = new Npcs(scene, stage, { food, cultists, audio, onEvent: (t) => sidebar.ticker(t),
+  throwFrom: (kind, p) => { if (allowed(THROW_SWITCH[kind])) projectiles?.throw(kind, p); } });
 const instincts = new Instincts({
   food, stimRate, stimAlias, pulse, reinforce, audio,
   home: hostPos.clone(),                            // the starting mark on the stage: home, where he drifts back to
@@ -507,7 +541,7 @@ const showSfx = new ShowSfx(audio);
 var showReady = false;              // (var: the autopilot callback can run before the show exists)
 const CROWD_VAL = { cheer: 1, laugh: 0.7, applause: 1, boo: -1, gasp: -0.5 };
 function crowdDo(kind, intensity = 1) {
-  if (audienceAway) return;
+  if (audienceAway || !audience.allowKind(kind)) return;
   // scripted crowd moments (not contingent on what Leno does): heard by the fly, and a dopamine signal
   const d = audio.crowd(kind, { gain: 0.5 + 0.5 * intensity });
   cultists.react(kind, intensity);
@@ -551,14 +585,32 @@ const show = new Show({
   voice: () => behavior.voiceEMA, mouthOpen: () => (behavior.eating ? 1 : mouth),
   deliverSnack: (kind) => { if (npcs.busy) return false; npcs.deliverSnack(getLeno, kind); return true; },
   onChange: () => updateShowUI(),
+  allowed, pacer, said: () => behavior.said || 0, transcript: () => behavior.transcript,
+  happen: (kind) => showPrize(kind),
+  gooseVisit: () => { if (goose.active || !allowed('goose')) return false; goose.spawn(); return true; },
+  gooseHead: () => goose.headPos(),
+  wave: (laps) => cultists.wave(laps),
+  dim: (x) => (dimTarget = x),
+  lullaby: (on) => (sleep.lullaby = on),
+  asleep: () => sleep.asleep,
 });
+// the wheel's prizes (and anything else a segment hands out)
+function showPrize(kind) {
+  if (kind === 'sugar') return happenings.sugarThrow(6);
+  if (kind === 'roses') return happenings.storm('rose', 12);
+  if (kind === 'ovation') return standingOvation(9);
+  if (kind === 'mushroom') return happenings.mushroom.start();
+  if (kind === 'storm') return happenings.storm('mixed', 14);
+}
+let dimTarget = 1, dimLevel = 1;                    // the lullaby dims the studio lights (smoothly)
+for (const [k, v] of Object.entries(SEGMENTS)) switches.define('seg:' + k, v.title, !!v.harmful);
 function updateShowUI() {
   const cur = show.cur?.key;
   $('onair').textContent = cur ? `● ON AIR · episode ${show.episode} · ${SEGMENTS[cur].title}` : show.enabled ? `● ON AIR · episode ${Math.max(1, show.episode)}` : '';
   $('rundown').innerHTML = show.rundown.map((k, i) => `<li class="${k === cur ? 'now' : i < show.idx ? 'done' : ''}">${SEGMENTS[k].title}</li>`).join('');
 }
 $('segments').innerHTML = Object.entries(SEGMENTS).map(([k, v]) => `<button class="mini" data-seg="${k}">${v.title.replace(/"/g, '')}</button>`).join('');
-$('segments').querySelectorAll('button').forEach((b) => (b.onclick = () => show.run(b.dataset.seg)));
+$('segments').querySelectorAll('button').forEach((b) => (b.onclick = () => { if (!switches.blocked('seg:' + b.dataset.seg)) show.run(b.dataset.seg); }));
 $('optRundown').checked = true;
 function syncShowEnabled() { show.enabled = director.enabled && $('optRundown').checked; updateShowUI(); }
 $('optRundown').onchange = syncShowEnabled;
@@ -599,6 +651,7 @@ const predators = new Predators({
   ceilY: ceiling ? new THREE.Box3().setFromObject(ceiling).min.y - 0.4 : hostPos.y + 16,
   knock: (v) => pushHost(v), hold: holdHost, convulse: (s) => (convulseT = s),
   pulse, reinforce, crowd: crowdDo, react: (act) => audience.react(act), ticker: (t) => sidebar.ticker(t),
+  center: show.center, stageRadius: physHost?.stageRadius ?? 7.3, allowed, pacer,
 });
 
 // ------------------------------------------------------------------ happenings: Rapture, rain cloud, mushroom, rig, aliens
@@ -645,10 +698,58 @@ const happenings = new Happenings({
   pan: panOf, setCrowdChance: (x) => (audience.chance = x),
   setAudienceAway: (v) => { audienceAway = v; audience.away = v; },
   audienceAway: () => audienceAway,
-  throwItem: (kind) => throwThing(kind),
+  throwItem: (kind) => throwThing(kind, true),        // (the storms check their own switches)
   ovation: (dur) => standingOvation(dur),
   stimAlias, pulse, reinforce, ticker: (t) => sidebar.ticker(t),
+  allowed, pacer,
+  // how much he needs a kind gesture from the seats: hungry -> sugar; miserable or stressed -> a rose
+  needs: () => ({ hunger: instincts.hunger, low: Math.max(0, Math.min(1, (0.5 - wellbeing.cheer) * 2 + wellbeing.stress * 0.6)) }),
 });
+
+// ------------------------------------------------------------------ pacing: the big things that can be on stage
+pacer.watch('spider', () => !!predators.spider.active || !!predators.spider.loading);
+pacer.watch('swatter', () => !!predators.swatter.active);
+pacer.watch('rain', () => !!happenings.rain.active);
+pacer.watch('aliens', () => happenings.aliens.active);
+pacer.watch('rapture', () => happenings.rapture.phase === 'ascend' || happenings.rapture.phase === 'empty');
+pacer.watch('goose', () => !!goose.active);
+pacer.watch('show', () => show.busy);
+goose.gate = () => {
+  if (!allowed('goose')) { goose.nextT = 60; return false; }
+  if (!pacer.canMajor('goose')) return false;
+  pacer.started(); return true;
+};
+
+// ------------------------------------------------------------------ event switches, Peaceful Mode
+buildEventsPanel($('events'), switches, [['Show segments', Object.entries(SEGMENTS).map(([k, v]) => ['seg:' + k, v.title.replace(/"/g, ''), !!v.harmful])]]);
+const AVERSIVE_STIMS = ['heckler', 'tomato', 'stink'];         // "Show events" chips that punish or frighten the fly
+let wasPeaceful = null;
+function applySwitches() {
+  const P = switches.peaceful;
+  show.frog.tongueOn = allowed('frogTongue');
+  show.car.gentle = !allowed('carBump');
+  show.gentle = P;
+  // the manual buttons for harmful things are greyed out in Peaceful Mode
+  for (const [id, sw] of [['throwTomato', 'tomatoes'], ['throwPipe', 'pipes']]) { const b = $(id); b.disabled = switches.blocked(sw); b.classList.toggle('grayed', b.disabled); }
+  document.querySelectorAll('#segments button').forEach((b) => { b.disabled = switches.blocked('seg:' + b.dataset.seg); b.classList.toggle('grayed', b.disabled); });
+  for (const k of AVERSIVE_STIMS) {
+    const el = sidebar.stimEls[k]; if (!el) continue;
+    el.btn.disabled = P; el.btn.classList.toggle('grayed', P);
+    if (P && sidebar.manual.has(k)) { sidebar.manual.delete(k); sidebar.refreshStim(k); }
+  }
+  $('optWorms').disabled = P; $('optWorms').closest('label')?.classList.toggle('grayed', P);
+  if (P && wasPeaceful === false) {
+    // switched on mid-show: the harmful things leave now
+    predators.calmDown(); happenings.calmDown();
+    if ($('optWorms').checked) setWorms(false);
+    if (show.cur && SEGMENTS[show.cur.key]?.harmful) show.stopSegment();
+    sidebar.ticker('🕊 Peaceful Mode: nothing harmful will happen');
+  }
+  wasPeaceful = P;
+  updateShowUI();
+}
+switches.onChange(applySwitches);
+applySwitches();
 
 // compile the shaders of props that are hidden until their moment (the UFO, the Rapture's light column, the rain
 // cloud) now, so their first appearance doesn't stall the show
@@ -669,6 +770,39 @@ if (params.has('quiet')) {
 }
 
 for (const [id, k] of [['iSacc', 'saccades'], ['iBout', 'bouts'], ['iTaxis', 'taxis'], ['iDust', 'dust'], ['iHome', 'homing']]) $(id).onchange = (e) => (instincts.enabled[k] = e.target.checked);
+$('iSleep').checked = true;
+$('iSleep').onchange = (e) => (sleep.enabled = e.target.checked);
+
+// ------------------------------------------------------------------ sleep
+// "Zzz" letters float up from his head while he sleeps (a soft fade, nothing flashes)
+const zzz = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const x = c.getContext('2d'); x.font = 'bold 52px Georgia, serif'; x.fillStyle = '#e8f0ff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('Z', 32, 34);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const list = [0, 1, 2].map((i) => {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0, depthWrite: false }));
+    s.visible = false; scene.add(s); return { s, ph: i / 3 };
+  });
+  let level = 0;
+  return {
+    update(dt, on, head) {
+      level += ((on ? 1 : 0) - level) * Math.min(1, dt * 1.5);
+      for (const z of list) {
+        z.ph = (z.ph + dt * 0.28) % 1;
+        z.s.visible = level > 0.02;
+        if (!z.s.visible) continue;
+        z.s.position.set(head.x + 0.25 + z.ph * 0.5, head.y + 0.35 + z.ph * 1.1, head.z);
+        z.s.scale.setScalar(0.22 + z.ph * 0.3);
+        z.s.material.opacity = level * Math.sin(z.ph * Math.PI) * 0.9;
+      }
+    },
+  };
+})();
+let sleepGate = 1, ambBase = 1;                     // sensory gating while asleep (1 awake .. lower asleep)
+sleep.onSleep = () => {
+  mind.stopAll(); sidebar.ticker('Leno dozes off… zzz'); audience.react('doze');
+};
+sleep.onWake = (why) => sidebar.ticker(`Leno wakes up (${why})`);
 let loomPrev = null;
 /** everything that moves in the scene, as { key, p, r } (key: a stable object, so each is tracked on its own) */
 function movers() {
@@ -686,7 +820,7 @@ function movers() {
   const rc = happenings.rain.active; if (rc) out.push({ key: rc, p: rc.g.position, r: 1.6 * rc.level });
   for (const b of show.balloons.list) out.push({ key: b, p: b.g.position, r: 0.35 });
   for (const y of brood.young) out.push({ key: y, p: y.kind === 'fly' ? y.body.root.position : y.body.root.position, r: 0.3 });
-  for (const it of projectiles?.items ?? []) out.push({ key: it, p: it.mesh.position, r: it.kind === 'pipe' ? 0.35 : it.kind === 'tomato' || it.kind === 'rose' ? 0.12 : 0.4 });
+  for (const it of projectiles?.items ?? []) out.push({ key: it, p: it.mesh.position, r: it.kind === 'pipe' ? 0.35 : it.kind === 'tomato' || it.kind === 'rose' ? 0.12 : it.kind === 'sugar' ? 0.08 : 0.4 });
   return out;
 }
 let loomMap = new Map();
@@ -801,7 +935,7 @@ function updateMindUI(t) {
   biBar($('moodBar'), $('moodNum'), mind.mood);
   $('broodNow').textContent = `${brood.eggs.length} egg${brood.eggs.length === 1 ? '' : 's'}, ${brood.young.length} hatchling${brood.young.length === 1 ? '' : 's'} (${brood.young.filter((y) => y.kind === 'fly').length} fly-form)`;
   $('instinctNow').textContent = instincts.status || (instincts.hunger > 0.25 ? `hungry (${(instincts.hunger * 100) | 0}%)` : 'content');
-  $('mindNow').textContent = mind.current ? mind.current.action : mind.initiative ? 'waiting…' : 'off';
+  $('mindNow').textContent = sleep.asleep ? 'asleep (zzz)' : mind.current ? mind.current.action : mind.initiative ? 'waiting…' : 'off';
   for (const a of ACTIONS) {
     const q = mind.Q[a.key], e = qEls[a.key];
     const w = Math.min(1, Math.abs(q) * 2) * 50;
@@ -912,7 +1046,7 @@ $('aboutLink').onclick = (e) => {
 
 // ------------------------------------------------------------------ loop
 const clock = new THREE.Clock();
-let hearAcc = 0;
+let hearAcc = 0, hearEMA = 0;
 // ------------------------------------------------------------------ pause / reset (whole show, not just the brain)
 let paused = false;
 let mouth = 0;
@@ -933,6 +1067,7 @@ function resetShow() {
   else leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
   mind.mood = 0; behavior.nausea = 0; behavior.transcript.length = 0;
   brood.clear(); goose.clear(); show.clear(); predators.clear(); happenings.clear(); convulseT = 0; cultists.ovation = 0;
+  sleep.wake('show reset'); sleep.pressure = 0.15; dimTarget = 1; sleep.lullaby = false;
   food.clear(); for (const n of npcs.list) n.remove(); npcs.list.length = 0; cultists.hidden.clear(); instincts.hunger = 0.4;
   sidebar.ticker('Show reset');
 }
@@ -941,6 +1076,13 @@ renderer.setAnimationLoop(() => {
   const rawDt = Math.min(0.05, clock.getDelta());
   const dt = paused ? 0 : rawDt;
   if (!paused) {
+  pacer.update(dt);
+  // sleep: dozes off when he's tired and safe; while he sleeps his initiative rests and nothing new starts
+  const heldNow = host === flyHost ? !!flyHost.heldAt : (host.heldUntil ?? 0) > performance.now();
+  const knockedNow = host === flyHost ? flyHost.knockT > 0 : (host.slack ?? 0) > 0.3;
+  sleep.update(dt, { energy: wellbeing.energy, fear: wellbeing.fear, loom: window.flyleno?.lastTick?.rates?.['s:heckler'] ?? 0,
+    held: heldNow, eating: instincts.eating, knocked: knockedNow, fallen: !!host.state?.fallen, flying: host === flyHost && flyHost.flying });
+  instincts.asleep = sleep.asleep; pacer.hold = sleep.asleep; mind.suspended = sleep.asleep;
   director.update(dt);
   mind.update(dt);
   audience.update(dt);
@@ -948,26 +1090,32 @@ renderer.setAnimationLoop(() => {
   if (lastMotor) {
     const adj = instincts.update(dt, host, lastMotor.command, window.flyleno?.lastTick?.rates);
     host.setMotor(adj.cmd);
-    host.setPosture?.(adj.posture);
+    host.setPosture?.({ ...adj.posture, sleep: sleep.asleep ? 1 : 0 });
     behavior.eating = instincts.eating;
   }
   npcs.update(dt);
-  director.hold = show.active;
+  director.hold = show.active || sleep.asleep;
+  audience.hush = sleep.asleep || sleep.lullaby ? 0.3 : 1;       // the audience keeps its voice down while he sleeps
+  // sensory gating while asleep: eyes shut, hearing and touch turned down
+  const gate = sleep.asleep ? 1 - sleep.depth : 1;
+  if (Math.abs(gate - sleepGate) > 0.02 || (gate === 1 && sleepGate !== 1)) { sleepGate = gate; setAmbience(ambBase * (1 - 0.5 * (1 - gate))); }
+  zzz.update(dt, sleep.asleep, host.state?.headPos ?? hostAt().clone().add(new THREE.Vector3(0, 2.3, 0)));
   wellbeing.update({
     dt, arousal: mind.arousal, mood: mind.mood, cmd: lastMotor?.command, rates: window.flyleno?.lastTick?.rates,
     isFly: host === flyHost, flying: host === flyHost && flyHost.flying, fallen: !!host.state?.fallen,
     held: host === flyHost ? !!flyHost.heldAt : (host.heldUntil ?? 0) > performance.now(),
     knocked: host === flyHost ? flyHost.knockT > 0 : (host.slack ?? 0) > 0.3, glitch: glitch.active, eating: instincts.eating,
-    hunger: instincts.hunger, nausea: behavior.nausea, homesick: instincts.homeUrge,
+    hunger: instincts.hunger, nausea: behavior.nausea, homesick: Math.max(instincts.homesick, instincts.homeUrge),
     spikes: window.flyleno?.lastTick?.spikesPerSec ?? 0, eatenFrac: wormsTotal / meta.N,
+    asleep: sleep.asleep, depth: sleep.depth, sleepiness: sleep.pressure,
   });
   show.update(dt);
   predators.update(dt, true);                        // random visits, like the goose
-  if (host !== flyHost && show.car.present && host.rag) {
+  if (host !== flyHost && show.car.present && host.rag && allowed('carBump')) {
     const hp = hostAt();
     for (const c of show.car.colliders()) if (hp.clone().setY(0).distanceTo(c.pos.clone().setY(0)) < c.radius + 0.5) { loosenHost(200); break; }
   }
-  if (host === flyHost && show.car.present) {
+  if (host === flyHost && show.car.present && allowed('carBump')) {
     carShoveT -= dt;
     const fp = flyHost.root.position;
     for (const c of show.car.colliders()) {
@@ -1029,10 +1177,10 @@ renderer.setAnimationLoop(() => {
       egoT = MOBILE ? 0.25 : 0.125;
       const E = eyePose();
       hideHead(true); ego.sample(renderer, scene, E.pos, E.quat); hideHead(false);
-      stimAlias('worldL', 'eyeL', ego.rates.L); stimAlias('worldR', 'eyeR', ego.rates.R);
+      stimAlias('worldL', 'eyeL', ego.rates.L * sleepGate); stimAlias('worldR', 'eyeR', ego.rates.R * sleepGate);   // (eyes shut asleep)
     }
   }
-  if (stageScreens?.available) stageScreens.gain = egoOn && stageScreens.mode !== 'video' ? 0 : 1;   // (seen through the eyes already)
+  if (stageScreens?.available) stageScreens.gain = (egoOn && stageScreens.mode !== 'video' ? 0 : 1) * sleepGate;   // (seen through the eyes already)
   if (stageScreens?.available) {
     if (stageScreens.greenGlow && stage.screens.glow) stage.screens.glow.color.set(0x33ff33);
     stageScreens.update(rawDt);
@@ -1045,7 +1193,12 @@ renderer.setAnimationLoop(() => {
   if (hearAcc > 0.05) {
     hearAcc = 0;
     const h = hearing.update();
-    stimRate('hearLow', h.low); stimRate('hearHigh', h.high);
+    const ear = 1 - 0.6 * (1 - sleepGate);                         // hearing is turned down asleep
+    stimRate('hearLow', h.low * ear); stimRate('hearHigh', h.high * ear);
+    // a sudden loud noise wakes him
+    const loud = h.low + h.high;
+    hearEMA += (loud - hearEMA) * 0.05;
+    if (sleep.asleep && loud - hearEMA > 0.5 * hearing.maxRate) { sleep.disturbWhy = 'a loud noise'; sleep.jolt(0.12); }
     $('hearLowBar').style.width = (100 * h.low / hearing.maxRate).toFixed(0) + '%'; $('hearLowNum').textContent = h.low.toFixed(0);
     $('hearHighBar').style.width = (100 * h.high / hearing.maxRate).toFixed(0) + '%'; $('hearHighNum').textContent = h.high.toFixed(0);
   }
@@ -1075,6 +1228,8 @@ renderer.setAnimationLoop(() => {
       }
     }
   }
+  dimLevel += (dimTarget - dimLevel) * Math.min(1, rawDt * 0.6);
+  renderer.toneMappingExposure = 0.85 * (0.25 + 0.75 * dimLevel);
   if (!eyeMode()) controls.update();
   for (const l of stageLODs) l.update(camera.position);
   propLOD.update(camera, rawDt);
@@ -1089,6 +1244,7 @@ renderer.setAnimationLoop(() => {
 });
 
 window.flyleno = {
-  scene, camera, controls, leno, stageScreens, brood, goose, show, showSfx, predators, happenings, stageLODs, propLOD, glitch, get host() { return host; }, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
+  scene, camera, controls, leno, stageScreens, brood, goose, show, showSfx, predators, happenings, stageLODs, propLOD, glitch, get host() { return host; },
+  switches, pacer, sleep, wellbeing, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
   get motor() { return lastMotor; },
 };

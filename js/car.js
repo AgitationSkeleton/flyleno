@@ -123,18 +123,27 @@ export class Car {
       target = A.exit;
       if (g.position.clone().setY(0).distanceTo(A.exit.clone().setY(0)) < 1.5) { this.clear(); this.onEvent?.('gone'); return; }
     }
-    // steer toward the target
-    const d = target.clone().sub(g.position).setY(0);
-    let dy = Math.atan2(d.x, d.z) - g.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
-    g.rotation.y += THREE.MathUtils.clamp(dy, -1.2 * dt, 1.2 * dt);
     // the host in the way: brake and honk
-    const fwd = new THREE.Vector3(Math.sin(g.rotation.y), 0, Math.cos(g.rotation.y));
+    let fwd = new THREE.Vector3(Math.sin(g.rotation.y), 0, Math.cos(g.rotation.y));
     const toHost = hostPos.clone().sub(g.position).setY(0);
     const ahead = toHost.dot(fwd), lateral = Math.abs(toHost.clone().addScaledVector(fwd, -ahead).length());
+    const inWay = ahead > 0 && ahead < 6 * S / 1.4 && lateral < 1.8;
     A.honkT -= dt;
-    if (ahead > 0 && ahead < 6 * S / 1.4 && lateral < 1.8) {
+    if (inWay && this.gentle) {
+      // gentle (Peaceful Mode / the switch is off): it never pushes him; it steers around him at a crawl
+      const side = Math.sign(fwd.z * toHost.x - fwd.x * toHost.z) || 1;
+      g.rotation.y -= side * 0.9 * dt;
+      want = ahead < 2.8 ? 0 : 0.8;
+    } else {
+      // steer toward the target
+      const d = target.clone().sub(g.position).setY(0);
+      let dy = Math.atan2(d.x, d.z) - g.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+      g.rotation.y += THREE.MathUtils.clamp(dy, -1.2 * dt, 1.2 * dt);
+    }
+    fwd = new THREE.Vector3(Math.sin(g.rotation.y), 0, Math.cos(g.rotation.y));
+    if (inWay) {
       A.blocked = (A.blocked || 0) + dt;
-      want = A.blocked > 4 ? 0.7 : ahead < 3.5 ? 0 : 1.2;       // after a while it just nudges him along
+      if (!this.gentle) want = A.blocked > 4 ? 0.7 : ahead < 3.5 ? 0 : 1.2;       // after a while it just nudges him along
       if (A.honkT <= 0) { A.honkT = 2.2; this.sfx.horn({ gain: 0.8 }); this.onEvent?.('honk'); }
     } else A.blocked = 0;
     A.speed += THREE.MathUtils.clamp(want - A.speed, -6 * dt, 2 * dt);
