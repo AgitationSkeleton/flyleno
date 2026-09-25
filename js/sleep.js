@@ -6,7 +6,8 @@
 // photoreceptors) and hearing and touch are turned down (sensory gating), his body rests: energy comes back fast
 // and injuries heal faster. A hit, a touch, a loud noise or something looming wakes him, easily in light sleep and
 // less easily once he's deep asleep. Otherwise he wakes up by himself when he's rested. Asleep he doesn't talk or
-// retch (js/behavior.js); the show goes on around him.
+// retch (js/behavior.js); the show goes on around him. During the lullaby he nods off quickly and sleeps through
+// anything that happens until it's over.
 export class Sleep {
   constructor() {
     this.enabled = true;
@@ -34,14 +35,16 @@ export class Sleep {
       this.pressure = Math.max(0, this.pressure - dt / 45);          // ~45 s from exhausted to rested
       this.depth = Math.min(1, this.depth + dt / 8);
       const threshold = 0.3 + 0.9 * this.depth;
-      if (s.held || s.knocked) this.wake('startled');
+      if (this.lullaby) this.disturb = 0;                           // the lullaby: he sleeps through anything
+      else if (s.held || s.knocked) this.wake('startled');
       else if (this.disturb > threshold) this.wake(this.disturbWhy || 'startled');
       else if (s.loom > 70 * (1 + this.depth)) this.wake('something looming');
       else if (this.pressure <= 0.02 && this.sleptFor > 20) this.wake('rested');
     } else {
       const tired = 1 - (s.energy ?? 1);
-      this.pressure = Math.min(1, this.pressure + dt * (1 / 360 + tired / 220 + (this.lullaby ? 1 / 55 : 0)));
-      const safe = (s.fear ?? 0) < 0.2 && (s.loom ?? 0) < 25 && !s.held && !s.eating && !s.knocked && !s.fallen && !s.flying;
+      this.pressure = Math.min(1, this.pressure + dt * (1 / 360 + tired / 220 + (this.lullaby ? 1 / 20 : 0)));
+      const settled = !s.held && !s.eating && !s.knocked && !s.flying;
+      const safe = this.lullaby ? settled : settled && (s.fear ?? 0) < 0.2 && (s.loom ?? 0) < 25 && !s.fallen;
       this.settleT = this.pressure > (this.lullaby ? 0.5 : 0.75) && safe ? this.settleT + dt : 0;
       if (this.settleT > 4) this.fallAsleep();
     }

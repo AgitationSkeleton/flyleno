@@ -65,9 +65,11 @@ export class StageScreens {
 
   setVolume(v, master = this.master) { this.volume = v; this.master = master; if (this.player?.setVolume) this.player.setVolume(v * master); }
 
-  async setMode(mode, videoId) {
+  /** opts.randomStart: once the video is playing, jump to a random point in it (not the first 10 s or last 40 s) */
+  async setMode(mode, videoId, opts = {}) {
     if (!this.available) return;
     if (videoId) this.videoId = videoId;
+    this.randomStart = !!opts.randomStart && mode === 'video';
     if (this.card) this.clearCard(false);
     this.mode = mode;
     this.big.material = mode === 'green' ? this.greenMat : mode === 'video' ? this.holeMat : this.camMats.big;
@@ -89,7 +91,14 @@ export class StageScreens {
           playerVars: { autoplay: 1, controls: 0, rel: 0, playsinline: 1, modestbranding: 1, loop: 1, playlist: id, cc_load_policy: 0, iv_load_policy: 3, disablekb: 1, origin: location.origin },
           events: {
             onReady: (e) => { e.target.setVolume(this.volume * this.master); e.target.unMute(); e.target.playVideo(); resolve(); },
-            onStateChange: (e) => { if (e.data === 0) e.target.playVideo(); this.onChange?.(this.mode); },
+            onStateChange: (e) => {
+              if (e.data === 0) e.target.playVideo();
+              if (e.data === 1 && this.randomStart) {
+                const d = e.target.getDuration?.() || 0;
+                if (d > 0) { this.randomStart = false; if (d > 60) e.target.seekTo(10 + Math.random() * (d - 50), true); }
+              }
+              this.onChange?.(this.mode);
+            },
             onError: (e) => { this.visionNote = `YouTube error ${e.data}`; this.onChange?.(this.mode); resolve(); },
           },
         });

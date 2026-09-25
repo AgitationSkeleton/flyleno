@@ -190,7 +190,8 @@ snack, and keeping track of them while it flies), tastes them (sugar neurons →
   rests, and the body recovers: energy comes back fast, injuries heal about three times faster, stress and
   dizziness fade quickly, hunger grows slower. The show and its events carry on around him (and can wake him).
 - **Waking:** a hit, touch, sudden loud noise or something looming wakes him (easily in light sleep, less easily
-  once he's deep asleep), and he wakes by himself when rested. Getting up off the floor afterwards isn't a fall.
+  once he's deep asleep), and he wakes by himself when rested. During the lullaby he sleeps through anything.
+  Getting up off the floor afterwards isn't a fall.
 
 **Knockbacks:** a hit (swatter, spider, zap, alien kick, pipe or falling rig, the car, a backflip) makes the
 puppet strings go slack for a moment, so he really is knocked over; they tighten again over about a second.
@@ -251,6 +252,7 @@ same way: the strings lower him into a curl, forehead to the floor.
 | Segment | What happens | What the fly gets |
 |---|---|---|
 | Opening | "Hey everybody and welcome to the Grey Leno Show!" title card; "Today we have a show." gets applause for nothing; a "GREY LE-NO" chant | sound (JO), screen picture (R1-6), reward dopamine from the crowd |
+| "Take a look at this next one" | the big screen plays a random point in one of five Grey Leno videos (The Grey Leno Show and four others) for ~25 s, then goes back to what it showed | the video (R1-6, with tab capture) and its sound (JO) |
 | Guest: Mr. Frog | a frog hops to the guest spot, answers every question with "Good. Good. Good." (croaks), and flicks his tongue at the host. He can catch and spit out Fly-Leno. He leaves when Leno bites his ankles (mouth open right next to him), shouts him off ("Up yours! You're out of here, Mr. Frog"), or his time is up | croaks (JO); tongue = looming (LC4) + hit (mechanosensory, punishment); the crowd reacts |
 | Sunday drive | a vintage roadster laps the stage, brakes and honks "a-oo-gah" when Leno is in the way ("do you drive a car?") | engine rumble (JO-B), floor vibration (mechanosensory), headlights approaching (LC4) |
 | Take it away, Johnny! | a spotlight swings to the empty band stool; the music drops out, crickets; "Where's Johnny?"; rimshot | sudden silence, crickets (JO-A), spotlight on the eyes |
@@ -262,7 +264,7 @@ same way: the strings lower him into a curl, forehead to the floor.
 | 500 years young | "I'm 500 years young, folks": a stagehand carries out a birthday cake with candles, the crowd sings Happy Birthday, balloons and confetti. The cake is food he goes for even when not hungry | the song and applause (JO), sugar taste, reward |
 | The Leno Wave | the audience does a stadium wave three times round, chanting "LE-NO" | a wave of motion across the seats (R1-6), chant (JO), cheers |
 | Spin the Wheel of Leno | a prize wheel on the screens spins (at most ~1 turn a second, soft colours) and lands on a prize: a sugar shower, roses, an ovation, confetti, a goose, a mushroom, nothing, or (only when tomato storms are on) tomatoes | moving picture (R1-6), clicks (JO), then the prize |
-| Lullaby | the studio lights fade down to about half, a music-box lullaby (Brahms) plays, the music ducks and the audience hushes; sleep pressure builds fast, and if he nods off there's a soft "aww". The lights fade back up at the end | dim light (R1-6), soft music (JO), sleep |
+| Lullaby | the studio lights fade down to about half, a music-box lullaby (Brahms) plays, the music ducks and the audience hushes; sleep pressure builds fast and he nods off (a soft "aww"); nothing that happens wakes him until the lights fade back up | dim light (R1-6), soft music (JO), sleep |
 | Space scabies telethon | telethon card with a donation counter ("three out of four Martians have the same problem") | itching: bursts on the mechanosensory and antennal JO neurons (→ grooming) |
 | Grey Leno dance party | disco lights and strobe, a synthesised beat; "my body is moving on its own": fictive left/right turning drives on the beat | beat (JO), strobe (R1-6), DNa01/02 fictive drives |
 | Vote Leno | campaign card, confetti and balloon drop, "LE-NO!" chant; "Folks, I can do a backflip": the backflip happens only if the giant fibre fires within 9 s, otherwise no backflip and boos | confetti landing on him (JO + touch, like dust → grooming); cheers or boos (dopamine) |

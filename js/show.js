@@ -46,6 +46,9 @@ export const SEGMENTS = {
 };
 const MIDDLE = Object.keys(SEGMENTS).filter((k) => SEGMENTS[k].pace === 'calm' || SEGMENTS[k].pace === 'big');
 
+// "Take a look at this next one": a random point in one of these Grey Leno videos
+const CLIP_VIDEOS = ['ki3ssj466E0', 'VzNDmsiiX1A', 'YAlx4zH3ag4', '1e2vLW7LMtc', 'ODIA7UsOmWs'];
+
 // callers (the questions are heard as a garbled voice on the line and shown in the ticker; the answer, if any,
 // is whatever the fly says)
 const CALLS = [
@@ -240,8 +243,8 @@ export class Show {
     }
     if (key === 'clip') {
       ctx.cue('Jesus Christ, take a look at this next one, huh?');
-      s.prevMode = ctx.screens?.mode;
-      if (ctx.screens?.available) ctx.screens.setMode('video');
+      s.prevMode = ctx.screens?.mode; s.prevVideo = ctx.screens?.videoId;
+      if (ctx.screens?.available) ctx.screens.setMode('video', pick(CLIP_VIDEOS), { randomStart: true });
     }
     if (key === 'monologue') { this.spot.on(() => ctx.hostHead()); s.jokes = 0; s.next = 1.5; ctx.ticker('The spotlight finds Leno: joke time'); }
     if (key === 'phonein') { this.ctx.sfx.sting('ring', { gain: 0.8 }); s.call = pick(CALLS); ctx.ticker('📞 The phone on the desk rings'); }
@@ -306,6 +309,14 @@ export class Show {
     }
   }
 
+  /** after the clip: back to whatever the screens showed before (the viewer's own video too) */
+  restoreScreens(s) {
+    const sc = this.ctx.screens;
+    if (!sc?.available || !s.prevMode) return;
+    if (s.prevMode !== 'video') sc.setMode(s.prevMode);
+    else if (s.prevVideo && s.prevVideo !== sc.videoId) sc.setMode('video', s.prevVideo);
+  }
+
   /** the wheel's prizes (all harmless except the tomatoes, which only appear when tomato storms are allowed) */
   prizes() {
     const ctx = this.ctx, ok = (k) => ctx.allowed?.(k) ?? true;
@@ -334,9 +345,10 @@ export class Show {
       if (t > SEGMENTS.open.dur) { this.spot.off(); return true; }
     }
     if (key === 'clip') {
+      this.at(C, 4, () => { const title = ctx.screens?.title(); if (title) ctx.ticker(`On the screens: ${title}`); });
       if (t > 26 && !s.back) {
         s.back = true;
-        if (ctx.screens?.available && s.prevMode && s.prevMode !== 'video') ctx.screens.setMode(s.prevMode);
+        this.restoreScreens(s);
         ctx.cue("Now that was another amazing bit. I ain't never seen nothing like that in my life, don't you agree, huh?");
         ctx.crowd('applause', 0.9);
       }
@@ -500,7 +512,7 @@ export class Show {
   stop(key, s) {
     const ctx = this.ctx;
     this.heard(s);
-    if (key === 'clip' && !s.back && ctx.screens?.available && s.prevMode && s.prevMode !== 'video') ctx.screens.setMode(s.prevMode);
+    if (key === 'clip' && !s.back) this.restoreScreens(s);
     if (key === 'guest') this.frog.leave('done');
     if (key === 'drive' && this.car.present) this.car.active.phase = 'out';
     if (key === 'johnny' && s.ducked) ctx.duckMusic(1);
