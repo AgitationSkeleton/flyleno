@@ -80,8 +80,8 @@ the connectome, labelled as such in the sidebar).
   surfaces face away from the camera and aren't drawn, his body still is); Fly-Leno's head and antennae are
   hidden for it. The live cams still show them.
 
-**View** (bottom right of the 3D view): ⛶ fullscreen hides the sidebar (and goes browser-fullscreen where the
-browser allows); 👁 hides the overlay buttons (the two stay, faded). Keys: F and H.
+**View** (bottom right of the 3D view): ▥ hides the sidebar; ⛶ fullscreen hides the sidebar and goes
+browser-fullscreen where the browser allows; 👁 hides the overlay buttons (the three stay, faded). Keys: S, F, H.
 
 **Speech:** the "speech" switch in the Voice panel turns his babbling off (the voice neurons still fire; nothing
 is said).

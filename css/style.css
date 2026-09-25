@@ -23,7 +23,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 .hud-title { font: 800 30px/1 "Arial Black", Impact, sans-serif; color: var(--accent); letter-spacing: 1px; }
 .hud-title span { color: var(--text); font-weight: 400; font-style: italic; }
 .hud-sub { color: #bbb; margin-top: 2px; }
-#cams { position: absolute; bottom: 14px; left: 18px; right: 316px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }   /* stops short of the volume pill; wraps upward if narrow */
+#cams { position: absolute; bottom: 14px; left: 18px; right: 354px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }   /* stops short of the volume pill; wraps upward if narrow */
 #cams button, .controls button { background: #000a; color: var(--text); border: 1px solid var(--line);
   border-radius: 6px; padding: 5px 10px; cursor: pointer; font: inherit; }
 #cams button.on { border-color: var(--accent); color: #fff; background: #e0263a44; }
@@ -121,7 +121,7 @@ button.mini { margin-left: auto; font-size: 11px; }
 #throws button { background: #000b; color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; font: inherit; }
 #throws button:hover { border-color: var(--accent); }
 
-#volume { position: absolute; bottom: 14px; right: 90px; display: flex; align-items: center; gap: 6px; background: #000b;
+#volume { position: absolute; bottom: 14px; right: 128px; display: flex; align-items: center; gap: 6px; background: #000b;
   border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; color: var(--text); }
 #volume input { width: 120px; }
 #volume span { font: 11px var(--mono); width: 26px; text-align: right; color: var(--muted); }
@@ -171,7 +171,7 @@ button.mini { margin-left: auto; font-size: 11px; }
   #screenModes { top: 142px; right: 8px; }
   #form button, #screenModes button { padding: 4px 8px; font-size: 12px; }
   /* bottom: the volume pill in the corner, the camera buttons wrapping on a row above it */
-  #volume { bottom: 8px; right: 80px; padding: 3px 10px; gap: 4px; }
+  #volume { bottom: 8px; right: 114px; padding: 3px 10px; gap: 4px; }
   #volume input { width: 84px; }
   #cams { bottom: 46px; left: 8px; right: 8px; flex-wrap: wrap; gap: 4px; }
   #cams button { padding: 4px 8px; font-size: 12px; }
@@ -219,8 +219,8 @@ button:disabled { cursor: not-allowed; }
   color: var(--text); border: 1px solid var(--line); cursor: pointer; }
 #viewTools button.on { border-color: var(--accent); background: #e0263a44; }
 #viewTools .ico { width: 17px; height: 17px; vertical-align: 0; }
-#app.full { grid-template-columns: 1fr; grid-template-rows: 100vh; grid-template-rows: 100svh; height: 100vh; height: 100svh; }
-#app.full #sidebar { display: none; }
+#app.full, #app.noside { grid-template-columns: 1fr; grid-template-rows: 100vh; grid-template-rows: 100svh; height: 100vh; height: 100svh; }
+#app.full #sidebar, #app.noside #sidebar { display: none; }
 #viewport.bare #cams, #viewport.bare #throws, #viewport.bare #form, #viewport.bare #screenModes, #viewport.bare #volume { display: none; }
 #viewport.bare #viewTools { opacity: .45; }
 #viewport.bare #viewTools:hover { opacity: 1; }

@@ -206,7 +206,8 @@ controls.addEventListener('start', () => {
   else if (camMode !== 'free') setCam('free');
 });
 $('showMarkers').onchange = (e) => (stage.markerGroup.visible = e.target.checked);
-// fullscreen (hides the sidebar; asks the browser for real fullscreen where it can) and hiding the overlay buttons
+// hide the sidebar; fullscreen (hides the sidebar and asks the browser for real fullscreen where it can); hide the
+// overlay buttons
 function setFull(on) {
   $('app').classList.toggle('full', on); $('btnFull').classList.toggle('on', on);
   if (on) document.documentElement.requestFullscreen?.().catch(() => {});
@@ -214,12 +215,18 @@ function setFull(on) {
   requestAnimationFrame(() => dispatchEvent(new Event('resize')));
 }
 $('btnFull').onclick = () => setFull(!$('app').classList.contains('full'));
+$('btnSide').onclick = () => {
+  const on = !$('app').classList.contains('noside');
+  $('app').classList.toggle('noside', on); $('btnSide').classList.toggle('on', on);
+  requestAnimationFrame(() => dispatchEvent(new Event('resize')));
+};
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && $('app').classList.contains('full')) setFull(false); });
 $('btnBare').onclick = () => { const on = !$('viewport').classList.contains('bare'); $('viewport').classList.toggle('bare', on); $('btnBare').classList.toggle('on', on); };
 addEventListener('keydown', (e) => {
   if (e.target.closest?.('input, textarea, select') || e.ctrlKey || e.metaKey || e.altKey) return;
   if (e.key === 'f' || e.key === 'F') $('btnFull').click();
   if (e.key === 'h' || e.key === 'H') $('btnBare').click();
+  if (e.key === 's' || e.key === 'S') $('btnSide').click();
 });
 resize();
 setCam('audience');
