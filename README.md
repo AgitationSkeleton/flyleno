@@ -452,6 +452,12 @@ Stock percussion for the monologue (`tools/audio/s10_stock_sfx.py`), from freely
   [Drum Roll - Concert Band](https://commons.wikimedia.org/wiki/File:Drum_Roll_-_Concert_Band_-_United_States_Air_Force_Band.mp3)
   by the United States Air Force Band (public domain).
 
+Leno's body hitting the floor and the set (`tools/audio/s11_body_sfx.py`): *Half-Life 2*'s
+`sound/physics/body` impacts (`body_medium_impact_soft*`, `body_medium_impact_hard*`, `body_medium_break*`),
+© Valve, in `sfx/bodysoft`, `sfx/bodyhard` and `sfx/bodybreak`. The ragdoll plays one when a heavy part of him
+(pelvis, chest, head, thighs, arms) suddenly loses speed; Fly-Leno when he lands from a knock. They play quietly,
+louder for bigger knocks; the biggest sometimes get a crunch.
+
 The sound bank is published with the site (the source downloads under `assets/_src/` stay local).
 
 ## Deploying (GitHub Pages)

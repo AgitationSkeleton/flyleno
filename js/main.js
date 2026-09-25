@@ -939,8 +939,17 @@ function looming(dt) {
   stimAlias('loomNpc', 'heckler', Math.min(200, Math.max(0, best) * 900));
 }
 
+// Leno's body hitting the floor or the set: Half-Life 2's body impact sounds, low to medium volume and louder with
+// the size of the knock (the hard ones are recorded much hotter than the soft ones, so they get less gain)
+function bodyKnock(part, dv, p) {
+  const kind = dv > 9 && Math.random() < 0.35 ? 'bodybreak' : dv > 4.5 ? 'bodyhard' : 'bodysoft';
+  const size = Math.min(1, (dv - 2) / 8) * (/arm/.test(part) ? 0.6 : /head/.test(part) ? 0.8 : 1);
+  audio.sfx(kind, { pan: panOf(p), gain: (kind === 'bodysoft' ? 0.22 : 0.075) * (1 + 1.2 * size) });
+}
+
 // Body controls (ragdoll)
 if (physHost) {
+  physHost.onImpact = bodyKnock;
   // (knocked down by a cream pie: a soft landing, no injury)
   physHost.onFall = () => { audience.react('fall'); sidebar.ticker('Leno collapses!'); pulse(performance.now() - lastPieHit < 3000 ? 'softFall' : 'fallTouch', 'ambientTouch', 80, 0.5); };
   const bc = $('bodyControls');
@@ -962,7 +971,7 @@ async function setForm(form) {
   const from = host.state?.root?.clone() ?? hostAt().clone(), yaw = host.state?.heading ?? 0;
   if (form === 'fly') {
     if (host === flyHost) return;
-    if (!flyHost) { sidebar.ticker('Growing wings…'); flyHost = (await new FlyLeno(scene).load()).attach(physHost, stage); }
+    if (!flyHost) { sidebar.ticker('Growing wings…'); flyHost = (await new FlyLeno(scene).load()).attach(physHost, stage); flyHost.onImpact = bodyKnock; }
     flyHost.keepOnStage = physHost.keepOnStage;
     for (const b of Object.values(physHost.rag.bodies)) b.setEnabled(false);
     for (const b of Object.values(flyHost.rag.bodies)) b.setEnabled(true);
@@ -1140,7 +1149,8 @@ $('aboutLink').onclick = (e) => {
     Rimshots: "Ba dum tss [Joke Rimshot]" by <a href="https://freesound.org/people/FREE_SOUND_ENTERTAINMENT/packs/31539/" target="_blank" rel="noopener">FREE_SOUND_ENTERTAINMENT</a>
     (Freesound, <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>). Drum rolls:
     <a href="https://commons.wikimedia.org/wiki/File:Drum_Roll_Intro.ogg" target="_blank" rel="noopener">Drum Roll Intro</a> (Wikimedia Commons, CC0) and the
-    <a href="https://commons.wikimedia.org/wiki/File:Drum_Roll_-_Concert_Band_-_United_States_Air_Force_Band.mp3" target="_blank" rel="noopener">United States Air Force Band</a> (public domain).</p>
+    <a href="https://commons.wikimedia.org/wiki/File:Drum_Roll_-_Concert_Band_-_United_States_Air_Force_Band.mp3" target="_blank" rel="noopener">United States Air Force Band</a> (public domain).
+    Body impacts: <i>Half-Life 2</i>'s physics/body sounds, © Valve.</p>
     <p class="credit"><b>Grey Leno model:</b> ported by <b>huckleberrypie</b> (Nexus Mods: huckpie):
     <a href="https://www.nexusmods.com/deadasdisco/mods/917" target="_blank" rel="noopener">Grey Leno for Dead as Disco (Nexus Mods)</a>.
     Original character and model by Vinesauce. Used in accordance with the mod's terms of use.</p>

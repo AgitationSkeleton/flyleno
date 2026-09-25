@@ -348,6 +348,7 @@ export class FlyLeno {
     this.kbody.setNextKinematicTranslation(next);
     const grounded = this.ctrl.computedGrounded();
     if (this.flying && grounded && this.vel.y <= 0 && this.flyT > (this.knockT > 0 ? 0.15 : 0.6)) {
+      if (this.knockT > 0 && -this.vel.y > 1) this.onImpact?.('thorax', -this.vel.y + 0.3 * Math.hypot(this.vel.x, this.vel.z), this.root.position.clone());
       this.flying = false;
       if (this.knockT > 0) this.vel.y = 0; else this.vel.set(0, 0, 0);           // a knocked landing keeps sliding
     }

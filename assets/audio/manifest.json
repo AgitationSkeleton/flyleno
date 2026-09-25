@@ -127,6 +127,12 @@
    "title": "Drum Roll - Concert Band - United States Air Force Band",
    "license": "Public domain",
    "author": "United States Air Force Band"
+  },
+  {
+   "id": "hl2-physics-body",
+   "url": "https://store.steampowered.com/app/220/HalfLife_2/",
+   "title": "Half-Life 2: sound/physics/body",
+   "author": "Valve"
   }
  ],
  "leno": {
@@ -4853,6 +4859,236 @@
     },
     "conf": null,
     "origin": "stock"
+   }
+  ],
+  "bodysoft": [
+   {
+    "file": "sfx/bodysoft/bodysoft_001.ogg",
+    "dur": 0.19,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_impact_soft1.wav",
+     "t0": 0,
+     "t1": 0.19
+    },
+    "conf": null,
+    "origin": "valve"
+   },
+   {
+    "file": "sfx/bodysoft/bodysoft_002.ogg",
+    "dur": 0.28,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_impact_soft2.wav",
+     "t0": 0,
+     "t1": 0.28
+    },
+    "conf": null,
+    "origin": "valve"
+   },
+   {
+    "file": "sfx/bodysoft/bodysoft_003.ogg",
+    "dur": 0.22,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_impact_soft3.wav",
+     "t0": 0,
+     "t1": 0.22
+    },
+    "conf": null,
+    "origin": "valve"
+   },
+   {
+    "file": "sfx/bodysoft/bodysoft_004.ogg",
+    "dur": 0.25,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_impact_soft4.wav",
+     "t0": 0,
+     "t1": 0.25
+    },
+    "conf": null,
+    "origin": "valve"
+   },
+   {
+    "file": "sfx/bodysoft/bodysoft_005.ogg",
+    "dur": 0.25,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_impact_soft5.wav",
+     "t0": 0,
+     "t1": 0.25
+    },
+    "conf": null,
+    "origin": "valve"
+   },
+   {
+    "file": "sfx/bodysoft/bodysoft_006.ogg",
+    "dur": 0.2,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_impact_soft6.wav",
+     "t0": 0,
+     "t1": 0.2
+    },
+    "conf": null,
+    "origin": "valve"
+   },
+   {
+    "file": "sfx/bodysoft/bodysoft_007.ogg",
+    "dur": 0.35,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_impact_soft7.wav",
+     "t0": 0,
+     "t1": 0.35
+    },
+    "conf": null,
+    "origin": "valve"
+   }
+  ],
+  "bodyhard": [
+   {
+    "file": "sfx/bodyhard/bodyhard_001.ogg",
+    "dur": 0.46,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_impact_hard1.wav",
+     "t0": 0,
+     "t1": 0.46
+    },
+    "conf": null,
+    "origin": "valve"
+   },
+   {
+    "file": "sfx/bodyhard/bodyhard_002.ogg",
+    "dur": 0.33,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_impact_hard2.wav",
+     "t0": 0,
+     "t1": 0.33
+    },
+    "conf": null,
+    "origin": "valve"
+   },
+   {
+    "file": "sfx/bodyhard/bodyhard_003.ogg",
+    "dur": 0.41,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_impact_hard3.wav",
+     "t0": 0,
+     "t1": 0.41
+    },
+    "conf": null,
+    "origin": "valve"
+   },
+   {
+    "file": "sfx/bodyhard/bodyhard_004.ogg",
+    "dur": 0.42,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_impact_hard4.wav",
+     "t0": 0,
+     "t1": 0.42
+    },
+    "conf": null,
+    "origin": "valve"
+   },
+   {
+    "file": "sfx/bodyhard/bodyhard_005.ogg",
+    "dur": 0.5,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_impact_hard5.wav",
+     "t0": 0,
+     "t1": 0.5
+    },
+    "conf": null,
+    "origin": "valve"
+   },
+   {
+    "file": "sfx/bodyhard/bodyhard_006.ogg",
+    "dur": 0.41,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_impact_hard6.wav",
+     "t0": 0,
+     "t1": 0.41
+    },
+    "conf": null,
+    "origin": "valve"
+   }
+  ],
+  "bodybreak": [
+   {
+    "file": "sfx/bodybreak/bodybreak_002.ogg",
+    "dur": 0.94,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_break2.wav",
+     "t0": 0,
+     "t1": 0.94
+    },
+    "conf": null,
+    "origin": "valve"
+   },
+   {
+    "file": "sfx/bodybreak/bodybreak_003.ogg",
+    "dur": 0.55,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_break3.wav",
+     "t0": 0,
+     "t1": 0.55
+    },
+    "conf": null,
+    "origin": "valve"
+   },
+   {
+    "file": "sfx/bodybreak/bodybreak_004.ogg",
+    "dur": 0.58,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "hl2-physics-body",
+     "file": "body_medium_break4.wav",
+     "t0": 0,
+     "t1": 0.58
+    },
+    "conf": null,
+    "origin": "valve"
    }
   ]
  },

@@ -65,6 +65,7 @@ export class PhysicsLeno {
     this.lastStartle = 0;
     this.activation = {};
     this.onFall = null;
+    this.onImpact = null;              // (part, dv m/s, position): a part of him hitting the floor or the set
     this.keepOnStage = false;         // true: body reflex keeps Leno on the platform top
     this.posture = { eat: 0, rub: 0, sleep: 0 }; this.postureTarget = { eat: 0, rub: 0, sleep: 0 };
     this.t = 0;
@@ -211,6 +212,7 @@ export class PhysicsLeno {
     this.rag.setStance?.(stn('drop'), stn('lean'), stn('pitch'), Math.min(1, stn('headFree')));
     this.rag.step(dt);
     this.rag.syncSkin();
+    this.knocks(dt);
 
     // fallen: he stays in whatever pose he landed in (no snapping upright). After a while on the floor the puppet
     // strings help him up gradually, physically. Being low on all fours while eating, or dangling in a predator's
@@ -230,6 +232,32 @@ export class PhysicsLeno {
     if (lost) {
       this.fallenFor = 0; this.getUp = 0;
       this.rag.place(this.home, st.heading);
+      this.lastVel = null;
+    }
+  }
+
+  /** knocks: a heavy part of him (not the feet and shins, which land on every step) that was moving and is suddenly
+   *  much slower, beyond what gravity, the strings and the muscles do in one frame, has hit something */
+  knocks(dt) {
+    if (!this.onImpact || dt <= 0) return;
+    const now = performance.now(), g = this.rag.world.gravity, stale = !this.lastVel || now - this.lastVelAt > 250;
+    const last = this.lastVel || {};
+    this.lastVel = {}; this.lastVelAt = now; this.knockAt ||= {};
+    for (const [n, min] of KNOCK_PARTS) {
+      const b = this.rag.bodies[n], v = b.linvel(), p = last[n];
+      this.lastVel[n] = { x: v.x, y: v.y, z: v.z };
+      if (stale || !p) continue;
+      const s0 = Math.hypot(p.x, p.y, p.z), s1 = Math.hypot(v.x, v.y, v.z);
+      const dv = Math.hypot(v.x - p.x - g.x * dt, v.y - p.y - g.y * dt, v.z - p.z - g.z * dt);
+      if (dv < min || s1 > s0 - min * 0.6) continue;
+      if (now - (this.knockAt[n] ?? 0) < 250 || now - (this.knockAt.any ?? 0) < 70) continue;
+      this.knockAt[n] = this.knockAt.any = now;
+      const t = b.translation();
+      this.onImpact(n, dv, new THREE.Vector3(t.x, t.y, t.z));
     }
   }
 }
+
+// parts that make a sound when they hit something, and the sudden loss of speed (m/s in one frame) that counts
+const KNOCK_PARTS = [['pelvis', 2], ['chest', 2], ['head', 2.4], ['thigh_l', 2.4], ['thigh_r', 2.4],
+  ['upperarm_l', 3], ['upperarm_r', 3], ['lowerarm_l', 3.4], ['lowerarm_r', 3.4]];
