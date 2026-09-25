@@ -153,6 +153,18 @@
    "url": "",
    "title": "fartreverb.mp3 and brainfart.mp3 (meme sounds)",
    "author": "unknown"
+  },
+  {
+   "id": "kybo-rant",
+   "url": "",
+   "title": "kylorant.mp3 (a Kylo Ren rant meme remix)",
+   "author": "unknown"
+  },
+  {
+   "id": "kybo-saber",
+   "url": "",
+   "title": "Star Wars lightsaber sounds (SABER)",
+   "author": "Lucasfilm"
   }
  ],
  "leno": {
@@ -5155,6 +5167,370 @@
     "conf": null,
     "origin": "stock"
    }
+  ],
+  "saberon": [
+   {
+    "file": "sfx/kylo/SABER/SABERONJ.WAV",
+    "dur": 1.08,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERONJ.WAV",
+     "t0": 0,
+     "t1": 1.08
+    },
+    "conf": null,
+    "origin": "kybo"
+   }
+  ],
+  "saberoff": [
+   {
+    "file": "sfx/kylo/SABER/SABEROFFJ.WAV",
+    "dur": 0.63,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABEROFFJ.WAV",
+     "t0": 0,
+     "t1": 0.63
+    },
+    "conf": null,
+    "origin": "kybo"
+   }
+  ],
+  "saberhum": [
+   {
+    "file": "sfx/kylo/SABER/SABERLOOPJ.WAV",
+    "dur": 1.13,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERLOOPJ.WAV",
+     "t0": 0,
+     "t1": 1.13
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABERLOOPB.WAV",
+    "dur": 0.69,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERLOOPB.WAV",
+     "t0": 0,
+     "t1": 0.69
+    },
+    "conf": null,
+    "origin": "kybo"
+   }
+  ],
+  "saberswing": [
+   {
+    "file": "sfx/kylo/SABER/SABERMOVE1.WAV",
+    "dur": 0.64,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERMOVE1.WAV",
+     "t0": 0,
+     "t1": 0.64
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABERMOVE2.WAV",
+    "dur": 0.66,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERMOVE2.WAV",
+     "t0": 0,
+     "t1": 0.66
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABERMOVE3.WAV",
+    "dur": 0.59,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERMOVE3.WAV",
+     "t0": 0,
+     "t1": 0.59
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABERMOVE4.WAV",
+    "dur": 0.45,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERMOVE4.WAV",
+     "t0": 0,
+     "t1": 0.45
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/COMBOSABER1.WAV",
+    "dur": 0.79,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "COMBOSABER1.WAV",
+     "t0": 0,
+     "t1": 0.79
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/COMBOSABER2.WAV",
+    "dur": 0.89,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "COMBOSABER2.WAV",
+     "t0": 0,
+     "t1": 0.89
+    },
+    "conf": null,
+    "origin": "kybo"
+   }
+  ],
+  "saberhit": [
+   {
+    "file": "sfx/kylo/SABER/SABERSMACK01.WAV",
+    "dur": 0.77,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERSMACK01.WAV",
+     "t0": 0,
+     "t1": 0.77
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABERSMACK02.WAV",
+    "dur": 0.42,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERSMACK02.WAV",
+     "t0": 0,
+     "t1": 0.42
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABERSMACK03.WAV",
+    "dur": 0.53,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERSMACK03.WAV",
+     "t0": 0,
+     "t1": 0.53
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABERSMACK05.WAV",
+    "dur": 0.41,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERSMACK05.WAV",
+     "t0": 0,
+     "t1": 0.41
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABERSPARKS.WAV",
+    "dur": 0.41,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERSPARKS.WAV",
+     "t0": 0,
+     "t1": 0.41
+    },
+    "conf": null,
+    "origin": "kybo"
+   }
+  ],
+  "saberclash": [
+   {
+    "file": "sfx/kylo/SABER/SABERSABER01.WAV",
+    "dur": 0.26,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERSABER01.WAV",
+     "t0": 0,
+     "t1": 0.26
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABERSABER02.WAV",
+    "dur": 0.41,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERSABER02.WAV",
+     "t0": 0,
+     "t1": 0.41
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABERSABER03.WAV",
+    "dur": 0.26,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERSABER03.WAV",
+     "t0": 0,
+     "t1": 0.26
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABERSABER04.WAV",
+    "dur": 0.44,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABERSABER04.WAV",
+     "t0": 0,
+     "t1": 0.44
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABDEFBLAS1.WAV",
+    "dur": 0.94,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABDEFBLAS1.WAV",
+     "t0": 0,
+     "t1": 0.94
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABDEFBLAS2.WAV",
+    "dur": 0.49,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABDEFBLAS2.WAV",
+     "t0": 0,
+     "t1": 0.49
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABDEFBLAS3.WAV",
+    "dur": 0.64,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABDEFBLAS3.WAV",
+     "t0": 0,
+     "t1": 0.64
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABDEFBLAS4.WAV",
+    "dur": 1.06,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABDEFBLAS4.WAV",
+     "t0": 0,
+     "t1": 1.06
+    },
+    "conf": null,
+    "origin": "kybo"
+   }
+  ],
+  "saberfield": [
+   {
+    "file": "sfx/kylo/SABER/SABFFIELD1.WAV",
+    "dur": 1.02,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABFFIELD1.WAV",
+     "t0": 0,
+     "t1": 1.02
+    },
+    "conf": null,
+    "origin": "kybo"
+   },
+   {
+    "file": "sfx/kylo/SABER/SABFFIELD2.WAV",
+    "dur": 1.04,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-saber",
+     "file": "SABFFIELD2.WAV",
+     "t0": 0,
+     "t1": 1.04
+    },
+    "conf": null,
+    "origin": "kybo"
+   }
   ]
  },
  "crowd": {
@@ -5504,6 +5880,24 @@
      "t1": 49.0
     },
     "conf": 0.87
+   }
+  ]
+ },
+ "music": {
+  "kylorant": [
+   {
+    "file": "sfx/kylo/kylorant.mp3",
+    "dur": 83.15,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "kybo-rant",
+     "file": "kylorant.mp3",
+     "t0": 0,
+     "t1": 83.15
+    },
+    "conf": null,
+    "origin": "kybo"
    }
   ]
  }

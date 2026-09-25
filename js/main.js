@@ -39,6 +39,7 @@ import { EventSwitches, buildEventsPanel } from './events.js';
 import { Sleep } from './sleep.js';
 import { ClownCar } from './clowns.js';
 import { Jonkler } from './jonkler.js';
+import { KyboRin } from './kybo.js';
 const wellbeing = new Wellbeing();                  // state of mind and body (read-outs for the Mind panel)
 const switches = new EventSwitches();               // an on/off switch per event, and Peaceful Mode (the Events panel)
 const sleep = new Sleep();                          // sleep pressure; dozing off when tired and safe
@@ -264,7 +265,7 @@ const pulseTimers = {};
 const JOLT = { hitTouch: [1.5, 'a hit'], hitTaste: [0.4, 'a splat'], rigTouch: [2, 'a crash'], swatHit: [2, 'a swat'], zapTouch: [2, 'a zap'],
   spiderGrab: [2, 'a grab'], spiderBump: [1.5, 'a bump'], alienKick: [1, 'a kick'], frogHit: [1.5, "the frog's tongue"], fallTouch: [1.5, 'a fall'],
   rainTouch: [0.25, 'the rain'], boltTouch: [1.2, 'thunder'], contactTouch: [0.1, 'a nudge'], confettiTouch: [0.05, 'confetti'], roseTouch: [0.15, 'a rose'],
-  sugarTouch: [0.05, 'a sugar cube'], pieHit: [1.5, 'a pie in the face'], bangHit: [2, 'a BANG!'], itch: [0.2, 'an itch'], loom: [0.9, 'something flying at him'], spiderLoom: [0.9, 'a spider'],
+  sugarTouch: [0.05, 'a sugar cube'], pieHit: [1.5, 'a pie in the face'], bangHit: [2, 'a BANG!'], saberHit: [2, 'a lightsaber'], saberLoom: [0.9, 'a lightsaber'], itch: [0.2, 'an itch'], loom: [0.9, 'something flying at him'], spiderLoom: [0.9, 'a spider'],
   swatLoom: [0.9, 'a swatter'], frogLoom: [0.9, "the frog's tongue"] };
 function pulse(alias, group, rate, seconds) {
   wellbeing.sensed(alias, rate);
@@ -325,7 +326,7 @@ const audience = new Audience(audio, reinforce, {
     const what = { speak: 'babbling', stroll: 'stroll', startle: 'flinch', groom: 'grooming', tomatoHit: 'tomato hit', pipeHit: 'pipe hit', eat: 'meal', burp: 'burp', fall: 'fall',
       eatPoop: 'goose-dropping snack', lay: 'egg', hatch: 'hatching', goose: 'goose', frogTongue: "frog's tongue", frogSpit: 'spit-out', frogBite: 'ankle bite',
       frogKicked: 'frog getting kicked out', backflip: 'backflip', backflipFail: 'missing backflip', spiderDrop: 'spider dropping him', swatHit: 'swat', zap: 'zap',
-      alienKick: 'shin kick', rigHit: 'falling rig', powerUp: 'power-up', roseHit: 'rose', dodge: 'narrow escape', doze: 'host dozing off', pieHit: 'pie in the face', bang: 'BANG! flag' }[e.act] || e.act;
+      alienKick: 'shin kick', rigHit: 'falling rig', powerUp: 'power-up', roseHit: 'rose', dodge: 'narrow escape', doze: 'host dozing off', pieHit: 'pie in the face', bang: 'BANG! flag', saber: 'lightsaber hit' }[e.act] || e.act;
     sidebar.ticker(`Audience ${verb} at the ${what}`);
     cultists.react(e.kind, e.intensity);
     // an unhappy crowd throws things
@@ -639,6 +640,7 @@ const show = new Show({
   asleep: () => sleep.asleep,
   mic: (on) => audio.setMic(on),
   jonkler: () => jonkler,
+  kybo: () => kybo,
 });
 // the Jonkler: nothing leaves his toy gun but a BANG! flag, and yet each shot throws Leno twice as hard as the last
 const jonkler = new Jonkler({
@@ -654,6 +656,34 @@ const jonkler = new Jonkler({
   },
   onLaugh: () => { if (Math.random() < 0.6) crowdDo('laugh', 0.7); },
 });
+// Kybo Rin: rants and rampages about the stage with a crossguard lightsaber; if the blade catches Leno, he flies
+const kybo = new KyboRin({
+  npcs, scene, audio, center: show.center, stageRadius: physHost?.stageRadius ?? 7.3, getLeno, ticker: (t) => sidebar.ticker(t),
+  pan: (p) => panOf(p), bladeHit, sparks: (p, n) => fx.sparks(p, n),
+  onHitLeno: (dir, p) => {
+    if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1);
+    const mag = 560;
+    launchHost(dir.normalize().multiplyScalar(mag).add(new THREE.Vector3(0, mag * 0.45, 0)));
+    pulse('saberHit', 'ambientTouch', 100, 0.5); pulse('saberLoom', 'heckler', 200, 0.3);
+    audience.react('saber'); sidebar.ticker('The lightsaber sends Leno flying!');
+  },
+});
+/** Kybo Rin's lightsaber: the first thing the blade (from `from` along `dir`, `len` long) runs into, and whether
+ *  that is Leno, the floor or something else (the set, a prop, another figure) */
+function bladeHit(from, dir, len, npc) {
+  const floorAt = (p) => { const gy = npcs.groundAt(p); return gy !== null && p.y - gy < 0.12; };
+  if (!physHost) {                                        // (no physics world: just the floor)
+    const tip = from.clone().addScaledVector(dir, len);
+    return floorAt(tip) ? { kind: 'floor', p: tip } : null;
+  }
+  const R = physHost.RAPIER, own = entityCols?.map.get(npc)?.body;
+  const hit = physHost.world.castRay(new R.Ray(from, dir), len, true, undefined, undefined, undefined, own);
+  if (!hit) return null;
+  const p = from.clone().addScaledVector(dir, hit.timeOfImpact ?? hit.toi), body = hit.collider.parent();
+  const his = host === flyHost ? [flyHost.kbody] : Object.values(host.rag?.bodies ?? {});
+  if (body && his.some((b) => b.handle === body.handle)) return { kind: 'leno', p };
+  return { kind: floorAt(p) ? 'floor' : 'prop', p };
+}
 /** throw him bodily: the same velocity change for every part of the ragdoll (a huge shove on one part would tear it) */
 function launchHost(v) {
   if (host === flyHost) { flyHost.applyImpulse('thorax', v); return; }
@@ -838,7 +868,7 @@ function applySwitches() {
   $('optWorms').disabled = P; $('optWorms').closest('label')?.classList.toggle('grayed', P);
   if (P && wasPeaceful === false) {
     // switched on mid-show: the harmful things leave now
-    predators.calmDown(); happenings.calmDown(); clownCar.leave(); jonkler.leave(); poisoned = 0;
+    predators.calmDown(); happenings.calmDown(); clownCar.leave(); jonkler.leave(); kybo.leave(); poisoned = 0;
     if ($('optWorms').checked) setWorms(false);
     if (show.cur && SEGMENTS[show.cur.key]?.harmful) show.stopSegment();
     sidebar.ticker('🕊 Peaceful Mode: nothing harmful will happen');
@@ -1167,7 +1197,8 @@ $('aboutLink').onclick = (e) => {
     <a href="https://commons.wikimedia.org/wiki/File:Drum_Roll_-_Concert_Band_-_United_States_Air_Force_Band.mp3" target="_blank" rel="noopener">United States Air Force Band</a> (public domain).
     Mic feedback: <a href="https://freesound.org/people/celesti-whispers/sounds/443023/" target="_blank" rel="noopener">celesti-whispers</a> and
     <a href="https://freesound.org/people/Breviceps/sounds/489566/" target="_blank" rel="noopener">Breviceps</a> (Freesound, CC0).
-    Body impacts: <i>Half-Life 2</i>'s physics/body sounds, © Valve.</p>
+    Body impacts: <i>Half-Life 2</i>'s physics/body sounds, © Valve. Kybo Rin: kylorant.mp3 (a meme remix) and
+    <i>Star Wars</i> lightsaber sounds, © Lucasfilm.</p>
     <p class="credit"><b>Grey Leno model:</b> ported by <b>huckleberrypie</b> (Nexus Mods: huckpie):
     <a href="https://www.nexusmods.com/deadasdisco/mods/917" target="_blank" rel="noopener">Grey Leno for Dead as Disco (Nexus Mods)</a>.
     Original character and model by Vinesauce. Used in accordance with the mod's terms of use.</p>
@@ -1197,7 +1228,7 @@ function resetShow() {
   else if (host.rag) { host.rag.place(host.home, 0); host.gesture = null; host.fallenFor = 0; host.getUp = 0; }
   else leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
   mind.mood = 0; behavior.nausea = 0; behavior.transcript.length = 0; poisoned = 0;
-  brood.clear(); goose.clear(); show.clear(); predators.clear(); happenings.clear(); clownCar.clear(); jonkler.clear(); convulseT = 0; cultists.ovation = 0;
+  brood.clear(); goose.clear(); show.clear(); predators.clear(); happenings.clear(); clownCar.clear(); jonkler.clear(); kybo.clear(); convulseT = 0; cultists.ovation = 0;
   sleep.wake('show reset'); sleep.pressure = 0.15; dimTarget = 1; sleep.lullaby = false;
   food.clear(); for (const n of npcs.list) n.remove(); npcs.list.length = 0; cultists.hidden.clear(); instincts.hunger = 0.4;
   sidebar.ticker('Show reset');
@@ -1225,6 +1256,7 @@ renderer.setAnimationLoop(() => {
     behavior.eating = instincts.eating;
   }
   npcs.update(dt);
+  kybo.update(dt);
   director.hold = show.active;
   audience.hush = sleep.lullaby ? 0.3 : 1;                         // the audience keeps its voice down for the lullaby
   // sensory gating while asleep: eyes shut, hearing and touch turned down
@@ -1377,6 +1409,6 @@ renderer.setAnimationLoop(() => {
 
 window.flyleno = {
   scene, camera, controls, leno, stageScreens, brood, goose, show, showSfx, predators, happenings, stageLODs, propLOD, glitch, get host() { return host; },
-  switches, sleep, wellbeing, clownCar, jonkler, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
+  switches, sleep, wellbeing, clownCar, jonkler, kybo, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
   get motor() { return lastMotor; },
 };

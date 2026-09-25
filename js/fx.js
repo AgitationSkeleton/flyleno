@@ -1,4 +1,4 @@
-// Particle effects: vomit stream from Leno's mouth, fart clouds from behind.
+// Particle effects: vomit stream from Leno's mouth, fart clouds from behind, sparks (a lightsaber strike).
 import * as THREE from 'three';
 
 const MAX = 1500;
@@ -10,7 +10,7 @@ export class FX {
     this.size = new Float32Array(MAX);
     this.vel = new Float32Array(MAX * 3);
     this.life = new Float32Array(MAX);      // remaining s (0 = dead)
-    this.kind = new Uint8Array(MAX);        // 1 vomit, 2 gas
+    this.kind = new Uint8Array(MAX);        // 1 vomit, 2 gas, 3 spark
     this.floor = new Float32Array(MAX);     // per-particle floor height
     this.next = 0;
     const g = new THREE.BufferGeometry();
@@ -46,20 +46,28 @@ export class FX {
 
   fart(getOrigin, getDir) { this.emitters.push({ kind: 2, getOrigin, getDir, until: 0.5, rate: 120 }); }
 
+  /** a burst of sparks at `p` that bounce and fade out within half a second */
+  sparks(p, n = 30, floor = null) {
+    for (let k = 0; k < n; k++) {
+      const d = new THREE.Vector3(Math.random() - 0.5, Math.random() * 0.9 + 0.1, Math.random() - 0.5).normalize();
+      this.spawn(3, p, d, [1, 0.55 + Math.random() * 0.35, 0.2 + Math.random() * 0.2], floor ?? p.y - 0.05);
+    }
+  }
+
   spawn(kind, o, d, color = null, floor = null) {
     const i = this.next; this.next = (this.next + 1) % MAX;
     const j = i * 3;
     this.pos[j] = o.x; this.pos[j + 1] = o.y; this.pos[j + 2] = o.z;
-    const sp = kind === 1 ? 3.2 : 0.5, jit = kind === 1 ? 0.6 : 0.5;
+    const sp = kind === 1 ? 3.2 : kind === 3 ? 4 : 0.5, jit = kind === 1 ? 0.6 : kind === 3 ? 1.2 : 0.5;
     this.vel[j] = d.x * sp + (Math.random() - 0.5) * jit;
     this.vel[j + 1] = d.y * sp + (Math.random() - 0.5) * jit + (kind === 2 ? 0.25 : 0.4);
     this.vel[j + 2] = d.z * sp + (Math.random() - 0.5) * jit;
-    this.life[i] = kind === 1 ? 2.5 : 2.2;
+    this.life[i] = kind === 1 ? 2.5 : kind === 3 ? 0.3 + Math.random() * 0.3 : 2.2;
     this.kind[i] = kind;
     this.floor[i] = floor ?? this.floorY;
     const c = color || (kind === 1 ? [0.55 + Math.random() * 0.15, 0.62 + Math.random() * 0.15, 0.12] : [0.55, 0.62, 0.35]);
     this.col[j] = c[0]; this.col[j + 1] = c[1]; this.col[j + 2] = c[2];
-    this.size[i] = kind === 1 ? 0.05 + Math.random() * 0.05 : 0.25 + Math.random() * 0.2;
+    this.size[i] = kind === 1 ? 0.05 + Math.random() * 0.05 : kind === 3 ? 0.03 + Math.random() * 0.02 : 0.25 + Math.random() * 0.2;
   }
 
   update(dt) {
@@ -74,7 +82,11 @@ export class FX {
       if (this.life[i] <= 0) continue;
       const j = i * 3;
       this.life[i] -= dt;
-      if (this.kind[i] === 1) {
+      if (this.kind[i] === 3) {
+        this.vel[j + 1] -= 9.8 * dt;
+        if (this.pos[j + 1] <= this.floor[i]) { this.pos[j + 1] = this.floor[i] + 0.01; this.vel[j + 1] = Math.abs(this.vel[j + 1]) * 0.4; }
+        const fade = 1 - Math.min(1, dt * 3); this.col[j] *= fade; this.col[j + 1] *= fade; this.col[j + 2] *= fade;
+      } else if (this.kind[i] === 1) {
         this.vel[j + 1] -= 9.8 * dt;
         if (this.pos[j + 1] <= this.floor[i]) { this.pos[j + 1] = this.floor[i] + 0.01; this.vel[j] *= 0.3; this.vel[j + 1] = 0; this.vel[j + 2] *= 0.3; }
       } else {

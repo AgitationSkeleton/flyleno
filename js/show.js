@@ -35,6 +35,7 @@ export const SEGMENTS = {
   eclair: { title: 'The rotten éclair', dur: 30, pace: 'calm', harmful: true },
   guest: { title: 'Guest: Mr. Frog', dur: 60, pace: 'big', major: true },
   jonkler: { title: 'Guest: The Jonkler', dur: 45, pace: 'big', major: true, harmful: true },
+  kybo: { title: 'Guest: Kybo Rin', dur: 95, pace: 'big', major: true, harmful: true },
   gooseguest: { title: 'Guest: a goose', dur: 40, pace: 'big', major: true },
   drive: { title: 'Sunday drive', dur: 55, pace: 'big', major: true },
   dance: { title: 'Grey Leno dance party', dur: 22, pace: 'big' },
@@ -51,6 +52,8 @@ const MIDDLE = Object.keys(SEGMENTS).filter((k) => SEGMENTS[k].pace === 'calm' |
 const CLIP_VIDEOS = ['ki3ssj466E0', 'VzNDmsiiX1A', 'YAlx4zH3ag4', '1e2vLW7LMtc', 'ODIA7UsOmWs'];
 // "Do The Leno": the Super Mario Bros. Super Show's closing "Do the Mario!" (45 s), played whole
 const DO_THE_LENO = '65uNCLBTje0';
+// Kybo Rin's visit: "Death Star Plans" on the screens (a silent video, so the music carries on)
+const KYBO_VIDEO = 'm8aYL2l5quU';
 
 // callers (the questions are heard as a garbled voice on the line and shown in the ticker; the answer, if any,
 // is whatever the fly says)
@@ -71,7 +74,7 @@ export class Show {
    *        stimAlias, pulse, reinforce, setStim, crowd, react, ticker, cue, motor, duckMusic, voice, mouthOpen,
    *        deliverSnack, onChange, allowed(switch), said() (words spoken so far), transcript(),
    *        happen(kind) (a prize), gooseVisit(), gooseHead(), dim(level), lullaby(on), asleep(), mic(on),
-   *        jonkler() }
+   *        jonkler(), kybo() }
    */
   constructor(ctx) {
     this.ctx = ctx;
@@ -264,6 +267,17 @@ export class Show {
     if (key === 'jonkler') {
       s.ok = ctx.jonkler().enter();
       if (s.ok) { ctx.ticker('Our next guest… the Jonkler!'); ctx.crowd('applause', 0.8); this.spot.on(() => ctx.jonkler().headPos() ?? ctx.hostHead(), 700); }
+    }
+    if (key === 'kybo') {
+      s.ok = ctx.kybo().enter();
+      if (s.ok) {
+        ctx.ticker('Our next guest… Kybo Rin!'); ctx.crowd('applause', 0.8); this.spot.on(() => ctx.kybo().headPos() ?? ctx.hostHead(), 700);
+        // (not over a green screen the viewer has chosen)
+        if (ctx.screens?.available && ctx.screens.mode !== 'green') {
+          s.prevMode = ctx.screens.mode; s.prevVideo = ctx.screens.videoId; s.video = true;
+          ctx.screens.setMode('video', KYBO_VIDEO);
+        }
+      }
     }
     if (key === 'gooseguest') {
       s.ok = ctx.gooseVisit() || !!ctx.gooseHead();                  // (if the goose is already on stage, it's the guest)
@@ -468,6 +482,13 @@ export class Show {
       if (t > 3 && !ctx.jonkler().present) { this.spot.off(); ctx.crowd('applause', 0.7); return true; }
       return t > SEGMENTS.jonkler.dur;
     }
+    if (key === 'kybo') {
+      if (!s.ok) return true;
+      const sc = ctx.screens;
+      if (s.video && (sc.mode !== 'video' || sc.videoId !== KYBO_VIDEO)) s.video = false;   // the viewer changed the screens
+      if (t > 3 && !ctx.kybo().present) { this.spot.off(); ctx.crowd('applause', 0.7); return true; }
+      return false;                                                              // (he leaves when his rant is over)
+    }
     if (key === 'gooseguest') {
       if (!s.ok) return true;
       this.at(C, 12, () => ctx.crowd('laugh', 0.8));
@@ -599,7 +620,8 @@ export class Show {
     if (key === 'lullaby') { s.box?.stop(); ctx.dim(1); ctx.duckMusic(1); ctx.lullaby(false); }
     if (key === 'signoff') { s.hum?.stop(); if (this.ufo.state !== 'off') this.ufo.state = 'leave'; }
     if (key === 'jonkler') this.ctx.jonkler().leave();
-    if (['open', 'johnny', 'guest', 'monologue', 'gooseguest', 'jonkler', 'doleno'].includes(key)) this.spot.off();
+    if (key === 'kybo') { this.ctx.kybo().leave(); if (s.video) this.restoreScreens(s); }
+    if (['open', 'johnny', 'guest', 'monologue', 'gooseguest', 'jonkler', 'doleno', 'kybo'].includes(key)) this.spot.off();
     if (['sponsor', 'static', 'telethon', 'rally', 'open', 'birthday', 'wheel'].includes(key)) ctx.screens?.clearCard();
   }
 

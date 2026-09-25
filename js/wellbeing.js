@@ -24,6 +24,7 @@ const EFFECTS = {
   fallTouch: { injury: 0.05, dizzy: 0.2 },
   softFall: { dizzy: 0.15 },                     // knocked over by a cream pie
   bangHit: { injury: 0.01, dizzy: 0.35 },        // thrown by the Jonkler's BANG! flag
+  saberHit: { injury: 0.05, dizzy: 0.35 },       // struck by Kybo Rin's lightsaber
   contactTouch: { injury: 0.001 },
   rainTouch: { wet: 0.06 },
   confettiTouch: { grime: 0.01 },

@@ -40,6 +40,7 @@ const TABLE = {
   doze:       [0.10, 0.50, 0.30, 0.05, 0.02],     // he nods off on stage
   pieHit:     [0.30, 1.00, 0.40, 0.02, 0.05],     // a cream pie in the face
   bang:       [0.40, 0.90, 0.30, 0.02, 0.80],     // the Jonkler's BANG! flag
+  saber:      [0.25, 0.55, 0.20, 0.10, 0.90],     // Kybo Rin's lightsaber sends him flying
 };
 const KINDS = ['cheer', 'laugh', 'applause', 'boo', 'gasp'];
 const VALENCE = { cheer: 1, laugh: 0.7, applause: 1, boo: -1, gasp: -0.5 };
