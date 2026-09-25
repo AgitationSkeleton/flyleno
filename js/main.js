@@ -939,12 +939,10 @@ function looming(dt) {
   stimAlias('loomNpc', 'heckler', Math.min(200, Math.max(0, best) * 900));
 }
 
-// Leno's body hitting the floor or the set: Half-Life 2's body impact sounds, low to medium volume and louder with
-// the size of the knock (the hard ones are recorded much hotter than the soft ones, so they get less gain)
+// Leno's body hitting the floor or the set: Half-Life 2's body impact sounds, at their stock volume
 function bodyKnock(part, dv, p) {
   const kind = dv > 9 && Math.random() < 0.35 ? 'bodybreak' : dv > 4.5 ? 'bodyhard' : 'bodysoft';
-  const size = Math.min(1, (dv - 2) / 8) * (/arm/.test(part) ? 0.6 : /head/.test(part) ? 0.8 : 1);
-  audio.sfx(kind, { pan: panOf(p), gain: (kind === 'bodysoft' ? 0.22 : 0.075) * (1 + 1.2 * size) });
+  audio.sfx(kind, { pan: panOf(p) });
 }
 
 // Body controls (ragdoll)
