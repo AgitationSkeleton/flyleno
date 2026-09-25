@@ -27,7 +27,7 @@ export class Sidebar {
 
     // stimuli
     const st = $('stimuli');
-    st.innerHTML = `<label class="chk" style="margin:0 0 6px"><input type="checkbox" id="autopilot" checked> Autopilot (show director)</label>
+    st.innerHTML = `<label class="chk" style="margin:0 0 6px"><input type="checkbox" id="autopilot" checked> Autopilot</label>
       <div id="ticker" class="status" style="margin-bottom:6px">—</div>`;
     $('autopilot').onchange = (e) => onAutopilot(e.target.checked);
     this.stimEls = {};

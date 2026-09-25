@@ -65,7 +65,7 @@ the connectome, labelled as such in the sidebar).
 | fart | oviposition DNs (oviDN) | neural |
 | eating | touching food → all 129 sugar taste neurons → the model's MN9 (proboscis motor neuron) decides | neural |
 | walking toward food when hungry | food taxis | engineered (see below) |
-| going back to his starting mark, now and then | he roams freely within ~4.5 m of his mark. Farther out, homesickness builds slowly (minutes; faster the farther away), and when it's full (or now and then on a whim) he makes a trip home: a home vector (path integration, which real flies do in the central complex, not modelled here) drives the brain's own DNa01/02 steering and P9 walking neurons until he's back near the mark. The ragdoll is also led gently by its strings, since its own walking is weak | engineered input onto neural DNs |
+| homing to his starting mark | he roams freely within ~4.5 m of his mark. Farther out, homesickness builds slowly (minutes; faster the farther away), and when it's full (or on a whim, about every 5 minutes) he makes a trip home: a home vector (path integration, which real flies do in the central complex, not modelled here) drives the brain's own DNa01/02 steering and P9 walking neurons until he's back near the mark. The ragdoll is also led gently by its strings, since its own walking is weak | engineered input onto neural DNs |
 | sleeping | sleep pressure builds while he's awake (faster when tired); when it's high and he's safe he dozes off (see **Sleep** below) | engineered |
 | saccadic turns, walking in bouts | shaping of the turn/walk commands | engineered |
 | spontaneous actions | action selector ("initiative"): softmax over values learned from dopamine | engineered, driven by neural dopamine |
@@ -79,6 +79,12 @@ the connectome, labelled as such in the sidebar).
 - **The head:** the camera sits inside the head. Humanoid Leno is drawn single-sided for the eye view (his head's
   surfaces face away from the camera and aren't drawn, his body still is); Fly-Leno's head and antennae are
   hidden for it. The live cams still show them.
+
+**View** (bottom right of the 3D view): ⛶ fullscreen hides the sidebar (and goes browser-fullscreen where the
+browser allows); 👁 hides the overlay buttons (the two stay, faded). Keys: F and H.
+
+**Speech:** the "speech" switch in the Voice panel turns his babbling off (the voice neurons still fire; nothing
+is said).
 
 **Stage screens** (viewport buttons: 📹 Cams / ▶ YouTube / 🟩 Green; YouTube link box in the sidebar):
 - **Cams:** live cameras following Leno.
@@ -97,18 +103,12 @@ are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when bare
 (sugar neurons → MN9) and eats them.
 
 **Predators** (`js/predators.js`, engineered; random visits like the goose, never lethal, off with `?quiet`):
-- **Spider-Leno** (rare, every ~4–9 minutes): a spider with Leno's head rappels on a silk thread from a random
-  spot over the stage, away from him, and hunts for him. He can get away:
-  - **Searching:** it creeps about the ceiling, looking around. Movement within ~6 m gets him noticed;
-    keeping still hides him (it only rarely spots a motionless host).
-  - **Stalking:** once it has spotted him it creeps toward him, slower than he walks, and drops to head height.
-    It loses him if he gets more than ~7.5 m away or off the stage (it can only follow over the stage).
-  - **Lunge:** it rears back for ~0.75 s first (the warning), then strikes at where he was when it committed.
-    If he has moved, it misses and the audience cheers the dodge.
-  - **Grab:** a lunge that lands grabs him three times in four and reels him up the thread for 2.5–4 s; the
-    audience gasps. Fly-Leno is held by the thorax. Otherwise it bumps him. After letting go it has to find
-    him again.
-  - **Leaving:** it climbs back up after ~45–60 s.
+- **Spider-Leno** (rare, every ~4–9 minutes): a spider with Leno's head rappels from the ceiling on a
+  silk thread. Its anchor creeps along the ceiling to stay above the host. It dangles and lunges.
+  - **Grab:** 60% of close lunges grab him. It reels him up the thread for 3–4.5 s, and the audience
+    gasps. Fly-Leno is held by the thorax.
+  - **Miss:** it bumps him instead.
+  - **Leaving:** it climbs back up after ~40–50 s.
 - **The glove** (every ~1.5–4 minutes): a floating white cartoon glove with a fly swatter. It hovers,
   winds up and swats where he'll be. A hit knocks him around; a miss slaps the air.
   - **Electric racket:** one visit in four is a bug-zapper racket instead. A hit zaps him: arcs,
@@ -121,21 +121,18 @@ are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when bare
     antennal JO.
 
 **Happenings** (`js/happenings.js`, engineered; random, off with `?quiet`):
-- **The Rapture** (rare, every ~10–20 minutes): a trumpet sounds and a light column comes down.
+- **The Rapture** (rare: the first after ~5–10 minutes, then every ~10–20): a trumpet sounds and a light column comes down.
   - **Ascension:** every seated audience member (not Leno) rises spinning into the light and is gone.
   - **Empty house:** then the seats stay empty for 30–45 s. Nobody reacts, cheers, boos, throws or heckles.
   - **Babies:** the seats fill with baby cultists (small, big-headed, standing on their seats, crying).
     They grow back into their adult selves over about 100 seconds.
   - **Effects:** the light reaches the fly's eyes, and the crowd reacts less while it is young.
-- **Rain cloud:** a small storm cloud gathers somewhere over the stage (not over him) and drifts about.
-  - **Seeking:** when he's within ~6.5 m it may notice him and creep toward him at 0.5 m/s, slower than he walks,
-    so he can get out from under it. It loses interest if he gets 9 m away or after ~20 s, and it stays over the
-    stage.
+- **Rain cloud:** a personal storm cloud follows Leno and rains on him.
   - **Rain:** water on the body and antennae (mechanosensory and JO → grooming), plus punishment dopamine
     every 2 s while he's under it. Rain also rinses off some grime.
-  - **Lightning:** strikes him only if he's under the cloud, otherwise the floor below it; thunder, and one
-    flash that fades (brighter on his eyes the nearer he is).
-  - **Leaving:** it drifts off after 40–55 s.
+  - **Lightning:** strikes toward him with thunder and one flash that fades (it hits the floor instead if he has
+    outrun the cloud).
+  - **Leaving:** it drifts off after 35–50 s.
 - **Vinesauce mushroom:** a power-up styled on the Vinesauce logo: green dome (yellow-green to teal) with white spots and a white badge with a teal V, on a white stem with green eyes and a smile.
   It slides slowly for a few seconds, then settles, and it stops whenever he comes close. Eating it corrupts
   the picture for 5 s like a bad NES cartridge: NES-palette pixels, swapped and garbage tiles, torn scanlines,
@@ -166,34 +163,32 @@ are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when bare
     `go_alert2.wav`. All three are in `assets/audio/sfx/minialien/`.
   - They scatter after 30–40 s.
 
-**Events panel, Peaceful Mode and pacing** (`js/events.js`):
+**Events panel and Peaceful Mode** (`js/events.js`):
 - **Switches:** the Events panel in the sidebar has an on/off switch for every event: visitors and predators
   (goose, spider-Leno, swatter, electric racket, mini aliens, Mr. Frog's tongue, the car nudging him),
   happenings (Rapture, rain cloud, mushroom, falling rig), every kind of audience action (cheers/laughs/applause,
   gasps, boos, rose / sugar / tomato / pipe throws, rose storms, tomato-and-pipe storms, ovations, hecklers), the
-  stage crew and director's cues (stagehand snacks, rotten éclairs, applause cues, stroll drives, the bitter-taste
+  stage crew and director's cues (stagehand snacks, rotten éclairs, applause cues, walk drives, the bitter-taste
   cue), and each show segment. Harmful ones have a red dot. The switches are remembered in this browser.
 - **Peaceful Mode:** one switch that turns off everything harmful (anything that hits, grabs, soaks, zaps or
   punishes the fly) and greys it out: the harmful switches, the tomato and pipe buttons, harmful segments, the
   aversive "Show events" stimuli and the brain worms. Switched on mid-show, the harmful things leave at once (the
   spider climbs away, the glove floats off, the rain cloud drifts away, the aliens scatter). Mr. Frog keeps his
   tongue in, the car steers around Leno instead of nudging him, and the UFO's beam only lifts him a little.
-- **Pacing:** the big things (spider-Leno, the glove, the rain cloud, the mini aliens, the Rapture, the goose,
-  show segments with the frog, the car or the UFO) never overlap. Each waits for its turn: nothing else big on
-  stage, and ~25 s of calm since the last one. Show segments give way to a random event that's waiting.
-  Smaller events (storms, rig falls, ovations, the mushroom) don't start during a big one and come at least 12 s
-  apart. While Leno sleeps nothing new starts.
+- **Overlap:** the Rapture, the rain cloud and the mini aliens don't start while one of the others is on (one
+  that's blocked tries again 20–40 s later), and spider-Leno and the glove don't visit at the same time.
+  Everything else runs on its own timer.
 
-**Sleep** (`js/sleep.js`, engineered, "sleep when tired" in Brain settings):
+**Sleep** (`js/sleep.js`, engineered, "sleep" in Brain settings):
 - **Pressure:** builds while he's awake (base ~6 minutes to full, faster when his energy is low, much faster
   during the lullaby) and drains while he sleeps.
 - **Dozing off:** when it's high and he's safe (nothing looming, not frightened, held, eating, falling or being
   knocked about) he settles for a few seconds and falls asleep. Humanoid Leno kneels and curls forward with his
   head down (the strings lower him); Fly-Leno sinks low on folded legs with its head bowed. "Z"s float up.
 - **Asleep:** his eyes are shut (the photoreceptor drive from what he sees fades out), hearing is turned down to
-  ~40% and the touch/taste ambience halved (sensory gating), his initiative and the director rest, the audience
-  keeps its voice down, and the body recovers: energy comes back fast, injuries heal about three times faster,
-  stress and dizziness fade quickly, hunger grows slower.
+  ~40% and the touch/taste ambience halved (sensory gating), he doesn't talk, retch or vomit, his own initiative
+  rests, and the body recovers: energy comes back fast, injuries heal about three times faster, stress and
+  dizziness fade quickly, hunger grows slower. The show and its events carry on around him (and can wake him).
 - **Waking:** a hit, touch, sudden loud noise or something looming wakes him (easily in light sleep, less easily
   once he's deep asleep), and he wakes by himself when rested. Getting up off the floor afterwards isn't a fall.
 
@@ -239,10 +234,10 @@ same way: the strings lower him into a curl, forehead to the floor.
 - **Structure:** each episode opens with the greeting, runs five segments, and ends with the sign-off. The
   segments come from Vinny's Grey Leno appearances: the 2022 Nightmare Puppeteer show, the later VR,
   public-access and VHS episodes, and the candidacy speech.
-- **Pacing:** an episode alternates calm segments (talk, screens) with busy ones (a guest, a party), prefers
-  segments it didn't run last episode, and sometimes closes with the late late show's lullaby. There are 14–30 s
-  between segments to roam, and 50–100 s between episodes. The show waits for the stage to be clear of big
-  random events.
+- **Rundown:** an episode alternates calm segments (talk, screens) with busy ones (a guest, a party) and takes
+  the segments that have gone longest without a run, so every segment comes round within a few episodes. The
+  lullaby closes about one episode in three (at least every third). 8–18 s between segments, 20–35 s between
+  episodes. Segments that need a stagehand wait for one to be free.
 - **Controls:** the "Tonight's show" panel lists the rundown and has a button for every segment. A
   segment holds the director's random events while it runs. Each segment also has a switch in the Events panel.
 - **No script on screen:** the host's lines from the shows are kept in `js/show.js` as cue cards, but
@@ -261,13 +256,13 @@ same way: the strings lower him into a curl, forehead to the floor.
 | Take it away, Johnny! | a spotlight swings to the empty band stool; the music drops out, crickets; "Where's Johnny?"; rimshot | sudden silence, crickets (JO-A), spotlight on the eyes |
 | A word from our sponsor | GRONK sponsor card (a slow, throbbing glow; no strobe), then "Buy Grey Leno NFTs" | pulsing light on the eyes (R1-6) |
 | Technical difficulties | screens full of soft grey static; "Dave, can you fix the static?" | visual noise (R1-6), hiss (JO-A) |
-| Phone-in: the fly answers | the desk phone rings and a garbled caller asks e.g. "Why do you puke so much?" or "What do the worms in your brain tell you?" (shown in the ticker). Then the line goes quiet for up to 9 s: whatever Leno says on his own is quoted as his answer (nothing drives his voice). Silence gets crickets and the caller hangs up | ring and voice (JO); laughs/applause or silence |
-| Monologue: joke time | spotlight; three "jokes": he has the floor for up to 8 s each, and nothing makes him talk. When he has said something and stops, a rimshot and usually a laugh (his words are quoted); if he says nothing, crickets ("tough crowd") | spotlight (R1-6), rimshots (JO), reward for talking |
+| Phone-in | the desk phone rings and a garbled caller asks e.g. "Why do you puke so much?" or "What do the worms in your brain tell you?" (shown in the ticker). Then the line goes quiet for up to 9 s: whatever Leno says on his own is quoted as his answer (nothing drives his voice). Silence gets crickets and the caller hangs up | ring and voice (JO); laughs/applause or silence |
+| Monologue | spotlight; three "jokes": he has the floor for up to 8 s each, and nothing makes him talk. When he has said something and stops, a rimshot and usually a laugh (his words are quoted); if he says nothing, crickets ("tough crowd") | spotlight (R1-6), rimshots (JO), reward for talking |
 | Guest: a goose | "Our next guest… a goose!" The goose waddles on in a follow spot, honks and poops | honks (JO), a spotlit mover (LC4, R1-6), droppings for Fly-Leno |
-| 500 years young (birthday) | "I'm 500 years young, folks": a stagehand carries out a birthday cake with candles, the crowd sings Happy Birthday, balloons and confetti. The cake is food he goes for even when not hungry | the song and applause (JO), sugar taste, reward |
+| 500 years young | "I'm 500 years young, folks": a stagehand carries out a birthday cake with candles, the crowd sings Happy Birthday, balloons and confetti. The cake is food he goes for even when not hungry | the song and applause (JO), sugar taste, reward |
 | The Leno Wave | the audience does a stadium wave three times round, chanting "LE-NO" | a wave of motion across the seats (R1-6), chant (JO), cheers |
 | Spin the Wheel of Leno | a prize wheel on the screens spins (at most ~1 turn a second, soft colours) and lands on a prize: a sugar shower, roses, an ovation, confetti, a goose, a mushroom, nothing, or (only when tomato storms are on) tomatoes | moving picture (R1-6), clicks (JO), then the prize |
-| The late late show: lullaby | the studio lights fade down to about half, a music-box lullaby (Brahms) plays, the music ducks and the audience hushes; sleep pressure builds fast, and if he nods off there's a soft "aww". The lights fade back up at the end | dim light (R1-6), soft music (JO), sleep |
+| Lullaby | the studio lights fade down to about half, a music-box lullaby (Brahms) plays, the music ducks and the audience hushes; sleep pressure builds fast, and if he nods off there's a soft "aww". The lights fade back up at the end | dim light (R1-6), soft music (JO), sleep |
 | Space scabies telethon | telethon card with a donation counter ("three out of four Martians have the same problem") | itching: bursts on the mechanosensory and antennal JO neurons (→ grooming) |
 | Grey Leno dance party | disco lights and strobe, a synthesised beat; "my body is moving on its own": fictive left/right turning drives on the beat | beat (JO), strobe (R1-6), DNa01/02 fictive drives |
 | Vote Leno | campaign card, confetti and balloon drop, "LE-NO!" chant; "Folks, I can do a backflip": the backflip happens only if the giant fibre fires within 9 s, otherwise no backflip and boos | confetti landing on him (JO + touch, like dust → grooming); cheers or boos (dopamine) |

@@ -35,11 +35,10 @@ import { disposeObject } from './dispose.js';
 import { NesGlitch } from './glitch.js';
 import { FlyEyeView, humanFov, EgoVision } from './eyeview.js';
 import { Wellbeing } from './wellbeing.js';
-import { EventSwitches, Pacer, buildEventsPanel } from './events.js';
+import { EventSwitches, buildEventsPanel } from './events.js';
 import { Sleep } from './sleep.js';
 const wellbeing = new Wellbeing();                  // state of mind and body (read-outs for the Mind panel)
 const switches = new EventSwitches();               // an on/off switch per event, and Peaceful Mode (the Events panel)
-const pacer = new Pacer();                          // big events one at a time, with calm spells between them
 const sleep = new Sleep();                          // sleep pressure; dozing off when tired and safe
 const allowed = (k) => switches.allowed(k);
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
@@ -197,8 +196,7 @@ function setCam(mode) {
   controls.enabled = !eyeMode();
   if (eyeMode()) { camera.near = 0.02; eyeS.init = false; }
   else if (wasEye) { camera.near = 0.1; camera.fov = 45; camera.updateProjectionMatrix(); if (mode === 'free') controls.target.copy(camera.position).add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(4)); }
-  $('eyeNote').textContent = mode === 'eyes' ? "Leno's eyes: a human's ~110° field of view"
-    : mode === 'flyeyes' ? "the fly's eyes: ~320° panorama, 5° facets, weak in red" : '';
+  $('eyeNote').textContent = mode === 'eyes' ? 'human eyes, ~110°' : mode === 'flyeyes' ? 'fly eyes, ~320°' : '';
   document.querySelectorAll('#cams button').forEach((b) => b.classList.toggle('on', b.dataset.cam === mode));
   if (cams[mode]) { const c = cams[mode](); camera.position.copy(c.pos); controls.target.copy(c.target); }
 }
@@ -208,6 +206,21 @@ controls.addEventListener('start', () => {
   else if (camMode !== 'free') setCam('free');
 });
 $('showMarkers').onchange = (e) => (stage.markerGroup.visible = e.target.checked);
+// fullscreen (hides the sidebar; asks the browser for real fullscreen where it can) and hiding the overlay buttons
+function setFull(on) {
+  $('app').classList.toggle('full', on); $('btnFull').classList.toggle('on', on);
+  if (on) document.documentElement.requestFullscreen?.().catch(() => {});
+  else if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+  requestAnimationFrame(() => dispatchEvent(new Event('resize')));
+}
+$('btnFull').onclick = () => setFull(!$('app').classList.contains('full'));
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && $('app').classList.contains('full')) setFull(false); });
+$('btnBare').onclick = () => { const on = !$('viewport').classList.contains('bare'); $('viewport').classList.toggle('bare', on); $('btnBare').classList.toggle('on', on); };
+addEventListener('keydown', (e) => {
+  if (e.target.closest?.('input, textarea, select') || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === 'f' || e.key === 'F') $('btnFull').click();
+  if (e.key === 'h' || e.key === 'H') $('btnBare').click();
+});
 resize();
 setCam('audience');
 
@@ -438,6 +451,8 @@ $('optAdapt').onchange = (e) => worker.postMessage({ type: 'adaptation', params:
 $('optEgo').checked = true;
 $('optEgo').onchange = (e) => { egoOn = e.target.checked; if (!egoOn) { stimAlias('worldL', 'eyeL', 0); stimAlias('worldR', 'eyeR', 0); } };
 $('optPlastic').onchange = (e) => worker.postMessage({ type: 'plasticity', params: { enabled: e.target.checked } });
+$('optVoice').checked = true;
+$('optVoice').onchange = (e) => (behavior.enabled.voice = e.target.checked);
 $('resetLearn').onclick = () => worker.postMessage({ type: 'plasticity', resetWeights: true });
 // brain worms: "my cabinet members" (engineered lesion, off by default)
 $('optWorms').checked = false;
@@ -585,7 +600,7 @@ const show = new Show({
   voice: () => behavior.voiceEMA, mouthOpen: () => (behavior.eating ? 1 : mouth),
   deliverSnack: (kind) => { if (npcs.busy) return false; npcs.deliverSnack(getLeno, kind); return true; },
   onChange: () => updateShowUI(),
-  allowed, pacer, said: () => behavior.said || 0, transcript: () => behavior.transcript,
+  allowed, said: () => behavior.said || 0, transcript: () => behavior.transcript,
   happen: (kind) => showPrize(kind),
   gooseVisit: () => { if (goose.active || !allowed('goose')) return false; goose.spawn(); return true; },
   gooseHead: () => goose.headPos(),
@@ -651,7 +666,7 @@ const predators = new Predators({
   ceilY: ceiling ? new THREE.Box3().setFromObject(ceiling).min.y - 0.4 : hostPos.y + 16,
   knock: (v) => pushHost(v), hold: holdHost, convulse: (s) => (convulseT = s),
   pulse, reinforce, crowd: crowdDo, react: (act) => audience.react(act), ticker: (t) => sidebar.ticker(t),
-  center: show.center, stageRadius: physHost?.stageRadius ?? 7.3, allowed, pacer,
+  allowed,
 });
 
 // ------------------------------------------------------------------ happenings: Rapture, rain cloud, mushroom, rig, aliens
@@ -701,24 +716,12 @@ const happenings = new Happenings({
   throwItem: (kind) => throwThing(kind, true),        // (the storms check their own switches)
   ovation: (dur) => standingOvation(dur),
   stimAlias, pulse, reinforce, ticker: (t) => sidebar.ticker(t),
-  allowed, pacer,
+  allowed,
   // how much he needs a kind gesture from the seats: hungry -> sugar; miserable or stressed -> a rose
   needs: () => ({ hunger: instincts.hunger, low: Math.max(0, Math.min(1, (0.5 - wellbeing.cheer) * 2 + wellbeing.stress * 0.6)) }),
 });
 
-// ------------------------------------------------------------------ pacing: the big things that can be on stage
-pacer.watch('spider', () => !!predators.spider.active || !!predators.spider.loading);
-pacer.watch('swatter', () => !!predators.swatter.active);
-pacer.watch('rain', () => !!happenings.rain.active);
-pacer.watch('aliens', () => happenings.aliens.active);
-pacer.watch('rapture', () => happenings.rapture.phase === 'ascend' || happenings.rapture.phase === 'empty');
-pacer.watch('goose', () => !!goose.active);
-pacer.watch('show', () => show.busy);
-goose.gate = () => {
-  if (!allowed('goose')) { goose.nextT = 60; return false; }
-  if (!pacer.canMajor('goose')) return false;
-  pacer.started(); return true;
-};
+goose.gate = () => { if (allowed('goose')) return true; goose.nextT = 60; return false; };
 
 // ------------------------------------------------------------------ event switches, Peaceful Mode
 buildEventsPanel($('events'), switches, [['Show segments', Object.entries(SEGMENTS).map(([k, v]) => ['seg:' + k, v.title.replace(/"/g, ''), !!v.harmful])]]);
@@ -845,10 +848,10 @@ if (physHost) {
   physHost.onFall = () => { audience.react('fall'); sidebar.ticker('Leno collapses!'); pulse('fallTouch', 'ambientTouch', 80, 0.5); };
   const bc = $('bodyControls');
   bc.innerHTML = `<div class="status" style="margin-top:6px">Body: physics ragdoll, 46 muscles</div>
-    <label class="rowlbl">puppet strings (support) <input id="bSupport" type="range" min="0" max="1" step="0.05" value="${physHost.support}"></label>
-    <label class="rowlbl">VNC assist (leg rhythms) <input id="bVnc" type="range" min="0" max="1" step="0.05" value="${physHost.vncWeight}"></label>
+    <label class="rowlbl">puppet strings <input id="bSupport" type="range" min="0" max="1" step="0.05" value="${physHost.support}"></label>
+    <label class="rowlbl">VNC assist <input id="bVnc" type="range" min="0" max="1" step="0.05" value="${physHost.vncWeight}"></label>
     <label class="rowlbl">direct DN → muscles <input id="bDirect" type="range" min="0" max="2" step="0.05" value="${physHost.directWeight}"></label>
-    <label class="chk"><input type="checkbox" id="bStage"> keep Leno on the stage (edge reflex)</label>`;
+    <label class="chk"><input type="checkbox" id="bStage"> keep on stage</label>`;
   $('bSupport').oninput = (e) => (physHost.support = +e.target.value);
   $('bVnc').oninput = (e) => (physHost.vncWeight = +e.target.value);
   $('bDirect').oninput = (e) => (physHost.directWeight = +e.target.value);
@@ -907,7 +910,7 @@ function buildWellbeingUI() {
     wbEls[group] = R[group].map(([label, sub]) => {
       const el = document.createElement('div');
       el.className = 'meter wb';
-      el.innerHTML = `<div class="lbl">${label}<small>${sub}</small></div><div class="bar"><i></i></div><div class="num">0</div>`;
+      el.innerHTML = `<div class="lbl">${label}${sub ? `<small>${sub}</small>` : ''}</div><div class="bar"><i></i></div><div class="num">0</div>`;
       $(id).appendChild(el);
       return { bar: el.querySelector('i'), num: el.querySelector('.num') };
     });
@@ -1076,13 +1079,12 @@ renderer.setAnimationLoop(() => {
   const rawDt = Math.min(0.05, clock.getDelta());
   const dt = paused ? 0 : rawDt;
   if (!paused) {
-  pacer.update(dt);
-  // sleep: dozes off when he's tired and safe; while he sleeps his initiative rests and nothing new starts
+  // sleep: dozes off when he's tired and safe; asleep, his own initiative rests (the show goes on around him)
   const heldNow = host === flyHost ? !!flyHost.heldAt : (host.heldUntil ?? 0) > performance.now();
   const knockedNow = host === flyHost ? flyHost.knockT > 0 : (host.slack ?? 0) > 0.3;
   sleep.update(dt, { energy: wellbeing.energy, fear: wellbeing.fear, loom: window.flyleno?.lastTick?.rates?.['s:heckler'] ?? 0,
     held: heldNow, eating: instincts.eating, knocked: knockedNow, fallen: !!host.state?.fallen, flying: host === flyHost && flyHost.flying });
-  instincts.asleep = sleep.asleep; pacer.hold = sleep.asleep; mind.suspended = sleep.asleep;
+  instincts.asleep = sleep.asleep; mind.suspended = sleep.asleep; behavior.asleep = sleep.asleep;
   director.update(dt);
   mind.update(dt);
   audience.update(dt);
@@ -1094,8 +1096,8 @@ renderer.setAnimationLoop(() => {
     behavior.eating = instincts.eating;
   }
   npcs.update(dt);
-  director.hold = show.active || sleep.asleep;
-  audience.hush = sleep.asleep || sleep.lullaby ? 0.3 : 1;       // the audience keeps its voice down while he sleeps
+  director.hold = show.active;
+  audience.hush = sleep.lullaby ? 0.3 : 1;                         // the audience keeps its voice down for the lullaby
   // sensory gating while asleep: eyes shut, hearing and touch turned down
   const gate = sleep.asleep ? 1 - sleep.depth : 1;
   if (Math.abs(gate - sleepGate) > 0.02 || (gate === 1 && sleepGate !== 1)) { sleepGate = gate; setAmbience(ambBase * (1 - 0.5 * (1 - gate))); }
@@ -1245,6 +1247,6 @@ renderer.setAnimationLoop(() => {
 
 window.flyleno = {
   scene, camera, controls, leno, stageScreens, brood, goose, show, showSfx, predators, happenings, stageLODs, propLOD, glitch, get host() { return host; },
-  switches, pacer, sleep, wellbeing, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
+  switches, sleep, wellbeing, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
   get motor() { return lastMotor; },
 };

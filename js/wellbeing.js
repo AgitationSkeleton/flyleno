@@ -99,31 +99,31 @@ export class Wellbeing {
     this.s = s;
   }
 
-  /** rows for the panel: [label, sub (what it is / what fixes it), value 0..1, text, good (true = high is good)] */
+  /** rows for the panel: [label, sub, value 0..1, text, good (true = high is good)] */
   rows() {
     const s = this.s || {};
     const brainLoad = clamp01((s.spikes ?? 0) / 150000);
     return {
       mind: [
-        ['Arousal', 'overall firing', s.arousal ?? 0, pct(s.arousal), null],
-        ['Stress', 'threats, hits; fades when safe, asleep, praised', this.stress, pct(this.stress), false],
-        ['Fear', 'looming, startles; fades when safe', this.fear, pct(this.fear), false],
-        ['Morale', 'slow dopamine mood; applause, roses, food', this.cheer, pct(this.cheer), true],
-        ['Hunger', 'a meal fixes it', s.hunger ?? 0, pct(s.hunger), false],
-        ['Nausea', 'retching builds it; it passes', clamp01(s.nausea ?? 0), pct(s.nausea), false],
-        ['Homesick', 'far from his mark; a trip home fixes it', s.homesick ?? 0, pct(s.homesick), false],
-        ['Sleepiness', 'awake time, tiredness; sleep clears it', s.sleepiness ?? 0, s.asleep ? 'zzz' : pct(s.sleepiness), false],
-        ['Dizziness', 'knocks, tumbles, glitches; wears off', this.dizzy, pct(this.dizzy), false],
+        ['Arousal', '', s.arousal ?? 0, pct(s.arousal), null],
+        ['Stress', '', this.stress, pct(this.stress), false],
+        ['Fear', '', this.fear, pct(this.fear), false],
+        ['Morale', '', this.cheer, pct(this.cheer), true],
+        ['Hunger', '', s.hunger ?? 0, pct(s.hunger), false],
+        ['Nausea', '', clamp01(s.nausea ?? 0), pct(s.nausea), false],
+        ['Homesick', '', s.homesick ?? 0, pct(s.homesick), false],
+        ['Sleepiness', '', s.sleepiness ?? 0, s.asleep ? 'zzz' : pct(s.sleepiness), false],
+        ['Dizziness', '', this.dizzy, pct(this.dizzy), false],
       ],
       body: [
-        ['Health', 'heals (faster resting, fastest asleep)', 1 - this.injury, pct(1 - this.injury), true],
-        ['Energy', 'moving uses it; food, rest, sleep restore', this.energy, pct(this.energy), true],
-        ['Wetness', 'rain; dries off', this.wet, pct(this.wet), false],
-        ['Grime', 'splats, slime; grooming and rain clean', this.grime, pct(this.grime), false],
+        ['Health', '', 1 - this.injury, pct(1 - this.injury), true],
+        ['Energy', '', this.energy, pct(this.energy), true],
+        ['Wetness', '', this.wet, pct(this.wet), false],
+        ['Grime', '', this.grime, pct(this.grime), false],
       ],
       brain: [
-        ['Brain load', 'spikes/s vs runaway (150k); calmer asleep', brainLoad, `${((s.spikes ?? 0) / 1000).toFixed(0)}k`, false],
-        ['Brain worms', 'cells silenced; the heal button restores them', clamp01((s.eatenFrac ?? 0) / 0.35), `${((s.eatenFrac ?? 0) * 100).toFixed(1)}%`, false],
+        ['Brain load', '', brainLoad, `${((s.spikes ?? 0) / 1000).toFixed(0)}k`, false],
+        ['Brain worms', '', clamp01((s.eatenFrac ?? 0) / 0.35), `${((s.eatenFrac ?? 0) * 100).toFixed(1)}%`, false],
       ],
     };
   }

@@ -71,14 +71,14 @@ export class Behavior {
       this.voiceEMA = 0; this.act.fill(0); for (const k in this.rates) this.rates[k] = 0;
     }
     this.syllableTimer -= dt; this.pause -= dt;
-    if (!this.inPhrase && this.pause <= 0 && this.voiceEMA > 0.3) { this.inPhrase = true; this.phraseT = 0; }
+    if (!this.inPhrase && this.pause <= 0 && this.voiceEMA > 0.3 && !this.asleep) { this.inPhrase = true; this.phraseT = 0; }
     if (this.inPhrase) {
       this.phraseT += dt;
       if (this.voiceEMA < 0.18 || this.phraseT > 1.2 + 2.5 * this.voiceEMA) {
         this.inPhrase = false; this.pause = 3 + 6 * Math.random() * (1.2 - this.voiceEMA);
       }
     }
-    if (this.enabled.voice && this.inPhrase && this.syllableTimer <= 0) {
+    if (this.enabled.voice && this.inPhrase && !this.asleep && this.syllableTimer <= 0) {       // (asleep: no talking)
       const vow = VOWELS.map((ph) => this.phoneScore(ph));
       const con = CONSONANTS.map((ph) => this.phoneScore(ph));
       const V = pickMax(vow), C = pickMax(con);
@@ -108,7 +108,7 @@ export class Behavior {
     if (!this.enabled.body) return;
     this.retchCool -= dt; this.fartCool -= dt; this.vomitCool -= dt;
     this.nausea = Math.max(0, this.nausea - dt * 0.15);
-    const retchDrive = this.rates.pharynx > 12 && this.rates.feed < 20;
+    const retchDrive = this.rates.pharynx > 12 && this.rates.feed < 20 && !this.asleep;         // (asleep: no retching)
     if (retchDrive && this.retchCool <= 0) {
       this.nausea += 0.4;
       if (this.nausea > 1 && this.vomitCool <= 0) {

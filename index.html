@@ -25,25 +25,29 @@
         <div id="onair"></div>
         <div id="eyeNote"></div>
       </div>
-      <div id="cue" title="cue card: what the host is supposed to say (the fly can't read)"></div>
+      <div id="cue"></div>
       <div id="cams">
         <button data-cam="audience" class="on">Audience</button>
         <button data-cam="wide">Wide</button>
         <button data-cam="close">Close-up</button>
         <button data-cam="follow">Follow</button>
         <button data-cam="free">Free</button>
-        <button data-cam="eyes" title="first person: what Leno's eyes see (human field of view)">Eyes</button>
-        <button data-cam="flyeyes" title="first person: what the fly's compound eyes take in (~320°, 5° facets, weak in red)">Fly eyes</button>
+        <button data-cam="eyes">Eyes</button>
+        <button data-cam="flyeyes">Fly eyes</button>
         <label class="chk"><input type="checkbox" id="showMarkers"> markers</label>
       </div>
-      <div id="volume" title="master volume (show sounds + music)">🔊 <input id="masterVol" type="range" min="0" max="1" step="0.01" value="0.8"><span id="masterVolNum">80</span></div>
-      <div id="form" title="who is Leno?"><button data-form="leno" class="on">Leno</button><button data-form="fly"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="7" cy="9" rx="5" ry="3" transform="rotate(-25 7 9)" fill="currentColor" opacity=".45"/><ellipse cx="17" cy="9" rx="5" ry="3" transform="rotate(25 17 9)" fill="currentColor" opacity=".45"/><ellipse cx="12" cy="14" rx="3" ry="5" fill="currentColor"/><circle cx="12" cy="8" r="2.4" fill="currentColor"/><path d="M9.5 13 5 11M9.5 15 4.5 16M10 17l-4 3M14.5 13 19 11M14.5 15l5 1M14 17l4 3" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg> Fly-Leno</button></div>
-      <div id="screenModes" title="what the stage screens show"><button data-screen="cams" class="on">📹 Cams</button><button data-screen="video">▶ YouTube</button><button data-screen="green">🟩 Green</button></div>
+      <div id="viewTools">
+        <button id="btnFull" title="fullscreen (F)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+        <button id="btnBare" title="hide buttons (H)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="2.9" fill="currentColor"/></svg></button>
+      </div>
+      <div id="volume" title="volume">🔊 <input id="masterVol" type="range" min="0" max="1" step="0.01" value="0.8"><span id="masterVolNum">80</span></div>
+      <div id="form"><button data-form="leno" class="on">Leno</button><button data-form="fly"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="7" cy="9" rx="5" ry="3" transform="rotate(-25 7 9)" fill="currentColor" opacity=".45"/><ellipse cx="17" cy="9" rx="5" ry="3" transform="rotate(25 17 9)" fill="currentColor" opacity=".45"/><ellipse cx="12" cy="14" rx="3" ry="5" fill="currentColor"/><circle cx="12" cy="8" r="2.4" fill="currentColor"/><path d="M9.5 13 5 11M9.5 15 4.5 16M10 17l-4 3M14.5 13 19 11M14.5 15l5 1M14 17l4 3" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg> Fly-Leno</button></div>
+      <div id="screenModes"><button data-screen="cams" class="on">📹 Cams</button><button data-screen="video">▶ YouTube</button><button data-screen="green">🟩 Green</button></div>
       <div id="throws">
-        <button id="throwTomato" title="a cultist in the audience throws a tomato">🍅 <span class="long">Throw </span>tomato</button>
-        <button id="throwPipe" title="a cultist in the audience throws a metal pipe">🔧 <span class="long">Throw </span>pipe</button>
-        <button id="throwRose" title="a cultist in the audience throws a rose">🌹 <span class="long">Throw </span>rose</button>
-        <button id="throwSugar" title="a cultist in the audience lobs a sugar cube to the floor in front of Leno (it can't hurt him; he can eat it)">🧊 <span class="long">Throw </span>sugar</button>
+        <button id="throwTomato">🍅 <span class="long">Throw </span>tomato</button>
+        <button id="throwPipe">🔧 <span class="long">Throw </span>pipe</button>
+        <button id="throwRose">🌹 <span class="long">Throw </span>rose</button>
+        <button id="throwSugar">🧊 <span class="long">Throw </span>sugar</button>
       </div>
       <div id="loading"><div class="spinner"></div><div id="loadingText">Loading…</div>
         <button id="startShow" hidden>▶ Start the show</button>
@@ -81,9 +85,9 @@
       </section>
 
       <section class="panel">
-        <h2>Mind <small>dopamine from the model's PAM / PPL1 neurons</small></h2>
+        <h2>Mind</h2>
         <div class="meter bi"><div class="lbl">Dopamine<small>PAM − PPL1</small></div><div class="bar"><i id="daBar"></i></div><div class="num" id="daNum">0</div></div>
-        <div class="meter bi"><div class="lbl">Mood<small>slow average</small></div><div class="bar"><i id="moodBar"></i></div><div class="num" id="moodNum">0</div></div>
+        <div class="meter bi"><div class="lbl">Mood</div><div class="bar"><i id="moodBar"></i></div><div class="num" id="moodNum">0</div></div>
         <div class="row status" style="margin:6px 0 2px"><span>Condition:</span> <b id="conditionNow">—</b></div>
         <div class="wb-head">State of mind</div><div id="wbMind"></div>
         <div class="wb-head">Body</div><div id="wbBody"></div>
@@ -97,8 +101,8 @@
       </section>
 
       <section class="panel">
-        <h2>Voice <small>articulator motor neurons → phonemes</small></h2>
-        <div class="meter"><div class="lbl">Voicing<small>DNg02/DNp13 + articulators</small></div><div class="bar"><i id="voiceBar"></i></div><div class="num" id="voiceNum">0</div></div>
+        <h2>Voice <label class="chk h2chk"><input type="checkbox" id="optVoice" checked> speech</label></h2>
+        <div class="meter"><div class="lbl">Voicing</div><div class="bar"><i id="voiceBar"></i></div><div class="num" id="voiceNum">0</div></div>
         <div id="transcript" class="transcript">…</div>
         <div class="row lesson"><input id="lessonWord" placeholder="teach a word, e.g. hello" maxlength="24"><button id="lessonBtn">Teach</button></div>
         <div id="lessonInfo" class="status"></div>
@@ -106,7 +110,7 @@
       </section>
 
       <section class="panel">
-        <h2>Motor output <small>descending neurons → Leno</small></h2>
+        <h2>Motor output</h2>
         <div id="motor"></div>
       </section>
 
@@ -116,24 +120,24 @@
       </section>
 
       <section class="panel">
-        <h2>Tonight's show <small>segments from Vinny's Grey Leno appearances</small></h2>
-        <label class="chk"><input type="checkbox" id="optRundown" checked> run the rundown <small class="status">(with autopilot)</small></label>
+        <h2>Tonight's show</h2>
+        <label class="chk"><input type="checkbox" id="optRundown" checked> run the show</label>
         <ol id="rundown" class="rundown"></ol>
         <div id="segments" class="segments"></div>
       </section>
 
       <section class="panel">
-        <h2>Events <small>switch any of them off</small></h2>
+        <h2>Events</h2>
         <div id="events"></div>
       </section>
 
       <section class="panel">
-        <h2>Show events <small>click to stimulate the fly</small></h2>
+        <h2>Show events</h2>
         <div id="stimuli"></div>
       </section>
 
       <section class="panel" id="music">
-        <h2>Music <small>heard by the fly</small></h2>
+        <h2>Music</h2>
         <div class="yt-frame"></div>
         <div class="yt-title">—</div>
         <div class="row yt-controls">
@@ -149,44 +153,44 @@
       </section>
 
       <section class="panel">
-        <h2>Stage screens <small>seen by the fly (R1-6 photoreceptors)</small></h2>
+        <h2>Stage screens</h2>
         <div class="row lesson"><input id="screenUrl" value="https://www.youtube.com/watch?v=ki3ssj466E0" placeholder="YouTube link or id"><button id="screenPlay">Show</button></div>
         <div class="status" id="screenTitle" style="margin:4px 0">live Leno cams</div>
         <label class="rowlbl">video volume <input id="screenVol" type="range" min="0" max="100" value="70"></label>
-        <div class="meter"><div class="lbl">Left eye<small>R1-6 drive (eyes + screen)</small></div><div class="bar"><i id="eyeLBar"></i></div><div class="num" id="eyeLNum">0</div></div>
-        <div class="meter"><div class="lbl">Right eye<small>R1-6 drive (eyes + screen)</small></div><div class="bar"><i id="eyeRBar"></i></div><div class="num" id="eyeRNum">0</div></div>
+        <div class="meter"><div class="lbl">Left eye<small>R1-6</small></div><div class="bar"><i id="eyeLBar"></i></div><div class="num" id="eyeLNum">0</div></div>
+        <div class="meter"><div class="lbl">Right eye<small>R1-6</small></div><div class="bar"><i id="eyeRBar"></i></div><div class="num" id="eyeRNum">0</div></div>
         <div class="status" id="visionNote"></div>
       </section>
 
       <section class="panel">
         <h2>Brain settings</h2>
-        <label class="chk"><input type="checkbox" id="optAdapt"> spike-frequency adaptation <small class="status">(off = pure Shiu model; can run away)</small></label>
-        <label class="chk"><input type="checkbox" id="optPlastic" checked> dopamine plasticity on articulator synapses</label>
-        <label class="chk" title="a few times a second two tiny wide cameras at Leno's eyes render the scene; each eye's brightness and motion drive its photoreceptors, so the brain sees everything, not just the stage screen"><input type="checkbox" id="optEgo" checked> eyesight: the fly sees the stage through its own eyes</label>
+        <label class="chk"><input type="checkbox" id="optAdapt"> spike-frequency adaptation</label>
+        <label class="chk"><input type="checkbox" id="optPlastic" checked> dopamine plasticity</label>
+        <label class="chk"><input type="checkbox" id="optEgo" checked> eyesight</label>
         <div class="row"><button id="resetLearn" class="mini">forget learning</button></div>
-        <label class="chk" title="&quot;The worms in my brain only eat the cells I don't need.&quot; An engineered lesion, not biology: worms slowly silence neurons that have been quiet and aren't sensory or motor."><input type="checkbox" id="optWorms"> brain worms <small class="status">(eat the cells he doesn't need)</small></label>
+        <label class="chk" title="&quot;The worms in my brain only eat the cells I don't need.&quot;"><input type="checkbox" id="optWorms"> brain worms</label>
         <div class="row status"><span id="wormsInfo">0 cells eaten</span><button id="wormsHeal" class="mini">heal</button></div>
-        <label class="rowlbl">stage ambience (taste/touch noise) <input id="ambience" type="range" min="0" max="3" step="0.1" value="1"></label>
+        <label class="rowlbl">ambience <input id="ambience" type="range" min="0" max="3" step="0.1" value="1"></label>
         <label class="rowlbl">hearing gain <input id="hearGain" type="range" min="0" max="2" step="0.05" value="1"></label>
         <label class="rowlbl">sound volume <input id="sfxVol" type="range" min="0" max="1" step="0.05" value="0.9"></label>
-        <div class="status" style="margin-top:6px">Fly instincts <small>(engineered body-level shaping)</small></div>
+        <div class="status" style="margin-top:6px">Fly instincts</div>
         <label class="chk"><input type="checkbox" id="iSacc" checked> saccadic turns</label>
         <label class="chk"><input type="checkbox" id="iBout" checked> walk in bouts</label>
-        <label class="chk"><input type="checkbox" id="iTaxis" checked> seek food when hungry</label>
-        <label class="chk"><input type="checkbox" id="iDust" checked> dust on antennae (→ grooming)</label>
-        <label class="chk" title="the starting mark on the stage is home, but he's free to roam: far from it, homesickness builds slowly (minutes), and then a home vector drives the brain's own steering and walking neurons on a trip back"><input type="checkbox" id="iHome" checked> homing to his starting mark (now and then)</label>
-        <label class="chk" title="sleep pressure builds while he's awake (faster when tired); when it's high and he's safe he dozes off: eyes shut, hearing and touch turned down, energy back fast, injuries heal faster. A hit, a noise or something looming wakes him."><input type="checkbox" id="iSleep" checked> sleep when tired</label>
-        <label class="rowlbl">egg chance per new surface <span><input id="eggChance" type="range" min="0" max="100" step="1" value="5"> <b id="eggChanceNum" class="status">5%</b></span></label>
+        <label class="chk"><input type="checkbox" id="iTaxis" checked> seek food</label>
+        <label class="chk"><input type="checkbox" id="iDust" checked> dust on antennae</label>
+        <label class="chk"><input type="checkbox" id="iHome" checked> homing</label>
+        <label class="chk"><input type="checkbox" id="iSleep" checked> sleep</label>
+        <label class="rowlbl">egg chance <span><input id="eggChance" type="range" min="0" max="100" step="1" value="5"> <b id="eggChanceNum" class="status">5%</b></span></label>
         <div id="bodyControls"></div>
       </section>
 
       <section class="panel">
-        <h2>Population rates <small>Hz, mean per neuron</small></h2>
+        <h2>Population rates <small>Hz</small></h2>
         <div id="groups"></div>
       </section>
 
       <section class="panel">
-        <h2>Super-classes <small>spikes by FlyWire super-class (log)</small></h2>
+        <h2>Super-classes</h2>
         <canvas id="classes" height="150"></canvas>
       </section>
 

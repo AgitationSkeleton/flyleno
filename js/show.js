@@ -6,9 +6,8 @@
 // him talk: where a segment wants something from Leno (the phone-in, the monologue) it gives him the floor and
 // listens, and whatever his voice neurons say on their own (js/behavior.js) is quoted.
 //
-// Pacing: an episode alternates calm segments with busy ones (a guest, a party), prefers segments it didn't run
-// last time, and may end on the late late show's lullaby. Between segments there is room to wander; the show waits
-// for the stage to be clear of big random events (js/events.js) and gives way to one that is waiting its turn.
+// Rundown: an episode alternates calm segments with busy ones (a guest, a party), picks the segments that have gone
+// longest without a run (so every segment comes round), and sometimes ends on the lullaby.
 // Nothing here flashes: lights fade, screens move smoothly (photosensitivity).
 import * as THREE from 'three';
 import { Frog } from './frog.js';
@@ -27,8 +26,8 @@ const V = { EY: [480, 1900], EH: [560, 1750], OW: [520, 900], AE: [700, 1700], I
 export const SEGMENTS = {
   open: { title: 'Opening', dur: 16 },
   clip: { title: '"Take a look at this next one"', dur: 32, pace: 'calm' },
-  monologue: { title: 'Monologue: joke time', dur: 36, pace: 'calm' },
-  phonein: { title: 'Phone-in: the fly answers', dur: 20, pace: 'calm' },
+  monologue: { title: 'Monologue', dur: 36, pace: 'calm' },
+  phonein: { title: 'Phone-in', dur: 20, pace: 'calm' },
   johnny: { title: '"Take it away, Johnny!"', dur: 13, pace: 'calm' },
   sponsor: { title: 'A word from our sponsor', dur: 14, pace: 'calm' },
   static: { title: 'Technical difficulties', dur: 11, pace: 'calm' },
@@ -39,11 +38,11 @@ export const SEGMENTS = {
   drive: { title: 'Sunday drive', dur: 55, pace: 'big', major: true },
   dance: { title: 'Grey Leno dance party', dur: 22, pace: 'big' },
   rally: { title: 'Vote Leno', dur: 32, pace: 'big' },
-  birthday: { title: '500 years young (birthday)', dur: 42, pace: 'big' },
+  birthday: { title: '500 years young', dur: 42, pace: 'big' },
   wave: { title: 'The Leno Wave', dur: 17, pace: 'big' },
   wheel: { title: 'Spin the Wheel of Leno', dur: 24, pace: 'big' },
-  lullaby: { title: 'The late late show: lullaby', dur: 36, pace: 'late' },
-  signoff: { title: 'Sign-off (UFO)', dur: 26, major: true },
+  lullaby: { title: 'Lullaby', dur: 36, pace: 'late' },
+  signoff: { title: 'Sign-off', dur: 26, major: true },
 };
 const MIDDLE = Object.keys(SEGMENTS).filter((k) => SEGMENTS[k].pace === 'calm' || SEGMENTS[k].pace === 'big');
 
@@ -64,7 +63,7 @@ export class Show {
   /**
    * ctx: { scene, stage, audio, sfx, screens, npcs, getHost, isFly, hostPos, hostHead, impulse, backflip,
    *        stimAlias, pulse, reinforce, setStim, crowd, react, ticker, cue, motor, duckMusic, voice, mouthOpen,
-   *        deliverSnack, onChange, allowed(switch), pacer, said() (words spoken so far), transcript(),
+   *        deliverSnack, onChange, allowed(switch), said() (words spoken so far), transcript(),
    *        happen(kind) (a prize), gooseVisit(), gooseHead(), wave(laps), dim(level), lullaby(on), asleep() }
    */
   constructor(ctx) {
@@ -87,7 +86,7 @@ export class Show {
     this.gentle = false;             // Peaceful Mode: the tractor beam only lifts him a little
     this.episode = 0;
     this.rundown = [];
-    this.recent = [];                // last episode's segments (the next one prefers others)
+    this.lastRun = {};               // segment -> episode it last ran in (the rundown picks the longest-waiting)
     this.idx = -1;
     this.cur = null;                 // { key, t, s (segment state) }
     this.gap = 6;
@@ -95,16 +94,14 @@ export class Show {
   }
 
   get active() { return !!this.cur; }
-  /** a segment that fills the stage is on (for the pacer) */
-  get busy() { return !!this.cur || this.ufo.state !== 'off' || this.frog.present || this.car.present; }
 
   allowed(key) { return this.ctx.allowed?.('seg:' + key) ?? true; }
 
   newEpisode() {
     this.episode++;
-    // alternate calm and busy segments, preferring ones that weren't on last time
-    const pool = MIDDLE.filter((k) => this.allowed(k));
-    const order = [...shuffle(pool.filter((k) => !this.recent.includes(k))), ...shuffle(pool.filter((k) => this.recent.includes(k)))];
+    // alternate calm and busy segments, taking the ones that have waited longest (never-run ones first)
+    const since = (k) => this.lastRun[k] ?? -99;
+    const order = shuffle(MIDDLE.filter((k) => this.allowed(k))).sort((a, b) => since(a) - since(b));
     const calm = order.filter((k) => SEGMENTS[k].pace === 'calm'), big = order.filter((k) => SEGMENTS[k].pace === 'big');
     const mid = [];
     let wantBig = Math.random() < 0.5;
@@ -112,10 +109,9 @@ export class Show {
       mid.push(((wantBig && big.length) || !calm.length ? big : calm).shift());
       wantBig = !wantBig;
     }
-    // the late late show: sometimes the lullaby closes the episode, just before the sign-off
-    const late = this.allowed('lullaby') && Math.random() < 0.35 ? ['lullaby'] : [];
+    // the late late show: sometimes the lullaby closes the episode, just before the sign-off (at least every third)
+    const late = this.allowed('lullaby') && (Math.random() < 0.35 || this.episode - since('lullaby') >= 3) ? ['lullaby'] : [];
     this.rundown = [...(this.allowed('open') ? ['open'] : []), ...mid, ...late, ...(this.allowed('signoff') ? ['signoff'] : [])];
-    this.recent = mid;
     this.idx = -1;
     this.ctx.onChange?.();
   }
@@ -125,6 +121,7 @@ export class Show {
     if (this.cur) this.stopSegment();
     if (!this.rundown.length) this.newEpisode();
     this.cur = { key, t: 0, s: {}, fired: new Set() };
+    this.lastRun[key] = this.episode;
     this.start(key, this.cur.s);
     this.ctx.onChange?.();
   }
@@ -134,8 +131,8 @@ export class Show {
     if (!C) return;
     this.stop(C.key, C.s);
     this.cur = null;
-    // room to wander between segments; a longer intermission between episodes
-    this.gap = this.idx >= this.rundown.length - 1 ? 50 + Math.random() * 50 : 14 + Math.random() * 16;
+    // a short break between segments, a longer one between episodes
+    this.gap = this.idx >= this.rundown.length - 1 ? 20 + Math.random() * 15 : 8 + Math.random() * 10;
     this.ctx.onChange?.();
   }
 
@@ -163,12 +160,8 @@ export class Show {
         // skip segments that have been switched off since the rundown was made
         while (this.idx < this.rundown.length - 1 && !this.allowed(this.rundown[this.idx + 1])) this.idx++;
         const next = this.rundown[this.idx + 1];
-        // wait until the stage is clear (and let a random event that's waiting go first)
-        if (next && (!ctx.pacer || ctx.pacer.canMajor('show', SEGMENTS[next].major ? 15 : 6))) {
-          this.idx++;
-          this.run(next);
-          if (SEGMENTS[next].major) ctx.pacer?.started();
-        }
+        if (next) { this.idx++; this.run(next); }
+        else this.gap = 5;
       }
     }
     // props
@@ -254,7 +247,7 @@ export class Show {
     if (key === 'phonein') { this.ctx.sfx.sting('ring', { gain: 0.8 }); s.call = pick(CALLS); ctx.ticker('📞 The phone on the desk rings'); }
     if (key === 'guest') ctx.cue("We're gonna have a guest, Mr. Frog. Mr. Frog will be on… at some point.");
     if (key === 'gooseguest') {
-      s.ok = ctx.gooseVisit();
+      s.ok = ctx.gooseVisit() || !!ctx.gooseHead();                  // (if the goose is already on stage, it's the guest)
       if (s.ok) { ctx.ticker('Our next guest… a goose!'); ctx.crowd('applause', 0.9); this.spot.on(() => ctx.gooseHead() ?? ctx.hostHead(), 700); }
     }
     if (key === 'drive') { ctx.cue("This next one is really beautiful, okay? It's like a Sunday drive."); this.car.enter(); }
@@ -321,7 +314,7 @@ export class Show {
       { label: 'ROSES', run: () => ctx.happen('roses'), ok: ok('roseStorms') },
       { label: 'OVATION', run: () => ctx.happen('ovation'), ok: ok('ovations') },
       { label: 'CONFETTI', run: () => { this.confetti.drop(this.center); this.balloons.drop(this.center, 12); this.confettiSaid = false; this.ctx.sfx.sting('pop', { gain: 0.8 }); }, ok: true },
-      { label: 'A GOOSE', run: () => ctx.gooseVisit(), ok: ok('goose') },
+      { label: 'A GOOSE', run: () => ctx.gooseVisit(), ok: ok('goose') && !ctx.gooseHead() },
       { label: 'MUSHROOM', run: () => ctx.happen('mushroom'), ok: ok('mushroom') },
       { label: 'NOTHING', run: () => { this.ctx.sfx.sting('crickets', { gain: 0.7 }); ctx.ticker('…nothing. Better luck next time.'); }, ok: true },
       { label: 'TOMATOES!', run: () => ctx.happen('storm'), ok: ok('storms') },
@@ -460,6 +453,7 @@ export class Show {
       return t > SEGMENTS.rally.dur;
     }
     if (key === 'birthday') {
+      if (!s.ok && t < 15) { s.retryT = (s.retryT ?? 1) - dt; if (s.retryT <= 0) { s.retryT = 1; s.ok = ctx.deliverSnack('cake'); } }   // stagehand busy: wait for them
       this.at(C, 6, () => { this.ctx.sfx.birthday({ gain: 0.55 }); ctx.ticker('The audience sings Happy Birthday'); });
       this.at(C, 17, () => { ctx.crowd('applause', 1); ctx.crowd('cheer', 0.8); this.confetti.drop(this.center, 5, 16, 400); this.confettiSaid = false; });
       this.at(C, 20, () => { if (s.ok) ctx.ticker('The cake is on the floor in front of him. Five hundred candles, give or take.'); });
@@ -487,7 +481,7 @@ export class Show {
       return t > SEGMENTS.lullaby.dur;
     }
     if (key === 'eclair') {
-      if (!s.ok) return true;
+      if (!s.ok) { s.retryT = (s.retryT ?? 1) - dt; if (s.retryT <= 0) { s.retryT = 1; s.ok = ctx.deliverSnack('eclair'); } return t > 15; }   // stagehand busy: wait for them
       return t > SEGMENTS.eclair.dur;
     }
     if (key === 'signoff') {

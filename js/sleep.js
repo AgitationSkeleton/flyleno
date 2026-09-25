@@ -5,8 +5,8 @@
 // or being knocked about) he settles down and dozes off. Asleep, his eyes are shut (no light drive to the
 // photoreceptors) and hearing and touch are turned down (sensory gating), his body rests: energy comes back fast
 // and injuries heal faster. A hit, a touch, a loud noise or something looming wakes him, easily in light sleep and
-// less easily once he's deep asleep. Otherwise he wakes up by himself when he's rested. While he sleeps the show
-// lets him be: no new random events start (js/events.js Pacer.hold).
+// less easily once he's deep asleep. Otherwise he wakes up by himself when he's rested. Asleep he doesn't talk or
+// retch (js/behavior.js); the show goes on around him.
 export class Sleep {
   constructor() {
     this.enabled = true;

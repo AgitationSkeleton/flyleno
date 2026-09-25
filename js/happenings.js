@@ -1,11 +1,10 @@
 // Random happenings on the TUURD Talk stage (engineered, like the goose):
 //   Rapture      - the trumpet sounds; every seated audience member (not Leno) is taken up into the light, and the
 //                  seats fill with babies, who grow back into their grown cultist selves in real time
-//   RainCloud    - a small storm cloud gathers somewhere over the stage and drifts about; when it notices Leno it
-//                  creeps toward him (slower than he walks, so he can get away) and rains on him if he stays under
-//                  it (touch, water on the antennae, low dopamine); lightning and thunder
+//   RainCloud    - a personal storm cloud follows Leno and rains on him (touch, water on the antennae, low
+//                  dopamine); lightning and thunder
 // Sugar cubes and roses are lobbed from the seats now and then, sooner when he is hungry or miserable.
-// Scheduling: the big happenings wait for their turn (js/events.js Pacer), each has an on/off switch.
+// Each has an on/off switch (js/events.js).
 //   VineMushroom - a Vinesauce-logo mushroom power-up falls from the ceiling and slides about; eating it
 //                  is a big dopamine reward
 //   rig drops    - studio cameras and stage lights fall from the ceiling (physics objects, js/projectiles.js)
@@ -135,20 +134,6 @@ export class RainCloud {
     this.ctx.scene.remove(g);
   }
 
-  /** a random spot over the stage, away from `avoid` (so it doesn't start right over him) */
-  spotOverStage(avoid, minDist = 4) {
-    const ctx = this.ctx, c = ctx.center;
-    let best = null;
-    for (let k = 0; k < 12; k++) {
-      const a = Math.random() * 6.28, r = Math.sqrt(Math.random()) * ctx.stageRadius * 0.8;
-      const p = V(c.x + Math.cos(a) * r, 0, c.z + Math.sin(a) * r);
-      const d = avoid ? Math.hypot(p.x - avoid.x, p.z - avoid.z) : 99;
-      if (!best || d > best.d) best = { p, d };
-      if (d >= minDist) break;
-    }
-    return best.p;
-  }
-
   start() {
     if (this.active) return false;
     const ctx = this.ctx, g = new THREE.Group();
@@ -162,15 +147,12 @@ export class RainCloud {
     const drops = new THREE.InstancedMesh(this.dropGeo, this.dropMat, N);
     drops.frustumCulled = false;
     const flash = this.flash;
-    // it gathers somewhere over the stage (not over him) and drifts about; if it notices him it creeps his way
-    const at = this.spotOverStage(ctx.hostPos());
-    const height = ctx.center.y + 6.4;
-    g.position.set(at.x, height, at.z); g.scale.setScalar(0.1);
+    const head = ctx.hostHead();
+    g.position.copy(head).add(V(3, 6, 0)); g.scale.setScalar(0.1);
     ctx.scene.add(g, drops);
     const d = Array.from({ length: N }, () => ({ x: rand(-1.4, 1.4), z: rand(-1.1, 1.1), y: rand(0, 1) }));
-    this.active = { g, mat, drops, d, flash, t: 0, life: rand(40, 55), level: 0, boltT: rand(4, 7), wetT: 0, sadT: 1, ground: ctx.center.y, groundT: 0,
-      rain: ctx.sfx.rain(), bolt: null, state: 'drift', way: this.spotOverStage(null), height, lostT: 0, seekT: 0 };
-    ctx.ticker('A small rain cloud gathers over the stage');
+    this.active = { g, mat, drops, d, flash, t: 0, life: rand(35, 50), level: 0, boltT: rand(3, 6), wetT: 0, sadT: 1, ground: head.y - 2.2, groundT: 0, rain: ctx.sfx.rain(), bolt: null };
+    ctx.ticker('A small rain cloud gathers over Leno');
     return true;
   }
 
@@ -192,24 +174,9 @@ export class RainCloud {
     const leaving = A.t > A.life;
     A.level += ((leaving ? 0 : 1) - A.level) * Math.min(1, dt * (leaving ? 0.8 : 1.2));
     if (leaving && A.level < 0.02) { this.clear(); ctx.ticker('The rain cloud drifts away'); return; }
-    // drift about the stage; notice him when he's near and creep toward him, slower than he walks, so he can get
-    // out from under it; lose interest when he gets away
-    const p = A.g.position, dh = Math.hypot(head.x - p.x, head.z - p.z);
-    if (A.state === 'drift') {
-      if (Math.hypot(A.way.x - p.x, A.way.z - p.z) < 0.6) A.way = this.spotOverStage(null);
-      if (dh < 6.5 && !leaving && Math.random() < dt * 0.2) { A.state = 'seek'; A.seekT = 0; ctx.ticker('The rain cloud drifts toward Leno'); }
-    } else {
-      A.seekT += dt;
-      A.lostT = dh > 9 ? A.lostT + dt : 0;
-      if (A.lostT > 2 || A.seekT > 22 || leaving) { A.state = 'drift'; A.way = this.spotOverStage(head); if (!leaving) ctx.ticker('The rain cloud loses interest'); }
-    }
-    const goal = A.state === 'seek' ? head : A.way, speed = A.state === 'seek' ? 0.5 : 0.4;
-    const to = V(goal.x - p.x, 0, goal.z - p.z), dist = to.length();
-    if (dist > 0.05) p.addScaledVector(to.normalize(), Math.min(dist, speed * dt));
-    // it stays over the stage area (he can leave it behind by going off the platform)
-    const fromC = V(p.x - ctx.center.x, 0, p.z - ctx.center.z), lim = ctx.stageRadius * 1.05;
-    if (fromC.length() > lim) { fromC.setLength(lim); p.x = ctx.center.x + fromC.x; p.z = ctx.center.z + fromC.z; }
-    p.y += (A.height + 0.15 * Math.sin(A.t * 0.7) - p.y) * Math.min(1, dt * 2);
+    // follow him (he can outrun it for a moment)
+    const want = head.clone().add(V(0, 4.2, 0));
+    A.g.position.lerp(want, Math.min(1, dt * 1.3));
     A.g.scale.setScalar(0.1 + 0.9 * A.level);
     A.flash.position.copy(A.g.position);
     A.mat.opacity = 0.95 * A.level;
@@ -237,7 +204,7 @@ export class RainCloud {
     // lightning and thunder
     A.boltT -= dt;
     if (A.boltT <= 0 && A.level > 0.7 && !leaving) {
-      A.boltT = rand(6, 11);
+      A.boltT = rand(5, 10);
       A.flashT = 0.3;
       // the bolt hits him if he's under the cloud, otherwise the floor below it
       const end = under ? head.clone().add(V(0, 0.3, 0)) : V(c.x + rand(-0.5, 0.5), A.ground + 0.05, c.z + rand(-0.5, 0.5));
@@ -514,7 +481,7 @@ export class Happenings {
   /**
    * ctx: { scene, sfx, cultists, food, center, stageRadius, ceilY, groundAt(p), hostPos(), hostHead(), shins(),
    *        kick(i, dir), dropRig(kind, p), playSfx(file, opts), pan(p), setCrowdChance(x), stimAlias, pulse,
-   *        reinforce, ticker, allowed(switch), pacer, needs() -> { hunger, low } }
+   *        reinforce, ticker, allowed(switch), needs() -> { hunger, low } }
    */
   constructor(ctx) {
     this.ctx = ctx;
@@ -523,7 +490,7 @@ export class Happenings {
     this.mushroom = new VineMushroom(ctx);
     this.aliens = new MiniAliens(ctx);
     this.enabled = true;
-    this.timers = { rapture: rand(480, 900), rain: rand(150, 330), mushroom: rand(90, 220), rig: rand(100, 280), aliens: rand(200, 420),
+    this.timers = { rapture: rand(300, 600), rain: rand(150, 330), mushroom: rand(90, 220), rig: rand(100, 280), aliens: rand(200, 420),
       storm: rand(120, 300), roseStorm: rand(200, 450), rose: rand(40, 120), sugar: rand(50, 130), ovation: rand(100, 260) };
   }
 
@@ -564,41 +531,33 @@ export class Happenings {
 
   update(dt, on) {
     if (!dt) return;
-    const T = this.timers, ctx = this.ctx, P = ctx.pacer, ok = (k) => ctx.allowed(k);
+    const T = this.timers, ctx = this.ctx, ok = (k) => ctx.allowed(k);
     if (this.enabled && on) {
-      for (const k in T) if (T[k] > 0) T[k] -= dt;
-      // the big ones: one at a time, with a calm spell before each (they wait for their turn, then go)
-      const big = (key, start, next) => {
-        if (T[key] > 0) return false;
-        if (!ok(key)) { T[key] = next(); return false; }                  // switched off: check again later
-        if (!P.canMajor(key)) return false;
-        T[key] = next();
-        if (start()) P.started();
-        return true;
-      };
-      big('rapture', () => this.rapture.start(), () => rand(600, 1200))
-        || big('rain', () => this.rain.start(), () => rand(180, 400))
-        || big('aliens', () => this.aliens.start(), () => rand(240, 480));
-      // smaller ones: not during a big one, and not too close together
-      const small = (key, sw, fire, next) => {
+      for (const k in T) T[k] -= dt;
+      // the big ones don't overlap each other; one that's blocked by another tries again shortly
+      const big = this.rapture.active || this.rain.active || this.aliens.active;
+      const fire = (key, sw, start, next) => {
         if (T[key] > 0) return;
         if (!ok(sw)) { T[key] = next(); return; }
-        if (!P.canMinor()) return;
-        T[key] = next();
-        if (fire() !== false) P.minorStarted();
+        if (big) { T[key] = rand(20, 40); return; }
+        T[key] = next(); start();
       };
-      small('mushroom', 'mushroom', () => this.mushroom.start(), () => rand(120, 300));
-      small('rig', 'rig', () => this.rigFall(), () => rand(120, 320));
-      small('storm', 'storms', () => this.storm('mixed'), () => rand(180, 420));
-      small('roseStorm', 'roseStorms', () => this.storm('rose', 10 + ((Math.random() * 12) | 0)), () => rand(260, 560));
-      small('ovation', 'ovations', () => ctx.ovation(rand(7, 12)), () => rand(150, 360));
+      fire('rapture', 'rapture', () => this.rapture.start(), () => rand(600, 1200));
+      fire('rain', 'rain', () => this.rain.start(), () => rand(180, 400));
+      fire('aliens', 'aliens', () => this.aliens.start(), () => rand(240, 480));
+      const every = (key, sw, run, next) => { if (T[key] <= 0) { T[key] = next(); if (ok(sw)) run(); } };
+      every('mushroom', 'mushroom', () => this.mushroom.start(), () => rand(120, 300));
+      every('rig', 'rig', () => this.rigFall(), () => rand(120, 320));
+      every('storm', 'storms', () => this.storm('mixed'), () => rand(180, 420));
+      every('roseStorm', 'roseStorms', () => this.storm('rose', 10 + ((Math.random() * 12) | 0)), () => rand(260, 560));
+      every('ovation', 'ovations', () => ctx.ovation(rand(7, 12)), () => rand(150, 360));
       // single kind gestures from the seats, sooner when he's having a hard time (hungry: sugar; miserable: a rose)
       const need = ctx.needs?.() ?? { hunger: 0, low: 0 };
       T.sugar -= dt * 2 * need.hunger; T.rose -= dt * 2 * need.low;
-      if (T.rose <= 0) { T.rose = rand(45, 140); if (ok('roses') && !P.hold && !ctx.audienceAway()) ctx.throwItem('rose'); }
+      if (T.rose <= 0) { T.rose = rand(45, 140); if (ok('roses') && !ctx.audienceAway()) ctx.throwItem('rose'); }
       if (T.sugar <= 0) {
         T.sugar = rand(60, 150);
-        if (ok('sugar') && !P.hold) this.sugarThrow(need.hunger > 0.7 && Math.random() < 0.5 ? 3 + ((Math.random() * 3) | 0) : 1);
+        if (ok('sugar')) this.sugarThrow(need.hunger > 0.7 && Math.random() < 0.5 ? 3 + ((Math.random() * 3) | 0) : 1);
       }
     }
     this.rapture.update(dt); this.rain.update(dt); this.mushroom.update(dt); this.aliens.update(dt);
