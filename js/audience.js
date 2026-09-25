@@ -38,6 +38,7 @@ const TABLE = {
   roseHit:    [1.00, 0.20, 1.00, 0.02, 0.20],
   dodge:      [0.90, 0.30, 0.80, 0.02, 0.20],     // a predator's lunge misses him
   doze:       [0.10, 0.50, 0.30, 0.05, 0.02],     // he nods off on stage
+  pieHit:     [0.30, 1.00, 0.40, 0.02, 0.05],     // a cream pie in the face
 };
 const KINDS = ['cheer', 'laugh', 'applause', 'boo', 'gasp'];
 const VALENCE = { cheer: 1, laugh: 0.7, applause: 1, boo: -1, gasp: -0.5 };

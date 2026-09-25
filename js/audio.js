@@ -47,7 +47,29 @@ export class AudioWorld {
     this.voiceBus = ctx.createGain();
     this.voiceAnalyser = ctx.createAnalyser(); this.voiceAnalyser.fftSize = 512;
     this.voiceBus.connect(this.voiceAnalyser);
-    this.voiceBus.connect(this.bus);
+    // his voice goes out dry, or through a PA microphone (the monologue; setMic): band-limited, a presence peak,
+    // gain into a soft clipper (loud syllables peak and crunch) and a short slapback off the studio walls
+    this.voiceDry = ctx.createGain();
+    this.voiceBus.connect(this.voiceDry).connect(this.bus);
+    const bq = (type, f, q = 0.7, g = 0) => { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; b.gain.value = g; return b; };
+    const shaper = ctx.createWaveShaper(), curve = new Float32Array(1024);
+    for (let i = 0; i < curve.length; i++) { const x = (i / (curve.length - 1)) * 2 - 1; curve[i] = Math.tanh(2.6 * x) / Math.tanh(2.6); }
+    shaper.curve = curve; shaper.oversample = '4x';
+    const drive = ctx.createGain(); drive.gain.value = 3.2;
+    const post = ctx.createGain(); post.gain.value = 0.55;
+    const slap = ctx.createDelay(0.3); slap.delayTime.value = 0.085;
+    const slapGain = ctx.createGain(); slapGain.gain.value = 0.22;
+    this.voiceMic = ctx.createGain(); this.voiceMic.gain.value = 0;
+    this.voiceBus.connect(bq('highpass', 170)).connect(bq('peaking', 2600, 1, 8)).connect(bq('lowpass', 6500))
+      .connect(drive).connect(shaper).connect(post).connect(this.voiceMic);
+    post.connect(slap).connect(slapGain).connect(this.voiceMic);
+    this.voiceMic.connect(this.bus);
+    // a big hall reverb (the fart meme): a long, decaying stereo noise impulse response
+    const len = Math.floor(ctx.sampleRate * 3.6), ir = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.4); }
+    this.reverb = ctx.createConvolver(); this.reverb.buffer = ir;
+    const wet = ctx.createGain(); wet.gain.value = 0.6;
+    this.reverb.connect(wet).connect(this.bus);
     this._vbuf = new Float32Array(this.voiceAnalyser.fftSize);
     this.noise = this.makeNoise(2);
     await this.reloadBank();
@@ -84,6 +106,14 @@ export class AudioWorld {
 
   setVolume(v) { this.volume = v; if (this.master) this.master.gain.value = v; }
 
+  /** his voice through the PA microphone (on) or dry (off), crossfaded */
+  setMic(on) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.voiceDry.gain.setTargetAtTime(on ? 0 : 1, t, 0.12);
+    this.voiceMic.gain.setTargetAtTime(on ? 1.35 : 0, t, 0.12);
+  }
+
   makeNoise(sec) {
     const b = this.ctx.createBuffer(1, this.ctx.sampleRate * sec, this.ctx.sampleRate);
     const d = b.getChannelData(0);
@@ -110,14 +140,22 @@ export class AudioWorld {
     return this.buffers.get(file);
   }
 
-  async playClip(clip, { gain = 1, rate = 1, pan = 0, when = 0, voice = false } = {}) {
+  /** reverb: send level into the big hall reverb; warble: depth (cents) of a wobble in pitch */
+  async playClip(clip, { gain = 1, rate = 1, pan = 0, when = 0, voice = false, reverb = 0, warble = 0 } = {}) {
     const buf = await this.load(clip.file);
     if (!buf) return 0;
     const ctx = this.ctx, src = ctx.createBufferSource(), g = ctx.createGain(), p = ctx.createStereoPanner();
     src.buffer = buf; src.playbackRate.value = rate; g.gain.value = gain; p.pan.value = pan;
     src.connect(g).connect(p).connect(voice ? this.voiceBus : this.bus);
-    src.start(ctx.currentTime + when);
-    return buf.duration / rate;
+    if (reverb && this.reverb) { const s = ctx.createGain(); s.gain.value = reverb; g.connect(s).connect(this.reverb); }
+    const t0 = ctx.currentTime + when, len = buf.duration / rate;
+    if (warble && src.detune) {
+      const lfo = ctx.createOscillator(); lfo.frequency.value = rand(4, 9);
+      const depth = ctx.createGain(); depth.gain.value = warble;
+      lfo.connect(depth).connect(src.detune); lfo.start(t0); lfo.stop(t0 + len + 0.1);
+    }
+    src.start(t0);
+    return len;
   }
 
   // ------------------------------------------------------------------ Leno's voice
@@ -197,6 +235,8 @@ export class AudioWorld {
     const mouthy = ['retch', 'vomit', 'burp'].includes(kind);            // come out of Leno's mouth -> lip-sync
     // gag/vomit SFX are recorded by other people: pitch them down a little toward Leno's low voice
     const rate = mouthy && kind !== 'burp' ? rand(0.82, 0.9) : rand(0.94, 1.06);
+    // a fart gets the meme treatment: a huge reverb tail, a random pitch and a warble
+    if (kind === 'fart' && clips?.length) return this.playClip(pick(clips), { pan, gain: gain * 1.1, rate: rand(0.7, 1.35), reverb: 0.9, warble: rand(40, 160) });
     if (clips?.length) return this.playClip(pick(clips), { pan, gain, rate, voice: mouthy });
     if (kind === 'vomit' && this.clips('sfx', 'retch')) {
       // no vomit clips: a heave followed by a splash
@@ -213,6 +253,7 @@ export class AudioWorld {
     const out = ctx.createGain(); const p = ctx.createStereoPanner(); p.pan.value = pan; out.connect(p).connect(this.bus);
     const n = ctx.createBufferSource(); n.buffer = this.noise;
     if (kind === 'fart') {
+      if (this.reverb) { const s = ctx.createGain(); s.gain.value = 0.9; out.connect(s).connect(this.reverb); }
       const dur = rand(0.4, 1.1);
       const o = ctx.createOscillator(); o.type = 'sawtooth';
       o.frequency.setValueAtTime(rand(70, 110), t);

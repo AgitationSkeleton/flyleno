@@ -8,7 +8,7 @@
 //   VineMushroom - a Vinesauce-logo mushroom power-up falls from the ceiling and slides about; eating it
 //                  is a big dopamine reward
 //   rig drops    - studio cameras and stage lights fall from the ceiling (physics objects, js/projectiles.js)
-//   MiniAliens   - dozens of little grey aliens walk up and kick him in the shins ("TOES", "mimimi")
+//   MiniAliens   - the duendes: dozens of little grey figures walk up and kick him in the shins ("TOES", "mimimi")
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -341,7 +341,7 @@ export class VineMushroom {
   }
 }
 
-// ------------------------------------------------------------------------------------------------ mini aliens
+// ------------------------------------------------------------------------------------------------ duendes
 const AL = 0.95;                           // height (m)
 
 function alienParts() {
@@ -387,7 +387,7 @@ export class MiniAliens {
         speed: rand(1.6, 2.6), walk: Math.random() * 6, kick: 0, side: 1, cool: rand(0, 1.5), gT: 0, hit: false };
     });
     this.active = true; this.leaving = false; this.t = 0; this.life = rand(28, 38); this.chatT = 0.3; this.hits = 0;
-    ctx.ticker(`${n} little grey aliens march onto the stage`);
+    ctx.ticker(`${n} duendes march onto the stage`);
     return true;
   }
 
@@ -409,7 +409,7 @@ export class MiniAliens {
     const ctx = this.ctx;
     this.t += dt;
     const host = ctx.hostPos(), shins = ctx.shins();
-    if (this.t > this.life && !this.leaving) { this.leaving = true; for (const a of this.list) a.state = 'leave'; ctx.ticker('The little aliens scatter'); }
+    if (this.t > this.life && !this.leaving) { this.leaving = true; for (const a of this.list) a.state = 'leave'; ctx.ticker('The duendes scatter'); }
     // chatter: "TOES" / "mimimi" from somewhere in the crowd of them
     this.chatT -= dt;
     if (this.chatT <= 0 && this.list.length) {
@@ -491,7 +491,7 @@ export class Happenings {
     this.aliens = new MiniAliens(ctx);
     this.enabled = true;
     this.timers = { rapture: rand(300, 600), rain: rand(150, 330), mushroom: rand(90, 220), rig: rand(100, 280), aliens: rand(200, 420),
-      storm: rand(120, 300), roseStorm: rand(200, 450), rose: rand(40, 120), sugar: rand(50, 130), ovation: rand(100, 260) };
+      storm: rand(120, 300), roseStorm: rand(200, 450), rose: rand(40, 120), sugar: rand(50, 130), ovation: rand(100, 260), clowns: rand(180, 420) };
   }
 
   /** a sugar cube (or, when he's starving, a handful) lobbed from the seats to land in front of him */
@@ -535,7 +535,7 @@ export class Happenings {
     if (this.enabled && on) {
       for (const k in T) T[k] -= dt;
       // the big ones don't overlap each other; one that's blocked by another tries again shortly
-      const big = this.rapture.active || this.rain.active || this.aliens.active;
+      const big = this.rapture.active || this.rain.active || this.aliens.active || !!ctx.clownsActive?.();
       const fire = (key, sw, start, next) => {
         if (T[key] > 0) return;
         if (!ok(sw)) { T[key] = next(); return; }
@@ -545,6 +545,7 @@ export class Happenings {
       fire('rapture', 'rapture', () => this.rapture.start(), () => rand(600, 1200));
       fire('rain', 'rain', () => this.rain.start(), () => rand(180, 400));
       fire('aliens', 'aliens', () => this.aliens.start(), () => rand(240, 480));
+      fire('clowns', 'clowns', () => ctx.startClowns?.(), () => rand(480, 900));
       const every = (key, sw, run, next) => { if (T[key] <= 0) { T[key] = next(); if (ok(sw)) run(); } };
       every('mushroom', 'mushroom', () => this.mushroom.start(), () => rand(120, 300));
       every('rig', 'rig', () => this.rigFall(), () => rand(120, 320));

@@ -33,6 +33,22 @@ export class Food {
     this.capSnacks();
   }
 
+  /** a cream pie on the floor (the clowns'): sweet */
+  addPie(pos) {
+    if (!this.pieParts) {
+      this.pieParts = [
+        [keep(new THREE.CylinderGeometry(0.17, 0.14, 0.05, 16)), keep(new THREE.MeshStandardMaterial({ color: 0xb8b8bc, metalness: 0.7, roughness: 0.35 }))],
+        [keep(new THREE.SphereGeometry(0.16, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.1, 0.3, 1.1).translate(0, 0.02, 0)), keep(new THREE.MeshStandardMaterial({ color: 0xfbf6ea, roughness: 0.8 }))],
+      ];
+    }
+    const mesh = new THREE.Group();
+    for (const [geo, mat] of this.pieParts) mesh.add(new THREE.Mesh(geo, mat));
+    mesh.position.copy(pos).add(new THREE.Vector3(0, 0.03, 0)); mesh.rotation.y = Math.random() * 6.28;
+    this.scene.add(mesh);
+    this.items.push({ kind: 'pie', pos: pos.clone(), amount: 0.8, mesh, sweet: 1 });
+    while (this.items.filter((i) => i.kind === 'pie').length > 16) this.remove(this.items.find((i) => i.kind === 'pie'));
+  }
+
   /** a birthday cake: big and sweet, and he goes for it even when he isn't hungry */
   addCake(pos, mesh) {
     if (mesh) { mesh.position.copy(pos); mesh.rotation.set(0, Math.random() * 6, 0); this.scene.add(mesh); }
@@ -70,6 +86,7 @@ export class Food {
     if (item.mesh && item.kind === 'poop') item.mesh.scale.setScalar(item.base * (0.3 + 0.7 * s / 0.35));
     else if (item.mesh && item.kind === 'mushroom') item.mesh.scale.setScalar(item.base * (0.35 + 0.65 * s / 0.6));
     else if (item.mesh && item.kind === 'cake') item.mesh.scale.setScalar(0.35 + 0.65 * s / 1.6);
+    else if (item.mesh && item.kind === 'pie') item.mesh.scale.setScalar(0.35 + 0.65 * s / 0.8);
     else if (item.mesh && item.rotten) item.mesh.scale.setScalar(0.35 + 0.65 * s);
     else if (item.mesh) item.mesh.scale.setScalar(item.kind === 'sugar' ? Math.cbrt(s) : 1).multiply(item.kind === 'tomato' ? new THREE.Vector3(1.1 * s + 0.2, 0.35, 1.1 * s + 0.2) : new THREE.Vector3(1, 1, 1));
     if (item.amount <= 0) { this.remove(item); return true; }

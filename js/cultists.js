@@ -5,7 +5,7 @@
 // They bob with applause/cheers, rock with laughter, sway and shake their fists at boos, and one of them
 // occasionally stands up to throw something.
 import * as THREE from 'three';
-import { seatedGeometry, farSeatedGeometry, figureMaterial, NECK, FIGURE_SCALE as SCALE } from './cultist-model.js';
+import { seatedGeometry, seatedArmGeometry, farSeatedGeometry, figureMaterial, NECK, SH_L, SH_R, FIGURE_SCALE as SCALE } from './cultist-model.js';
 
 const LOD_DIST = [16, 32];                 // metres: near < 16 <= mid < 32 <= far (with 10% hysteresis)
 
@@ -22,12 +22,17 @@ export class Cultists {
       m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.frustumCulled = false; m.name = name; m.count = 0;
       scene.add(m); return m;
     };
-    const near = seatedGeometry(), mid = seatedGeometry(undefined, 0.5);
+    // near and mid: the arms are their own instanced meshes (pivots at the shoulders) so the audience can clap
+    const near = seatedGeometry(undefined, 1, { arms: false }), mid = seatedGeometry(undefined, 0.5, { arms: false });
     this.levels = [
-      { body: inst(near.body, 'Cultists'), head: inst(near.head, 'CultistHeads') },
-      { body: inst(mid.body, 'CultistsMid'), head: inst(mid.head, 'CultistHeadsMid') },
-      { body: inst(farSeatedGeometry(), 'CultistsFar'), head: null },
+      { body: inst(near.body, 'Cultists'), head: inst(near.head, 'CultistHeads'),
+        arms: [inst(seatedArmGeometry(undefined, 1), 'CultistArmsL'), inst(seatedArmGeometry(undefined, -1), 'CultistArmsR')] },
+      { body: inst(mid.body, 'CultistsMid'), head: inst(mid.head, 'CultistHeadsMid'),
+        arms: [inst(seatedArmGeometry(undefined, 1, 0.5), 'CultistArmsMidL'), inst(seatedArmGeometry(undefined, -1, 0.5), 'CultistArmsMidR')] },
+      { body: inst(farSeatedGeometry(), 'CultistsFar'), head: null, arms: null },
     ];
+    this._shoulders = [SH_L.clone().multiplyScalar(SCALE), SH_R.clone().multiplyScalar(SCALE)];
+    this._aq = new THREE.Quaternion(); this._ae = new THREE.Euler(); this._am = new THREE.Matrix4(); this._av = new THREE.Vector3();
     this.mesh = this.levels[0].body; this.heads = this.levels[0].head;
     this.eye = null;                         // camera position for LOD (set by the app); null = all near
     for (const s of this.seats) { s.lod = 0; s.age = 1; s.rise = 0; s.spin = 0; s.gone = false; }
@@ -107,15 +112,29 @@ export class Cultists {
       y += 0.008 * Math.sin(this.t * 1.3 + s.phase);                                                   // breathing
       y += s.stand * 0.45 * SCALE;                                                                    // standing to throw
       y += s.rise;                                                                                    // ascending (the Rapture)
-      // age 0 (newborn) .. 1 (adult): babies are small with big heads, standing up on their seats and bouncing
+      // age 0 (newborn) .. 1 (adult): babies are small with big heads, sitting in their seats and wriggling
       const bs = 0.5 + 0.5 * s.age, hs = 0.82 + 0.18 * s.age, young = 1 - s.age;
-      y += young * (0.55 + 0.08 * Math.abs(Math.sin(this.t * 6 + s.phase)));
+      y += young * 0.03 * Math.abs(Math.sin(this.t * 6 + s.phase));
       _e.set(pitch, s.yaw + s.spin, roll, 'YXZ');
       _q.setFromEuler(_e);
       const base = new THREE.Vector3(s.p.x, s.p.y + this.seatHeight * SCALE + y, s.p.z);
       const sc = _s.set(bs, bs, bs);
       _m.compose(base, _q, sc);
       L.body.setMatrixAt(slot, _m);
+      if (L.arms) {
+        // arms: hands in the lap, or clapping in front of the chest (applause and cheers; everyone at their own pace)
+        const clapping = (m.kind === 'applause' || m.kind === 'cheer') && e > 0.25;
+        s.clap = (s.clap ?? 0) + ((clapping ? 1 : 0) - (s.clap ?? 0)) * Math.min(1, dt * 6);
+        const beat = 0.5 + 0.5 * Math.sin(this.t * Math.PI * 2 * (2.6 + s.rate) + s.phase * 3);
+        for (let k = 0; k < 2; k++) {
+          const side = k ? -1 : 1;
+          this._ae.set(-0.85 * s.clap, side * -(0.3 + 0.2 * beat) * s.clap, 0, 'XYZ');
+          this._aq.setFromEuler(this._ae).premultiply(_q);
+          this._av.copy(this._shoulders[k]).multiplyScalar(bs).applyQuaternion(_q).add(base);
+          this._am.compose(this._av, this._aq, _s.set(bs, bs, bs));
+          L.arms[k].setMatrixAt(slot, this._am);
+        }
+      }
       if (!L.head) return;                                          // far: head merged into the body, fixed
       // head: turn toward Leno (relative to the body), limited like a neck, smoothed
       let ty = 0, tp = 0;
@@ -135,7 +154,7 @@ export class Cultists {
       L.head.setMatrixAt(slot, this._hm);
     });
     this.levels.forEach((L, k) => {
-      for (const m of [L.body, L.head]) { if (!m) continue; m.count = counts[k]; m.instanceMatrix.needsUpdate = true; }
+      for (const m of [L.body, L.head, ...(L.arms || [])]) { if (!m) continue; m.count = counts[k]; m.instanceMatrix.needsUpdate = true; }
     });
     this.lodCounts = counts;
   }

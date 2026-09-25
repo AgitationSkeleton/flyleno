@@ -94,19 +94,25 @@ export function bodyGeometry(P, seated, part = 'all', q = 1) {
   return mergeGeometries(parts);
 }
 
-const SH_L = new THREE.Vector3(0.24, 0.6, 0), SH_R = new THREE.Vector3(-0.24, 0.6, 0);
+export const SH_L = new THREE.Vector3(0.24, 0.6, 0), SH_R = new THREE.Vector3(-0.24, 0.6, 0);
 
 /** seated audience member: { body (incl. arms resting on the lap), head (pivot at neck) }, scaled.
  *  q = level of detail (1 full, 0.5 about half the segments) */
-export function seatedGeometry(P = PALETTES.audience, q = 1) {
+export function seatedGeometry(P = PALETTES.audience, q = 1, { arms = true } = {}) {
   const body = mergeGeometries([
     bodyGeometry(P, true, 'all', q),
-    armGeometry(P, 1, 'lap', q).translate(SH_L.x, SH_L.y, SH_L.z),
-    armGeometry(P, -1, 'lap', q).translate(SH_R.x, SH_R.y, SH_R.z),
+    ...(arms ? [armGeometry(P, 1, 'lap', q).translate(SH_L.x, SH_L.y, SH_L.z), armGeometry(P, -1, 'lap', q).translate(SH_R.x, SH_R.y, SH_R.z)] : []),
   ]).scale(FIGURE_SCALE, FIGURE_SCALE, FIGURE_SCALE);
   const head = headGeometry(P, q).scale(FIGURE_SCALE, FIGURE_SCALE, FIGURE_SCALE);
   body.computeVertexNormals(); head.computeVertexNormals();
   return { body, head };
+}
+
+/** a seated audience member's arm on its own (hands in the lap), pivot at the shoulder, scaled; side +1 left, -1 right */
+export function seatedArmGeometry(P = PALETTES.audience, side = 1, q = 1) {
+  const g = armGeometry(P, side, 'lap', q).scale(FIGURE_SCALE, FIGURE_SCALE, FIGURE_SCALE);
+  g.computeVertexNormals();
+  return g;
 }
 
 /** distant seated audience member: one merged low-poly piece (robe, hood, white mask), head fixed, scaled */

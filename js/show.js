@@ -67,7 +67,7 @@ export class Show {
    * ctx: { scene, stage, audio, sfx, screens, npcs, getHost, isFly, hostPos, hostHead, impulse, backflip,
    *        stimAlias, pulse, reinforce, setStim, crowd, react, ticker, cue, motor, duckMusic, voice, mouthOpen,
    *        deliverSnack, onChange, allowed(switch), said() (words spoken so far), transcript(),
-   *        happen(kind) (a prize), gooseVisit(), gooseHead(), wave(laps), dim(level), lullaby(on), asleep() }
+   *        happen(kind) (a prize), gooseVisit(), gooseHead(), wave(laps), dim(level), lullaby(on), asleep(), mic(on) }
    */
   constructor(ctx) {
     this.ctx = ctx;
@@ -246,7 +246,11 @@ export class Show {
       s.prevMode = ctx.screens?.mode; s.prevVideo = ctx.screens?.videoId;
       if (ctx.screens?.available) ctx.screens.setMode('video', pick(CLIP_VIDEOS), { randomStart: true });
     }
-    if (key === 'monologue') { this.spot.on(() => ctx.hostHead()); s.jokes = 0; s.next = 1.5; ctx.ticker('The spotlight finds Leno: joke time'); }
+    if (key === 'monologue') {
+      this.spot.on(() => ctx.hostHead()); s.jokes = 0; s.next = 2.2; s.fbT = 3;
+      ctx.mic(true); this.ctx.sfx.sting('mictap', { gain: 0.6 });
+      ctx.ticker('The spotlight finds Leno at the mic: joke time');
+    }
     if (key === 'phonein') { this.ctx.sfx.sting('ring', { gain: 0.8 }); s.call = pick(CALLS); ctx.ticker('📞 The phone on the desk rings'); }
     if (key === 'guest') ctx.cue("We're gonna have a guest, Mr. Frog. Mr. Frog will be on… at some point.");
     if (key === 'gooseguest') {
@@ -355,20 +359,37 @@ export class Show {
       return t > SEGMENTS.clip.dur;
     }
     if (key === 'monologue') {
-      // three "jokes": he has the floor for up to 8 s each (nothing makes him talk). When he has said something
-      // and stops, a rimshot and usually a laugh; if he says nothing, crickets
+      // three "jokes" at the mic: he has the floor for up to 8 s each (nothing makes him talk). A drumroll builds
+      // while he's talking; when he stops, a rimshot (a cymbal crash on the last one) and the audience reacts;
+      // if he says nothing, crickets. Loud stretches can make the PA feed back.
       s.next -= dt;
       if (!s.listening && s.next <= 0 && s.jokes < 3) this.listen(s);
+      if (s.listening && !s.roll && ctx.said() > s.w0) s.roll = this.ctx.sfx.drumroll({ gain: 0.4 });
+      if (s.listening) {
+        s.fbT -= dt;
+        if (ctx.voice() > 0.85 && s.fbT <= 0 && Math.random() < dt * 0.6) {
+          s.fbT = 6; this.ctx.sfx.feedback({ gain: 0.09 }); ctx.ticker('The mic squeals');
+          if (Math.random() < 0.4) setTimeout(() => ctx.crowd('laugh', 0.5), 700);
+        }
+      }
       if (s.listening && this.heardEnough(s, 8)) {
         const { said, v } = this.heard(s);
-        s.jokes++; s.next = 3;
+        s.roll?.stop(); s.roll = null;
+        s.jokes++; s.next = 3.5;
+        const last = s.jokes >= 3;
         if (said || v > 0.35) {
           if (said) ctx.ticker(`Leno: "${said}"`);
-          this.ctx.sfx.sting('rimshot', { gain: 0.7 });
-          setTimeout(() => ctx.crowd(Math.random() < 0.7 ? 'laugh' : 'applause', 0.8), 900);
+          this.ctx.sfx.sting('rimshot', { gain: 0.75 });
+          if (last) setTimeout(() => this.ctx.sfx.sting('cymbal', { gain: 0.5 }), 380);
+          const short = said.split(' ').length <= 2;
+          setTimeout(() => {
+            if (last) { ctx.crowd('laugh', 1); ctx.crowd('applause', 0.9); return; }
+            const r = Math.random();
+            ctx.crowd(r < 0.55 ? 'laugh' : r < 0.75 ? 'applause' : r < 0.85 + (short ? 0 : 0.1) ? 'cheer' : 'boo', 0.8);   // (a weak one can get a groan)
+          }, 900);
         } else { this.ctx.sfx.sting('crickets', { gain: 0.7 }); ctx.ticker('…nothing. Tough crowd.'); }
       }
-      if (s.jokes >= 3 && s.next <= 1) { this.spot.off(); return true; }
+      if (s.jokes >= 3 && s.next <= 1.5) { this.spot.off(); ctx.mic(false); return true; }
       return false;
     }
     if (key === 'phonein') {
@@ -512,6 +533,7 @@ export class Show {
   stop(key, s) {
     const ctx = this.ctx;
     this.heard(s);
+    if (key === 'monologue') { s.roll?.stop(); ctx.mic(false); }
     if (key === 'clip' && !s.back) this.restoreScreens(s);
     if (key === 'guest') this.frog.leave('done');
     if (key === 'drive' && this.car.present) this.car.active.phase = 'out';

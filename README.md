@@ -62,7 +62,7 @@ the connectome, labelled as such in the sidebar).
 | voice: babble, mutters, stammers | song/flight DNs DNg02+DNp13 (voicing) + pharyngeal (vowels) and mouthpart (consonants) motor neurons | neural, phoneme mapping engineered |
 | lip-sync | loudness of Leno's own sounds → `MouthOpen` shape key (jaw drop) | — |
 | retch / vomit | pharyngeal-pump motor neurons (PhN, not MN9) while MN9 is quiet; repeated retching → vomit | neural |
-| fart | oviposition DNs (oviDN) | neural |
+| fart | oviposition DNs (oviDN); the sound gets a huge reverb, a random pitch and a warble | neural |
 | eating | touching food → all 129 sugar taste neurons → the model's MN9 (proboscis motor neuron) decides | neural |
 | walking toward food when hungry | food taxis | engineered (see below) |
 | homing to his starting mark | he roams freely within ~4.5 m of his mark. Farther out, homesickness builds slowly (minutes; faster the farther away), and when it's full (or on a whim, about every 5 minutes) he makes a trip home: a home vector (path integration, which real flies do in the central complex, not modelled here) drives the brain's own DNa01/02 steering and P9 walking neurons until he's back near the mark. The ragdoll is also led gently by its strings, since its own walking is weak | engineered input onto neural DNs |
@@ -124,7 +124,7 @@ snack, and keeping track of them while it flies), tastes them (sugar neurons →
 - **The Rapture** (rare: the first after ~5–10 minutes, then every ~10–20): a trumpet sounds and a light column comes down.
   - **Ascension:** every seated audience member (not Leno) rises spinning into the light and is gone.
   - **Empty house:** then the seats stay empty for 30–45 s. Nobody reacts, cheers, boos, throws or heckles.
-  - **Babies:** the seats fill with baby cultists (small, big-headed, standing on their seats, crying).
+  - **Babies:** the seats fill with baby cultists (small, big-headed, sitting in their seats, crying).
     They grow back into their adult selves over about 100 seconds.
   - **Effects:** the light reaches the fly's eyes, and the crowd reacts less while it is young.
 - **Rain cloud:** a personal storm cloud follows Leno and rains on him.
@@ -156,16 +156,21 @@ snack, and keeping track of them while it flies), tastes them (sugar neurons →
 - **Kindness:** single roses and sugar cubes come sooner when he's having a hard time: sugar when he's hungry,
   a rose when his morale is low or he's stressed.
 - **Standing ovation:** the whole audience stands and applauds for 7–12 s, with a long reward.
-- **Mini aliens** (every ~4–8 minutes): 24–40 little grey aliens march in, surround Leno and kick him in the shins.
+- **Duendes** (every ~4–8 minutes): 24–40 little grey duendes march in, surround Leno and kick him in the shins.
   - A kick knocks the leg and him around, with touch and mild punishment.
   - Sounds: while they're active, `TOES.mp3` and `mimimi.mp3` play at random from the crowd of them (boosted
     ~12 dB: the recordings are much quieter than the rest of the bank). Every kick that lands plays
     `go_alert2.wav`. All three are in `assets/audio/sfx/minialien/`.
   - They scatter after 30–40 s.
+- **Clown car** (the first after ~3–7 minutes, then every ~8–15): a tiny polka-dot car putters on to circus music
+  and stops near Leno, squashing and stretching as twelve full-size clowns climb out one by one, honking as they
+  walk. They fan out around him and each throws 3–5 cream pies rapid-fire. A pie in the face shoves him hard
+  (slapstick) but does almost no harm, even when it knocks him down, and it's sweet (sugar taste neurons); the
+  audience laughs. Every pie ends up on the floor as food. Then they pile back into the car and it drives off.
 
 **Events panel and Peaceful Mode** (`js/events.js`):
 - **Switches:** the Events panel in the sidebar has an on/off switch for every event: visitors and predators
-  (goose, spider-Leno, swatter, electric racket, mini aliens, Mr. Frog's tongue, the car nudging him),
+  (goose, spider-Leno, swatter, electric racket, duendes, Mr. Frog's tongue, the car nudging him, the clown car),
   happenings (Rapture, rain cloud, mushroom, falling rig), every kind of audience action (cheers/laughs/applause,
   gasps, boos, rose / sugar / tomato / pipe throws, rose storms, tomato-and-pipe storms, ovations, hecklers), the
   stage crew and director's cues (stagehand snacks, rotten éclairs, applause cues, walk drives, the bitter-taste
@@ -175,7 +180,7 @@ snack, and keeping track of them while it flies), tastes them (sugar neurons →
   aversive "Show events" stimuli and the brain worms. Switched on mid-show, the harmful things leave at once (the
   spider climbs away, the glove floats off, the rain cloud drifts away, the aliens scatter). Mr. Frog keeps his
   tongue in, the car steers around Leno instead of nudging him, and the UFO's beam only lifts him a little.
-- **Overlap:** the Rapture, the rain cloud and the mini aliens don't start while one of the others is on (one
+- **Overlap:** the Rapture, the rain cloud, the duendes and the clown car don't start while one of the others is on (one
   that's blocked tries again 20–40 s later), and spider-Leno and the glove don't visit at the same time.
   Everything else runs on its own timer.
 
@@ -207,6 +212,8 @@ distance from the viewing camera, with 10% hysteresis so seats don't flicker:
 - **Near** (under 16 m): the full figure, 1,076 triangles, with a head that follows Leno.
 - **Mid** (16–32 m): about half the segments, 364 triangles; the head still follows Leno.
 - **Far** (over 32 m): one merged piece of 104 triangles (robe, hood, white mask), with the head fixed.
+- **Clapping:** near and mid seats have separate arms; during applause and cheers they raise their hands and clap,
+  each at their own pace.
 
 **Other levels of detail** (`js/lod.js`):
 - **Instanced set pieces:** seats, toilets, truss bays and light cans each get one or two simpler geometries and
@@ -215,7 +222,7 @@ distance from the viewing camera, with 10% hysteresis so seats don't flicker:
     colour with distance); toilets: coarse lathe and boxes; truss: just the four chords far away;
     light cans: 8 instead of 20 segments.
 - **One-off props:** the frog, car, goose, stagehand/heckler, spider, glove, mushroom, bandstand, balloons, UFO
-  and the mini aliens swap each mesh to automatically simplified copies (three.js `SimplifyModifier`) as they get
+  and the duendes swap each mesh to automatically simplified copies (three.js `SimplifyModifier`) as they get
   small on screen: full, then medium (~60% of the vertices), then far (~25%).
   - The goose keeps 80% and 45%, because its round body crumples otherwise.
   - The frog's eyes are their own mesh and are never simplified.
@@ -259,7 +266,7 @@ same way: the strings lower him into a curl, forehead to the floor.
 | A word from our sponsor | GRONK sponsor card (a slow, throbbing glow; no strobe), then "Buy Grey Leno NFTs" | pulsing light on the eyes (R1-6) |
 | Technical difficulties | screens full of soft grey static; "Dave, can you fix the static?" | visual noise (R1-6), hiss (JO-A) |
 | Phone-in | the desk phone rings and a garbled caller asks e.g. "Why do you puke so much?" or "What do the worms in your brain tell you?" (shown in the ticker). Then the line goes quiet for up to 9 s: whatever Leno says on his own is quoted as his answer (nothing drives his voice). Silence gets crickets and the caller hangs up | ring and voice (JO); laughs/applause or silence |
-| Monologue | spotlight; three "jokes": he has the floor for up to 8 s each, and nothing makes him talk. When he has said something and stops, a rimshot and usually a laugh (his words are quoted); if he says nothing, crickets ("tough crowd") | spotlight (R1-6), rimshots (JO), reward for talking |
+| Monologue | a mic tap-tap, a spotlight, and his voice through a PA microphone (band-limited, a presence boost, gain into a soft clipper so loud syllables peak, a short slapback). Three "jokes": he has the floor for up to 8 s each, and nothing makes him talk. A drumroll builds while he talks; when he stops, a rimshot (a cymbal crash on the last) and the audience laughs, applauds, cheers or sometimes groans; his words are quoted. Silence gets crickets ("tough crowd"). Loud stretches can make the mic squeal with feedback | spotlight (R1-6), drumroll, rimshots, feedback (JO), reward for talking |
 | Guest: a goose | "Our next guest… a goose!" The goose waddles on in a follow spot, honks and poops | honks (JO), a spotlit mover (LC4, R1-6), droppings for Fly-Leno |
 | 500 years young | "I'm 500 years young, folks": a stagehand carries out a birthday cake with candles, the crowd sings Happy Birthday, balloons and confetti. The cake is food he goes for even when not hungry | the song and applause (JO), sugar taste, reward |
 | The Leno Wave | the audience does a stadium wave three times round, chanting "LE-NO" | a wave of motion across the seats (R1-6), chant (JO), cheers |
@@ -310,7 +317,7 @@ after 2.5 s, shown as a commercial break during the show.
   turned off in Brain settings.
 - **Looming:** every moving thing drives the LC4 looming neurons by how fast its angular size grows, each one
   tracked on its own: stagehands and hecklers, the goose, Mr. Frog and his tongue, the roadster, the UFO,
-  spider-Leno and the swatter glove, mini aliens, a falling mushroom, balloons, hatchlings, the rain cloud and
+  spider-Leno and the swatter glove, duendes, the clown car and its clowns, a falling mushroom, balloons, hatchlings, the rain cloud and
   every thrown or falling object.
 - **Contact:** bumping into anything solid (stagehands, the goose, the frog, hatchlings, aliens) and falling over
   drive mechanosensory neurons.

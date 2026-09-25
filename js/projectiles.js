@@ -84,6 +84,20 @@ export class Projectiles {
     return g;
   }
 
+  /** a cream pie in a tin (the clowns' ammunition) */
+  pieMesh() {
+    if (!this.pieParts) {
+      this.pieParts = [
+        [new THREE.CylinderGeometry(0.17, 0.14, 0.05, 16), new THREE.MeshStandardMaterial({ color: 0xb8b8bc, metalness: 0.7, roughness: 0.35 })],
+        [new THREE.SphereGeometry(0.16, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.45, 1).translate(0, 0.02, 0), new THREE.MeshStandardMaterial({ color: 0xfbf6ea, roughness: 0.8 })],
+      ];
+      this.creamMat = keep(new THREE.MeshStandardMaterial({ color: 0xfbf6ea, roughness: 0.85, transparent: true }));
+    }
+    const g = new THREE.Group();
+    for (const [geo, mat] of this.pieParts) g.add(new THREE.Mesh(keep(geo), keep(mat)));
+    return g;
+  }
+
   /** a sugar cube (the audience being kind): light, lobbed, lands on the floor as food */
   sugarMesh() {
     this.sugarGeo ||= keep(new THREE.BoxGeometry(0.15, 0.15, 0.15));
@@ -107,7 +121,7 @@ export class Projectiles {
     // ballistic aim with a chosen flight time (roses and sugar are slow, arcing lobs); lead the target a little
     const d = target.clone().sub(from);
     const gentle = kind === 'sugar' || kind === 'rose';
-    const T = THREE.MathUtils.clamp(d.length() / (kind === 'pipe' ? 13 : kind === 'rose' ? 8 : kind === 'sugar' ? 9 : 16), gentle ? 0.9 : 0.45, 2.2);
+    const T = THREE.MathUtils.clamp(d.length() / (kind === 'pipe' ? 13 : kind === 'rose' ? 8 : kind === 'sugar' ? 9 : kind === 'pie' ? 14 : 16), gentle ? 0.9 : 0.45, 2.2);
     const g = -9.81;
     const v = new THREE.Vector3(d.x / T, (d.y - 0.5 * g * T * T) / T, d.z / T);
     v.x += (Math.random() - 0.5) * 0.8; v.z += (Math.random() - 0.5) * 0.8;   // human inaccuracy
@@ -130,6 +144,14 @@ export class Projectiles {
       collider = world.createCollider(R.ColliderDesc.capsule(0.2, 0.03).setMass(0.05).setRestitution(0.1).setFriction(0.8)
         .setCollisionGroups(groups(G_GROUND, 0xffff)), body);
       return this.add({ kind, body, collider, mesh: this.roseMesh(), v });
+    }
+    if (kind === 'pie') {
+      // flies flat, cream first, spinning a little
+      bodyDesc.setAngvel({ x: (Math.random() - 0.5) * 2, y: (Math.random() - 0.5) * 6, z: (Math.random() - 0.5) * 2 });
+      const body = world.createRigidBody(bodyDesc);
+      collider = world.createCollider(R.ColliderDesc.cylinder(0.03, 0.16).setMass(0.35).setRestitution(0.05).setFriction(0.9)
+        .setCollisionGroups(groups(G_GROUND, 0xffff)), body);
+      return this.add({ kind, body, collider, mesh: this.pieMesh(), v });
     }
     if (kind === 'sugar') {
       // feather-light (it can't hurt or shove him); it tumbles a little and settles
@@ -199,12 +221,12 @@ export class Projectiles {
       const speed = it.prevVel.length();
       if (dv > 2.5 && speed > 2) {
         const near = this.nearestLenoBody(it.mesh.position);
-        const hitLeno = near.dist < (it.kind === 'tomato' || it.kind === 'rose' || it.kind === 'sugar' ? 0.6 : it.kind === 'pipe' ? 0.8 : 0.95);
-        if (it.kind === 'tomato' && !it.splatted) {
+        const hitLeno = near.dist < (it.kind === 'tomato' || it.kind === 'rose' || it.kind === 'sugar' ? 0.6 : it.kind === 'pipe' || it.kind === 'pie' ? 0.8 : 0.95);
+        if ((it.kind === 'tomato' || it.kind === 'pie') && !it.splatted) {
           it.splatted = true;
           this.splat(it, hitLeno ? near.name : null);
           this.onImpact?.(it, { hitLeno, bodyName: near.name, speed });
-        } else if (it.kind !== 'tomato' && it.clangs < (it.kind === 'rose' || it.kind === 'sugar' ? 1 : 4)) {
+        } else if (it.kind !== 'tomato' && it.kind !== 'pie' && it.clangs < (it.kind === 'rose' || it.kind === 'sugar' ? 1 : 4)) {
           it.clangs++;
           this.onImpact?.(it, { hitLeno, bodyName: near.name, speed });
         }
@@ -246,8 +268,9 @@ export class Projectiles {
     const p = it.mesh.position.clone();
     this.remove(it);
     const rest = bodyName ? p : (this.groundBelow(p) ?? p);
-    this.onSplat?.(p, bodyName, rest);
-    const mesh = new THREE.Mesh(bodyName ? this.splatGeo.leno : this.splatGeo.floor, this.splatMat.clone());   // own material: it fades
+    this.onSplat?.(p, bodyName, rest, it.kind, this.groundBelow(p));
+    const cream = it.kind === 'pie';
+    const mesh = new THREE.Mesh(bodyName ? this.splatGeo.leno : this.splatGeo.floor, (cream ? this.creamMat : this.splatMat).clone());   // own material: it fades
     mesh.position.copy(rest);
     if (bodyName) { mesh.scale.set(1, 0.4, 1); mesh.rotation.set(Math.random(), Math.random(), Math.random()); }
     else { mesh.scale.set(1, 0.12, 1.2); mesh.rotation.y = Math.random() * 6.28; mesh.position.y += 0.015; }   // squashed flat on the floor

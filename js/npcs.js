@@ -12,9 +12,9 @@ const WALK = 2.2, RUN = 4.2;             // m/s (stage units)
 const down = new THREE.Vector3(0, -1, 0);
 
 class Npc {
-  constructor(world, palette) {
+  constructor(world, palette, fig = null) {
     this.world = world;
-    this.fig = standingFigure(palette, world.mat);
+    this.fig = fig ?? standingFigure(palette, world.mat);
     world.scene.add(this.fig); propLOD.track(this.fig);
     this.plan = [];                       // queue of steps
     this.t = 0; this.phase = Math.random() * 6;
@@ -206,6 +206,35 @@ export class Npcs {
     );
     this.list.push(n);
     this.onEvent?.('A heckler storms the stage!');
+  }
+
+  /** a clown from the clown car (js/clowns.js): out of the door, to its spot, `n` pies rapid-fire at Leno, a ta-da,
+   *  and back into the car */
+  clown(fig, door, spot, getLeno, n, { door: doorAt = () => door, onThrow, onBack } = {}) {
+    const c = new Npc(this, null, fig).at(door);
+    c.clown = true;
+    const faceLeno = (f) => { const d = getLeno().pos.clone().sub(f.position); f.rotation.y = Math.atan2(d.x, d.z); };
+    c.plan.push(
+      { type: 'walk', to: spot, within: 0.35, speed: 3.2 },
+      ...Array.from({ length: n }, (_, k) => ({
+        type: 'pose', dur: 0.5, pose: (f, t) => {
+          const u = t / 0.5;
+          faceLeno(f);
+          f.armR.rotation.set(u < 0.5 ? -2.6 * (u / 0.5) - 0.4 : -3.0 + 3.4 * ((u - 0.5) / 0.5), 0, -0.15);
+          f.armL.rotation.set(-0.4, 0, 0.3);
+          f.body.rotation.x = u < 0.5 ? -0.15 : 0.2;
+          if (u > 0.55 && !c['threw' + k]) {
+            c['threw' + k] = true;
+            const hand = new THREE.Vector3(); f.armR.localToWorld(hand.copy(f.handOffset));
+            onThrow?.(hand.add(new THREE.Vector3(0, 0.3, 0)));
+          }
+        } })),
+      { type: 'pose', dur: 0.5, pose: (f) => { f.armR.rotation.set(-2.7, 0, -0.35); f.armL.rotation.set(-2.7, 0, 0.35); } },   // ta-da
+      { type: 'walk', to: () => doorAt(), within: 0.5, speed: 3.6 },
+      { type: 'pose', dur: 0.05, then: () => { c.remove(); onBack?.(); } },
+    );
+    this.list.push(c);
+    return c;
   }
 
   /** heads of NPCs that are approaching Leno (for the fly's looming detectors) */

@@ -36,10 +36,11 @@ export class FX {
   /** stream for `dur` seconds from getOrigin() in direction getDir() */
   vomit(getOrigin, getDir, dur = 1.2) { this.emitters.push({ kind: 1, getOrigin, getDir, until: dur, rate: 500 }); }
   /** one-off burst of tomato juice / pulp at `p` */
-  splash(p, n = 60) {
+  splash(p, n = 60, cream = false) {
     for (let k = 0; k < n; k++) {
       const d = new THREE.Vector3(Math.random() - 0.5, Math.random() * 0.8 + 0.2, Math.random() - 0.5).normalize().multiplyScalar(0.4 + Math.random() * 0.6);
-      this.spawn(1, p, d, [0.75 + Math.random() * 0.2, 0.05 + Math.random() * 0.08, 0.04], p.y - 0.12);
+      const c = cream ? [0.93 + Math.random() * 0.06, 0.9 + Math.random() * 0.06, 0.8 + Math.random() * 0.08] : [0.75 + Math.random() * 0.2, 0.05 + Math.random() * 0.08, 0.04];
+      this.spawn(1, p, d, c, p.y - 0.12);
     }
   }
 

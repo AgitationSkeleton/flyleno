@@ -220,6 +220,87 @@ export class ShowSfx {
     return { stop: () => { out.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.4); } };
   }
 
+  /** a snare drumroll that builds while it runs: returns { stop() } */
+  drumroll({ gain = 0.45 } = {}) {
+    if (!this.ctx) return { stop() {} };
+    const ctx = this.ctx, out = this.out(0.0001), t0 = ctx.currentTime;
+    out.gain.setValueAtTime(0.0001, t0); out.gain.exponentialRampToValueAtTime(gain * 0.35, t0 + 0.2);
+    out.gain.linearRampToValueAtTime(gain, t0 + 6);                        // crescendo
+    let next = t0 + 0.03, alive = true, k = 0;
+    const sched = () => {
+      if (!alive) return;
+      while (next < ctx.currentTime + 0.25) {
+        const s = ctx.createBufferSource(); s.buffer = this.audio.noise;
+        const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = rand(1600, 2600); bp.Q.value = 0.9;
+        const g = ctx.createGain(); s.connect(bp).connect(g).connect(out);
+        this.env(g.gain, next, 0.002, (k % 2 ? 0.55 : 0.75) * rand(0.85, 1.1), 0.004, 0.05);
+        s.start(next, Math.random()); s.stop(next + 0.08);
+        next += (1 / 17) * rand(0.92, 1.08); k++;
+      }
+      setTimeout(sched, 80);
+    };
+    sched();
+    return { stop: () => { alive = false; const now = ctx.currentTime; out.gain.cancelScheduledValues(now); out.gain.setTargetAtTime(0.0001, now, 0.04); } };
+  }
+
+  /** circus music: an original calliope oom-pah tune (bass on the beat, chord stabs off it, a chromatic melody),
+   *  looped: returns { stop() } */
+  circus({ gain = 0.3 } = {}) {
+    if (!this.ctx) return { stop() {} };
+    const ctx = this.ctx, out = this.out(gain), e = 60 / 150 / 2;           // an eighth note at 150 bpm
+    const midi = (m) => 440 * Math.pow(2, (m - 69) / 12);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500; lp.connect(out);
+    const C = [60, 64, 67], G7 = [59, 62, 65];
+    const bars = [[36, 43, C, [67, 66, 67, 64]], [36, 43, C, [65, 64, 65, 62]], [31, 38, G7, [64, 63, 64, 60]], [31, 38, G7, [62, 61, 62, 59]],
+      [36, 43, C, [60, 64, 67, 72]], [36, 43, C, [71, 72, 74, 72]], [31, 38, G7, [71, 69, 67, 65]], [36, 43, C, [64, 62, 60, null]]];
+    const note = (f, t, dur, type, amp, dest) => {
+      const o = ctx.createOscillator(); o.type = type; o.frequency.value = f;
+      const g = ctx.createGain(); o.connect(g).connect(dest); this.env(g.gain, t, 0.005, amp, dur * 0.45, dur * 0.4);
+      o.start(t); o.stop(t + dur + 0.05);
+    };
+    let next = ctx.currentTime + 0.05, bar = 0, alive = true;
+    const sched = () => {
+      if (!alive) return;
+      while (next < ctx.currentTime + 0.4) {
+        const [root, fifth, chord, mel] = bars[bar % bars.length];
+        note(midi(root), next, e * 1.5, 'sawtooth', 0.5, lp);                       // oom
+        note(midi(fifth), next + 2 * e, e * 1.5, 'sawtooth', 0.45, lp);             // pah
+        for (const b of [1, 3]) for (const m of chord) note(midi(m), next + b * e, e * 0.6, 'triangle', 0.05, out);
+        mel.forEach((m, i) => { if (m) { note(midi(m + 12), next + i * e, e * 0.9, 'square', 0.035, out); note(midi(m + 24), next + i * e, e * 0.9, 'sine', 0.03, out); } });
+        next += 4 * e; bar++;
+      }
+      setTimeout(sched, 120);
+    };
+    sched();
+    return { stop: () => { alive = false; out.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.3); } };
+  }
+
+  /** one squeeze-bulb honk (a clown's footsteps); pitch multiplies the frequency */
+  honk({ gain = 0.3, pitch = 1, pan = 0 } = {}) {
+    if (!this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime, out = this.out(gain, pan);
+    const o = ctx.createOscillator(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(430 * pitch, t); o.frequency.exponentialRampToValueAtTime(350 * pitch, t + 0.14);
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 950 * pitch; bp.Q.value = 2.5;
+    const g = ctx.createGain(); o.connect(bp).connect(g).connect(out); this.env(g.gain, t, 0.008, 0.9, 0.09, 0.05);
+    o.start(t); o.stop(t + 0.18);
+  }
+
+  /** microphone feedback: a squeal that swells and dies away */
+  feedback({ gain = 0.1 } = {}) {
+    if (!this.ctx) return 0;
+    const ctx = this.ctx, t = ctx.currentTime, f = rand(1900, 3200), dur = rand(0.5, 0.9), out = this.out(0.0001);
+    const o = ctx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(f, t); o.frequency.linearRampToValueAtTime(f * 1.03, t + dur);
+    const vib = ctx.createOscillator(); vib.frequency.value = 7; const vg = ctx.createGain(); vg.gain.value = f * 0.006;
+    vib.connect(vg).connect(o.frequency);
+    const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = f * 2.01; const g2 = ctx.createGain(); g2.gain.value = 0.25;
+    o.connect(out); o2.connect(g2).connect(out);
+    out.gain.setValueAtTime(0.0001, t); out.gain.exponentialRampToValueAtTime(gain, t + dur * 0.65); out.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.2);
+    for (const x of [o, o2, vib]) { x.start(t); x.stop(t + dur + 0.25); }
+    return dur;
+  }
+
   claps(t, n = 1, gain = 0.5, dest = null) {
     const ctx = this.ctx, out = dest || this.out(gain);
     for (let k = 0; k < n; k++) for (let v = 0; v < 12; v++) {
@@ -416,6 +497,36 @@ export class ShowSfx {
         o.start(st); o.stop(st + 0.07);
       }
       return 2.5;
+    }
+    if (kind === 'clownhorn') {                               // a squeeze-bulb horn: honk honk
+      for (const dt of [0, 0.26]) {
+        const o = ctx.createOscillator(); o.type = 'sawtooth';
+        o.frequency.setValueAtTime(430, t + dt); o.frequency.exponentialRampToValueAtTime(350, t + dt + 0.17);
+        const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 950; bp.Q.value = 2.5;
+        const g = ctx.createGain(); o.connect(bp).connect(g).connect(out); this.env(g.gain, t + dt, 0.01, 0.9, 0.12, 0.05);
+        o.start(t + dt); o.stop(t + dt + 0.2);
+      }
+      return 0.5;
+    }
+    if (kind === 'cymbal') {                                  // a crash cymbal
+      const n = this.noise(), hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 5000;
+      const sh = ctx.createBiquadFilter(); sh.type = 'peaking'; sh.frequency.value = 9000; sh.gain.value = 6;
+      const g = ctx.createGain(); n.connect(hp).connect(sh).connect(g).connect(out);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.9, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
+      n.start(t, Math.random()); n.stop(t + 1.9);
+      return 1.8;
+    }
+    if (kind === 'mictap') {                                  // tap, tap on the microphone
+      for (const dt of [0, 0.38]) {
+        const o = ctx.createOscillator(); o.type = 'sine';
+        o.frequency.setValueAtTime(95, t + dt); o.frequency.exponentialRampToValueAtTime(40, t + dt + 0.09);
+        const g = ctx.createGain(); o.connect(g).connect(out); this.env(g.gain, t + dt, 0.002, 0.9, 0.01, 0.1);
+        o.start(t + dt); o.stop(t + dt + 0.15);
+        const n = this.noise(), lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1800;
+        const ng = ctx.createGain(); n.connect(lp).connect(ng).connect(out); this.env(ng.gain, t + dt, 0.001, 0.4, 0.005, 0.03);
+        n.start(t + dt, Math.random()); n.stop(t + dt + 0.05);
+      }
+      return 0.6;
     }
     if (kind === 'wheel') {                                   // a prize wheel's pointer clicking over the pegs, slowing down
       const spin = 6.5, F = Math.PI * 5, wedge = Math.PI / 4;

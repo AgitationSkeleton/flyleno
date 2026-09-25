@@ -11,9 +11,10 @@ export const EVENT_GROUPS = [
     ['spider', 'Spider-Leno', true],
     ['swatter', 'Swatter glove', true],
     ['racket', 'Electric racket', true],
-    ['aliens', 'Mini grey aliens', true],
+    ['aliens', 'Duendes', true],
     ['frogTongue', "Mr. Frog's tongue", true],
     ['carBump', 'Car nudges', true],
+    ['clowns', 'Clown car', true],
   ]],
   ['Happenings', [
     ['rapture', 'The Rapture', false],

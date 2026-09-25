@@ -22,11 +22,13 @@ const EFFECTS = {
   alienKick: { injury: 0.006, dizzy: 0.05 },      // lots of little kicks
   frogHit: { injury: 0.03, grime: 0.06 },        // sticky tongue
   fallTouch: { injury: 0.05, dizzy: 0.2 },
+  softFall: { dizzy: 0.15 },                     // knocked over by a cream pie
   contactTouch: { injury: 0.001 },
   rainTouch: { wet: 0.06 },
   confettiTouch: { grime: 0.01 },
   roseTouch: {},
   sugarTouch: {},
+  pieHit: { injury: 0.004, dizzy: 0.12, grime: 0.08 },   // a cream pie: a big shove, hardly any harm, messy
   itch: { grime: 0.03 },
 };
 
@@ -57,7 +59,7 @@ export class Wellbeing {
   }
 
   ate(kind) {
-    const boost = { sugar: 0.3, mushroom: 0.6, cake: 0.5, 'éclair': 0.2, tomato: 0.12, poop: 0.15 }[kind] ?? 0.1;
+    const boost = { sugar: 0.3, mushroom: 0.6, cake: 0.5, pie: 0.3, 'éclair': 0.2, tomato: 0.12, poop: 0.15 }[kind] ?? 0.1;
     this.energy = clamp01(this.energy + boost);
     if (kind === 'poop' || kind === 'tomato') this.grime = clamp01(this.grime + 0.05);
   }
