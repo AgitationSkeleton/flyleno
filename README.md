@@ -267,7 +267,7 @@ same way: the strings lower him into a curl, forehead to the floor.
 | A word from our sponsor | GRONK sponsor card (a slow, throbbing glow; no strobe), then "Buy Grey Leno NFTs" | pulsing light on the eyes (R1-6) |
 | Technical difficulties | screens full of soft grey static; "Dave, can you fix the static?" | visual noise (R1-6), hiss (JO-A) |
 | Phone-in | the desk phone rings and a garbled caller asks e.g. "Why do you puke so much?" or "What do the worms in your brain tell you?" (shown in the ticker). Then the line goes quiet for up to 9 s: whatever Leno says on his own is quoted as his answer (nothing drives his voice). Silence gets crickets and the caller hangs up | ring and voice (JO); laughs/applause or silence |
-| Monologue | a mic tap-tap, a spotlight, and his voice through a PA microphone (band-limited, a presence boost, gain into a soft clipper so loud syllables peak, a short slapback). Three "jokes": he has the floor for up to 8 s each, and nothing makes him talk. A drumroll builds while he talks; when he stops, a rimshot (a cymbal crash on the last) and the audience laughs, applauds, cheers or sometimes groans; his words are quoted. Silence gets crickets ("tough crowd"). Loud stretches can make the mic squeal with feedback | spotlight (R1-6), drumroll, rimshots, feedback (JO), reward for talking |
+| Monologue | a mic tap-tap, a spotlight, and his voice through a PA microphone (band-limited, a presence boost, gain into a soft clipper so loud syllables peak, a slapback; about 3 dB above his dry voice). Three "jokes": he has the floor for up to 8 s each, and nothing makes him talk. A recorded snare roll builds while he talks; when he stops, a recorded rimshot (a cymbal crash on the last) and the audience's verdict, picked at random: laughs, applause, a standing ovation (with roses), boos, boos and a few tomatoes or pipes, or a tomato, pipe or mixed storm (the harmful ones only where their switches allow; the last joke leans toward an ovation). Silence gets crickets, sometimes boos. Loud stretches can make the mic squeal with feedback | spotlight (R1-6), drum roll, rimshots, feedback (JO), reward or punishment from the crowd |
 | Guest: a goose | "Our next guest… a goose!" The goose waddles on in a follow spot, honks and poops | honks (JO), a spotlit mover (LC4, R1-6), droppings for Fly-Leno |
 | 500 years young | "I'm 500 years young, folks": a stagehand carries out a birthday cake with candles, the crowd sings Happy Birthday, balloons and confetti. The cake is food he goes for even when not hungry | the song and applause (JO), sugar taste, reward |
 | The Leno Wave | the audience does a stadium wave three times round, chanting "LE-NO" | a wave of motion across the seats (R1-6), chant (JO), cheers |
@@ -436,7 +436,19 @@ burps and are kept as `sfx/burp`. So those categories come from short YouTube so
 - **Pipe clang:** f8mL0_4GeV0.
 - **Goose honks:** zcDiAD8RGq8, J0WO22NhTK8, A8nqfY3rUKw.
 
-All clips are git-ignored.
+Stock percussion for the monologue (`tools/audio/s10_stock_sfx.py`), from freely licensed recordings:
+- **Rimshots:** "Ba dum tss [Joke Rimshot]" (Unmixed, Blue Ridge, Boutique SP12, Modern Club) by
+  FREE_SOUND_ENTERTAINMENT on Freesound, [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/):
+  [561869](https://freesound.org/people/FREE_SOUND_ENTERTAINMENT/sounds/561869/),
+  [561862](https://freesound.org/people/FREE_SOUND_ENTERTAINMENT/sounds/561862/),
+  [561959](https://freesound.org/people/FREE_SOUND_ENTERTAINMENT/sounds/561959/),
+  [561969](https://freesound.org/people/FREE_SOUND_ENTERTAINMENT/sounds/561969/).
+- **Drum rolls:** [Drum Roll Intro](https://commons.wikimedia.org/wiki/File:Drum_Roll_Intro.ogg) by Iwan Sounds and
+  DIY (Wikimedia Commons, CC0), and
+  [Drum Roll - Concert Band](https://commons.wikimedia.org/wiki/File:Drum_Roll_-_Concert_Band_-_United_States_Air_Force_Band.mp3)
+  by the United States Air Force Band (public domain).
+
+The sound bank is published with the site (the source downloads under `assets/_src/` stay local).
 
 ## Deploying (GitHub Pages)
 

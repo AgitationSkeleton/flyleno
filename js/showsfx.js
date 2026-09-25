@@ -220,9 +220,23 @@ export class ShowSfx {
     return { stop: () => { out.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.4); } };
   }
 
-  /** a snare drumroll that builds while it runs: returns { stop() } */
+  /** a snare drum roll that builds while it runs: returns { stop() }. Uses the stock recording (a long, even roll by
+   *  the US Air Force Band, public domain), from a random point in it; synthesised if the sound bank lacks it */
   drumroll({ gain = 0.45 } = {}) {
     if (!this.ctx) return { stop() {} };
+    const long = (this.audio.clips('sfx', 'drumroll') || []).filter((c) => c.dur > 10);
+    if (long.length) {
+      const ctx = this.ctx, out = this.out(0.0001), t0 = ctx.currentTime;
+      out.gain.setValueAtTime(0.0001, t0); out.gain.exponentialRampToValueAtTime(gain * 0.45, t0 + 0.3);
+      out.gain.linearRampToValueAtTime(gain, t0 + 6);                        // crescendo
+      let src = null, stopped = false;
+      this.audio.load(long[(Math.random() * long.length) | 0].file).then((buf) => {
+        if (!buf || stopped) return;
+        src = ctx.createBufferSource(); src.buffer = buf; src.connect(out);
+        src.start(ctx.currentTime, Math.random() * Math.max(0, buf.duration - 12));
+      });
+      return { stop: () => { stopped = true; const now = ctx.currentTime; out.gain.cancelScheduledValues(now); out.gain.setTargetAtTime(0.0001, now, 0.04); try { src?.stop(now + 0.3); } catch { /* not started */ } } };
+    }
     const ctx = this.ctx, out = this.out(0.0001), t0 = ctx.currentTime;
     out.gain.setValueAtTime(0.0001, t0); out.gain.exponentialRampToValueAtTime(gain * 0.35, t0 + 0.2);
     out.gain.linearRampToValueAtTime(gain, t0 + 6);                        // crescendo
@@ -317,6 +331,12 @@ export class ShowSfx {
    *  'caller' (voice on the line), 'static' (TV hiss), 'pop' (confetti cannon) */
   sting(kind, { gain = 0.7 } = {}) {
     if (!this.ctx) return 0;
+    // stock recordings where the sound bank has them: rimshots, and a short crescendo roll ('rollup')
+    if (kind === 'rimshot' && this.audio.clips('sfx', 'rimshot')?.length) return this.audio.sfx('rimshot', { gain: gain * 1.3 });
+    if (kind === 'rollup') {
+      const short = (this.audio.clips('sfx', 'drumroll') || []).filter((c) => c.dur <= 10);
+      return short.length ? this.audio.playClip(short[(Math.random() * short.length) | 0], { gain }) : 0;
+    }
     const ctx = this.ctx, t = ctx.currentTime, out = this.out(gain);
     if (kind === 'rimshot') {
       [[0, 190], [0.16, 130]].forEach(([dt, f]) => {

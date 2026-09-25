@@ -520,8 +520,9 @@ export class Happenings {
   storm(kind = 'mixed', n = 14 + ((Math.random() * 16) | 0), dur = rand(5, 9)) {
     const ctx = this.ctx;
     if (ctx.audienceAway()) return false;
-    // a mixed storm throws whichever of tomatoes and pipes are switched on
-    const kinds = kind === 'rose' ? ['rose'] : [...(ctx.allowed('tomatoes') ? ['tomato', 'tomato', 'tomato'] : []), ...(ctx.allowed('pipes') ? ['pipe'] : [])];
+    // a mixed storm throws whichever of tomatoes and pipes are switched on; 'tomato' / 'pipe': only that
+    const kinds = kind === 'rose' ? ['rose']
+      : [...(ctx.allowed('tomatoes') && kind !== 'pipe' ? ['tomato', 'tomato', 'tomato'] : []), ...(ctx.allowed('pipes') && kind !== 'tomato' ? ['pipe'] : [])];
     if (!kinds.length) return false;
     ctx.ticker(kind === 'rose' ? 'Roses rain down from the audience!' : kinds.includes('pipe') && kinds.includes('tomato')
       ? 'The audience unleashes a storm of tomatoes and pipes!' : kinds.includes('pipe') ? 'The audience unleashes a storm of pipes!' : 'The audience unleashes a storm of tomatoes!');

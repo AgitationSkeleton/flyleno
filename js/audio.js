@@ -111,7 +111,7 @@ export class AudioWorld {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
     this.voiceDry.gain.setTargetAtTime(on ? 0 : 1, t, 0.12);
-    this.voiceMic.gain.setTargetAtTime(on ? 1.35 : 0, t, 0.12);
+    this.voiceMic.gain.setTargetAtTime(on ? 0.4 : 0, t, 0.12);           // ~3 dB above his dry voice (the clipper adds a lot)
   }
 
   makeNoise(sec) {

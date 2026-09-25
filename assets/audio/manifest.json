@@ -85,6 +85,48 @@
    "id": "A8nqfY3rUKw",
    "url": "https://www.youtube.com/watch?v=A8nqfY3rUKw",
    "title": "sound effect"
+  },
+  {
+   "id": "freesound-561869",
+   "url": "https://freesound.org/people/FREE_SOUND_ENTERTAINMENT/sounds/561869/",
+   "title": "Ba dum tss [Joke Rimshot] - Unmixed",
+   "license": "CC BY 3.0",
+   "author": "FREE_SOUND_ENTERTAINMENT"
+  },
+  {
+   "id": "freesound-561862",
+   "url": "https://freesound.org/people/FREE_SOUND_ENTERTAINMENT/sounds/561862/",
+   "title": "Ba dum tss [Joke Rimshot] - Blue Ridge",
+   "license": "CC BY 3.0",
+   "author": "FREE_SOUND_ENTERTAINMENT"
+  },
+  {
+   "id": "freesound-561959",
+   "url": "https://freesound.org/people/FREE_SOUND_ENTERTAINMENT/sounds/561959/",
+   "title": "Ba dum tss [Joke Rimshot] - Boutique SP12",
+   "license": "CC BY 3.0",
+   "author": "FREE_SOUND_ENTERTAINMENT"
+  },
+  {
+   "id": "freesound-561969",
+   "url": "https://freesound.org/people/FREE_SOUND_ENTERTAINMENT/sounds/561969/",
+   "title": "Ba dum tss [Joke Rimshot] - Modern Club",
+   "license": "CC BY 3.0",
+   "author": "FREE_SOUND_ENTERTAINMENT"
+  },
+  {
+   "id": "commons-drum-roll-intro",
+   "url": "https://commons.wikimedia.org/wiki/File:Drum_Roll_Intro.ogg",
+   "title": "Drum Roll Intro",
+   "license": "CC0",
+   "author": "Iwan Sounds and DIY"
+  },
+  {
+   "id": "commons-usaf-drum-roll",
+   "url": "https://commons.wikimedia.org/wiki/File:Drum_Roll_-_Concert_Band_-_United_States_Air_Force_Band.mp3",
+   "title": "Drum Roll - Concert Band - United States Air Force Band",
+   "license": "Public domain",
+   "author": "United States Air Force Band"
   }
  ],
  "leno": {
@@ -4729,6 +4771,88 @@
     },
     "conf": null,
     "origin": "youtube-sfx"
+   }
+  ],
+  "rimshot": [
+   {
+    "file": "sfx/rimshot/rimshot_s001.ogg",
+    "dur": 2.52,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "freesound-561869",
+     "t0": 0.08,
+     "t1": 2.6
+    },
+    "conf": null,
+    "origin": "stock"
+   },
+   {
+    "file": "sfx/rimshot/rimshot_s002.ogg",
+    "dur": 2.52,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "freesound-561862",
+     "t0": 0.08,
+     "t1": 2.6
+    },
+    "conf": null,
+    "origin": "stock"
+   },
+   {
+    "file": "sfx/rimshot/rimshot_s003.ogg",
+    "dur": 1.82,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "freesound-561959",
+     "t0": 0.08,
+     "t1": 1.9
+    },
+    "conf": null,
+    "origin": "stock"
+   },
+   {
+    "file": "sfx/rimshot/rimshot_s004.ogg",
+    "dur": 1.82,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "freesound-561969",
+     "t0": 0.08,
+     "t1": 1.9
+    },
+    "conf": null,
+    "origin": "stock"
+   }
+  ],
+  "drumroll": [
+   {
+    "file": "sfx/drumroll/drumroll_s001.ogg",
+    "dur": 3.75,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "commons-drum-roll-intro",
+     "t0": 0.0,
+     "t1": 3.75
+    },
+    "conf": null,
+    "origin": "stock"
+   },
+   {
+    "file": "sfx/drumroll/drumroll_s002.ogg",
+    "dur": 30.0,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "commons-usaf-drum-roll",
+     "t0": 1.5,
+     "t1": 31.5
+    },
+    "conf": null,
+    "origin": "stock"
    }
   ]
  },

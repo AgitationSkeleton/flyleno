@@ -298,7 +298,7 @@ export class Show {
       s.prize = pick(prizes);
       s.card = makeCard('wheel', { labels: prizes.map((p) => p.label), pick: prizes.indexOf(s.prize), spin: 6.5 });
       ctx.screens?.showCard(s.card, 15);
-      this.ctx.sfx.sting('wheel', { gain: 0.6 });
+      this.ctx.sfx.sting('wheel', { gain: 0.6 }); setTimeout(() => this.ctx.sfx.sting('rollup', { gain: 0.5 }), 3000);
       ctx.ticker('Spin the Wheel of Leno!');
     }
     if (key === 'lullaby') {
@@ -322,6 +322,27 @@ export class Show {
     if (!sc?.available || !s.prevMode) return;
     if (s.prevMode !== 'video') sc.setMode(s.prevMode);
     else if (s.prevVideo && s.prevVideo !== sc.videoId) sc.setMode('video', s.prevVideo);
+  }
+
+  /** the audience's verdict on a joke, anything from applause to a storm of pipes (harmful ones only where their
+   *  switches allow; the last joke leans toward big reactions; `bad`: after a joke that fell flat) */
+  verdict(last = false, bad = false) {
+    const ctx = this.ctx, ok = (k) => ctx.allowed?.(k) ?? true;
+    const opts = [
+      ['laugh', bad ? 0 : 3, () => ctx.crowd('laugh', 0.9)],
+      ['applause', bad ? 0 : 3, () => ctx.crowd('applause', 0.9)],
+      ['ovation', bad ? 0 : last ? 2.5 : 1, () => ctx.happen('ovation'), ok('ovations')],
+      ['ovation and roses', bad ? 0 : last ? 2 : 0.7, () => { ctx.happen('ovation'); ctx.happen('roses'); }, ok('ovations') && ok('roseStorms')],
+      ['boos', bad ? 3 : 1.5, () => { ctx.crowd('boo', 0.9); ctx.ticker('The audience boos'); }, ok('boos')],
+      ['boos and throws', bad ? 3 : 1.2, () => { ctx.crowd('boo', 0.9); ctx.ticker('The audience boos, and something gets thrown'); ctx.happen('throws'); }, ok('boos') && (ok('tomatoes') || ok('pipes'))],
+      ['tomato storm', 0.7, () => ctx.happen('tomatoStorm'), ok('storms') && ok('tomatoes')],
+      ['pipe storm', 0.5, () => ctx.happen('pipeStorm'), ok('storms') && ok('pipes')],
+      ['tomato and pipe storm', 0.6, () => ctx.happen('storm'), ok('storms') && ok('tomatoes') && ok('pipes')],
+    ].filter((o) => o[1] > 0 && o[3] !== false);
+    if (!opts.length) return;
+    let r = Math.random() * opts.reduce((a, o) => a + o[1], 0);
+    for (const o of opts) if ((r -= o[1]) <= 0) { o[2](); return o[0]; }
+    opts[0][2](); return opts[0][0];
   }
 
   /** the wheel's prizes (all harmless except the tomatoes, which only appear when tomato storms are allowed) */
@@ -384,13 +405,11 @@ export class Show {
           if (said) ctx.ticker(`Leno: "${said}"`);
           this.ctx.sfx.sting('rimshot', { gain: 0.75 });
           if (last) setTimeout(() => this.ctx.sfx.sting('cymbal', { gain: 0.5 }), 380);
-          const short = said.split(' ').length <= 2;
-          setTimeout(() => {
-            if (last) { ctx.crowd('laugh', 1); ctx.crowd('applause', 0.9); return; }
-            const r = Math.random();
-            ctx.crowd(r < 0.55 ? 'laugh' : r < 0.75 ? 'applause' : r < 0.85 + (short ? 0 : 0.1) ? 'cheer' : 'boo', 0.8);   // (a weak one can get a groan)
-          }, 900);
-        } else { this.ctx.sfx.sting('crickets', { gain: 0.7 }); ctx.ticker('…nothing. Tough crowd.'); }
+          setTimeout(() => this.verdict(last), 900);
+        } else {
+          this.ctx.sfx.sting('crickets', { gain: 0.7 }); ctx.ticker('…nothing. Tough crowd.');
+          if (Math.random() < 0.3) setTimeout(() => this.verdict(false, true), 2500);
+        }
       }
       if (s.jokes >= 3 && s.next <= 1.5) { this.spot.off(); ctx.mic(false); return true; }
       return false;

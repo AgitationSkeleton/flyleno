@@ -645,6 +645,12 @@ function showPrize(kind) {
   if (kind === 'ovation') return standingOvation(9);
   if (kind === 'mushroom') return happenings.mushroom.start();
   if (kind === 'storm') return happenings.storm('mixed', 14);
+  if (kind === 'tomatoStorm') return happenings.storm('tomato', 12 + ((Math.random() * 8) | 0));
+  if (kind === 'pipeStorm') return happenings.storm('pipe', 6 + ((Math.random() * 5) | 0));
+  if (kind === 'throws') {                               // a few booing people throw something
+    for (let k = 0, n = 2 + ((Math.random() * 3) | 0); k < n; k++) setTimeout(() => throwThing(Math.random() < 0.7 ? 'tomato' : 'pipe'), 300 + k * (300 + Math.random() * 500));
+    return true;
+  }
 }
 let dimTarget = 1, dimLevel = 1;                    // the lullaby dims the studio lights (smoothly)
 for (const [k, v] of Object.entries(SEGMENTS)) switches.define('seg:' + k, v.title, !!v.harmful);
@@ -1075,7 +1081,11 @@ $('aboutLink').onclick = (e) => {
     <p><b>Stage:</b> an original procedural set inspired by the TUURD Talk show of <i>Nightmare Puppeteer</i>.
     Leno's voice bank is cut from Vinesauce's Grey Leno videos (<a href="https://www.youtube.com/watch?v=ki3ssj466E0" target="_blank" rel="noopener">The Grey Leno Show</a>,
     <a href="https://www.youtube.com/watch?v=w7lBVJwHABM" target="_blank" rel="noopener">Grey Leno announces his candidacy</a>), with thanks to Vinesauce.
-    Crowd and effect sounds are cut from YouTube sound-effect uploads (sources listed in assets/audio/manifest.json).</p>
+    Crowd and effect sounds are cut from YouTube sound-effect uploads (sources listed in assets/audio/manifest.json).
+    Rimshots: "Ba dum tss [Joke Rimshot]" by <a href="https://freesound.org/people/FREE_SOUND_ENTERTAINMENT/packs/31539/" target="_blank" rel="noopener">FREE_SOUND_ENTERTAINMENT</a>
+    (Freesound, <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>). Drum rolls:
+    <a href="https://commons.wikimedia.org/wiki/File:Drum_Roll_Intro.ogg" target="_blank" rel="noopener">Drum Roll Intro</a> (Wikimedia Commons, CC0) and the
+    <a href="https://commons.wikimedia.org/wiki/File:Drum_Roll_-_Concert_Band_-_United_States_Air_Force_Band.mp3" target="_blank" rel="noopener">United States Air Force Band</a> (public domain).</p>
     <p class="credit"><b>Grey Leno model:</b> ported by <b>huckleberrypie</b> (Nexus Mods: huckpie):
     <a href="https://www.nexusmods.com/deadasdisco/mods/917" target="_blank" rel="noopener">Grey Leno for Dead as Disco (Nexus Mods)</a>.
     Original character and model by Vinesauce. Used in accordance with the mod's terms of use.</p>
