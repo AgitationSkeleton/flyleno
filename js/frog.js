@@ -1,5 +1,5 @@
 // Mr. Frog, tonight's guest ("Give it up for Mr. Frog!"): a frog-headed man in a grey robe with a rope belt, black
-// gloves and a black cap. He walks on from the wings, stands across from Leno, and answers every question with
+// gloves and a black beanie. He walks on from the wings, stands across from Leno, and answers every question with
 // "Good. Good. Good." (croaks, his jaw working).
 // He is also a fly's natural predator. On some visits he now and then opens his mouth and flicks his tongue at the
 // host: for the fly, a looming object (LC4) and a hit on the body (mechanosensory), and Fly-Leno can get caught and
@@ -39,13 +39,13 @@ function frogModel() {
     colored(new THREE.CylinderGeometry(0.236, 0.236, 0.07, 14, 1).translate(0, 0.04, 0), BELT),
     colored(new THREE.CylinderGeometry(0.12, 0.18, 0.1, 12, 1).translate(0, 0.66, 0), ROBE),
   ]));
-  // the head (origin at the neck): the cranium above the mouth line under a black cap with pointed flaps, a wide
+  // the head (origin at the neck): the cranium above the mouth line under a black beanie (a snug crown, a folded cuff), a wide
   // upper lip, nostrils, and the mouth's dark roof (seen when the jaw drops)
   const head = new THREE.Group();
   head.add(mk(mergeGeometries([
     colored(new THREE.SphereGeometry(R, 14, 10, 0, Math.PI * 2, 0, CUT).scale(1.12, SY, 1).translate(0, HY, 0), SKIN),
-    colored(new THREE.SphereGeometry(R * 1.03, 14, 6, 0, Math.PI * 2, 0, Math.PI * 0.3).scale(1.12, SY, 1.04).translate(0, HY, -0.005), CAP),
-    ...[-1, 1].map((s) => colored(new THREE.ConeGeometry(0.05, 0.15, 4).rotateZ(-s * (Math.PI / 2 + 0.45)).translate(0.23 * s, 0.29, 0.02), CAP)),
+    colored(new THREE.SphereGeometry(R * 1.05, 18, 7, 0, Math.PI * 2, 0, Math.PI * 0.34).scale(1.12, SY * 1.08, 1.05).translate(0, HY + 0.005, -0.005), CAP),
+    colored(new THREE.CylinderGeometry(0.2, 0.203, 0.05, 20, 1, true).scale(1.12, 1, 1.05).translate(0, 0.272, -0.005), CAP),
     colored(new THREE.TorusGeometry(R * 0.98, 0.016, 5, 16, Math.PI).rotateX(Math.PI / 2).scale(1.12, 1, 1.02).translate(0, MY + 0.005, 0), LIP),
     ...[-1, 1].map((s) => colored(new THREE.SphereGeometry(0.012, 5, 4).translate(0.03 * s, 0.175, 0.2), SKIN_DARK)),
     colored(new THREE.CircleGeometry(R * 0.97, 14).rotateX(Math.PI / 2).scale(1.12, 1, 1).translate(0, MY + 0.002, 0), MOUTH),
