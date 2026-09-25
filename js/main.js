@@ -409,7 +409,11 @@ $('throwRose').onclick = () => throwThing('rose', true);
 $('throwSugar').onclick = () => throwThing('sugar', true);
 const behavior = new Behavior(meta, audio, {
   onEvent: (type, d) => {
-    if (type === 'vomit') { wellbeing.vomited(); host.trigger('vomit'); setTimeout(() => fx.vomit(() => host.mouth(), () => host.headDown(), 1.1), 500); }
+    if (type === 'vomit') {
+      // the stream starts with the sound and lasts about as long as it does
+      wellbeing.vomited(); host.trigger('vomit');
+      Promise.resolve(d.len).then((len) => setTimeout(() => fx.vomit(() => host.mouth(), () => host.headDown(), Math.max(1.1, Math.min(2.6, (len || 1.5) - 0.4))), 300));
+    }
     if (type === 'retch') host.trigger('retch');
     if (type === 'fart') { host.trigger('fart'); fx.fart(() => host.butt(), () => host.forward().negate()); }
     if (type === 'speak') {

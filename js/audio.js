@@ -189,7 +189,11 @@ export class AudioWorld {
   // ------------------------------------------------------------------ body sounds
   sfx(kind, { pan = 0, gain = 1 } = {}) {
     if (!this.ctx) return 0;
-    const clips = this.clips('sfx', kind);
+    let clips = this.clips('sfx', kind);
+    // the longer gagging clips (over ~1.2 s) carry a whole bout of vomiting: they're used when he actually vomits,
+    // never for a dry retch
+    if (kind === 'retch' && clips) clips = clips.filter((c) => c.dur <= 1.2);
+    if (kind === 'vomit') clips = [...(clips || []), ...(this.clips('sfx', 'retch') || []).filter((c) => c.dur > 1.2)];
     const mouthy = ['retch', 'vomit', 'burp'].includes(kind);            // come out of Leno's mouth -> lip-sync
     // gag/vomit SFX are recorded by other people: pitch them down a little toward Leno's low voice
     const rate = mouthy && kind !== 'burp' ? rand(0.82, 0.9) : rand(0.94, 1.06);

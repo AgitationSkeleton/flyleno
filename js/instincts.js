@@ -55,15 +55,20 @@ export class Instincts {
     const fwd = host.forward();
 
     // ---- food: taxis, taste on contact, eating
-    // humanoid Leno ignores goose droppings; Fly-Leno is keen on them
-    const near = this.food.nearest(pos, 18, host.isFly ? null : (it) => it.kind !== 'poop');
-    const eager = (host.isFly && near?.item.kind === 'poop') || !!near?.item.eager;
+    // humanoid Leno ignores goose droppings; Fly-Leno is keen on them. Something he's keen on (droppings for the fly,
+    // the mushroom, a cake) wins over a nearer plain snack; in flight the fly still sees food on the floor below
+    const edible = host.isFly ? null : (it) => it.kind !== 'poop';
+    const keen = (it) => (host.isFly && it.kind === 'poop') || !!it.eager;
+    const dy = host.isFly && host.flying ? 8 : 1.5;
+    const near = this.food.nearest(pos, 18, (it) => (!edible || edible(it)) && keen(it), dy) ?? this.food.nearest(pos, 18, edible, dy);
+    const eager = !!near && keen(near.item);
     let inReach = false;
     this.status = '';
     if (near) {
       const mouth = host.mouth();
       const reach = Math.min(near.dist, Math.hypot(near.item.pos.x - mouth.x, near.item.pos.z - mouth.z));
       inReach = reach < (this.eating ? 2.0 : 1.15);          // once eating, stay with it
+      if (host.isFly && host.flying) inReach = inReach && Math.abs(near.item.pos.y - mouth.y) < 0.8;   // (not from the air)
       const to = near.item.pos.clone().sub(pos).setY(0);
       this.foodDir = to.clone().normalize();
       let ang = Math.atan2(fwd.x * to.z - fwd.z * to.x, fwd.x * to.x + fwd.z * to.z);   // + = food to the left? (y-up)
@@ -102,7 +107,7 @@ export class Instincts {
       } else if (inReach) this.status = `tasting the ${near.item.kind}… (MN9 ${this.feedEMA.toFixed(0)} Hz)`;
     } else {
       this.stimRate('sugarTaste', 0);
-      this.eating = false;
+      this.eating = false; this.taxis = false;
     }
 
     // ---- homing: steer the brain's own DNs back toward the starting mark

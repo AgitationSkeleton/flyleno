@@ -53,12 +53,12 @@ export class Food {
     while (this.items.filter((i) => i.kind === 'poop').length > 40) this.remove(this.items.find((i) => i.kind === 'poop'));
   }
 
-  nearest(p, maxDist = Infinity, accept = null) {
+  nearest(p, maxDist = Infinity, accept = null, maxDy = 1.5) {
     let best = null, bd = maxDist;
     for (const it of this.items) {
       if (accept && !accept(it)) continue;
       const d = Math.hypot(it.pos.x - p.x, it.pos.z - p.z);
-      if (d < bd && Math.abs(it.pos.y - p.y) < 1.5) { bd = d; best = it; }
+      if (d < bd && Math.abs(it.pos.y - p.y) < maxDy) { bd = d; best = it; }
     }
     return best ? { item: best, dist: bd } : null;
   }

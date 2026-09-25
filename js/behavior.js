@@ -112,7 +112,7 @@ export class Behavior {
     if (retchDrive && this.retchCool <= 0) {
       this.nausea += 0.4;
       if (this.nausea > 1 && this.vomitCool <= 0) {
-        this.audio.sfx('vomit', { pan }); this.onEvent?.('vomit', {});
+        const len = this.audio.sfx('vomit', { pan }); this.onEvent?.('vomit', { len });
         this.nausea = 0; this.vomitCool = 6; this.retchCool = 3;
       } else {
         this.audio.sfx('retch', { pan }); this.onEvent?.('retch', {});

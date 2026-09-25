@@ -99,8 +99,8 @@ browsers don't expose iframe pixels otherwise. The video's sound reaches the fly
 
 **The goose** (`js/goose.js`): at random intervals (every ~1–3 minutes, on its own schedule) a
 low-poly goose waddles onto the stage. It honks (YouTube SFX) and defecates profusely. The droppings
-are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when barely hungry, tastes them
-(sugar neurons → MN9) and eats them.
+are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when barely hungry (over a nearer plain
+snack, and keeping track of them while it flies), tastes them (sugar neurons → MN9) and eats them.
 
 **Predators** (`js/predators.js`, engineered; random visits like the goose, never lethal, off with `?quiet`):
 - **Spider-Leno** (rare, every ~4–9 minutes): a spider with Leno's head rappels from the ceiling on a
