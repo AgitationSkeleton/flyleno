@@ -583,8 +583,8 @@ const goose = new Goose({
 const showSfx = new ShowSfx(audio);
 var showReady = false;              // (var: the autopilot callback can run before the show exists)
 const CROWD_VAL = { cheer: 1, laugh: 0.7, applause: 1, boo: -1, gasp: -0.5 };
-function crowdDo(kind, intensity = 1) {
-  if (audienceAway || !audience.allowKind(kind)) return;
+function crowdDo(kind, intensity = 1, force = false) {
+  if (audienceAway || (force ? kind === 'boo' && switches.blocked('boos') : !audience.allowKind(kind))) return;
   // scripted crowd moments (not contingent on what Leno does): heard by the fly, and a dopamine signal
   const d = audio.crowd(kind, { gain: 0.5 + 0.5 * intensity });
   cultists.react(kind, intensity);
@@ -724,7 +724,7 @@ const panOf = (p) => Math.max(-1, Math.min(1, p.clone().project(camera).x));
 const clownCar = new ClownCar({
   scene, sfx: showSfx, npcs, center: show.center, stageRadius: physHost?.stageRadius ?? 7.3, groundAt: groundY,
   hostPos: () => hostAt().clone(), ticker: (t) => sidebar.ticker(t), crowd: crowdDo, pan: panOf,
-  throwPie: (hand) => { if (allowed('clowns')) projectiles?.throw('pie', hand); },
+  throwPie: (hand) => { if (!switches.blocked('clowns')) projectiles?.throw('pie', hand); },
 });
 const happenings = new Happenings({
   scene, sfx: showSfx, cultists, food, center: show.center, stageRadius: physHost?.stageRadius ?? 7.3,
@@ -756,12 +756,43 @@ const happenings = new Happenings({
   throwItem: (kind) => throwThing(kind, true),        // (the storms check their own switches)
   ovation: (dur) => standingOvation(dur),
   stimAlias, pulse, reinforce, ticker: (t) => sidebar.ticker(t),
-  allowed, startClowns: () => clownCar.start(), clownsActive: () => clownCar.present,
+  allowed, blocked: (k) => switches.blocked(k), startClowns: () => clownCar.start(), clownsActive: () => clownCar.present,
   // how much he needs a kind gesture from the seats: hungry -> sugar; miserable or stressed -> a rose
   needs: () => ({ hunger: instincts.hunger, low: Math.max(0, Math.min(1, (0.5 - wellbeing.cheer) * 2 + wellbeing.stress * 0.6)) }),
 });
 
 goose.gate = () => { if (allowed('goose')) return true; goose.nextT = 60; return false; };
+
+// ------------------------------------------------------------------ a button for every event (Tonight's show panel)
+// Started by hand, an event happens even if its switch is off; Peaceful Mode greys out the harmful ones.
+const EVENT_BUTTONS = [
+  ['Goose', 'goose', () => goose.spawn()],
+  ['Spider-Leno', 'spider', () => predators.dropSpider()],
+  ['Swatter glove', 'swatter', () => predators.sendSwatter(false)],
+  ['Electric racket', 'racket', () => predators.sendSwatter(true)],
+  ['Duendes', 'aliens', () => happenings.aliens.start()],
+  ['Clown car', 'clowns', () => clownCar.start()],
+  ['The Rapture', 'rapture', () => happenings.rapture.start()],
+  ['Rain cloud', 'rain', () => happenings.rain.start()],
+  ['Mushroom', 'mushroom', () => happenings.mushroom.start()],
+  ['Falling rig', 'rig', () => happenings.rigFall()],
+  ['Tomato storm', 'tomatoes', () => happenings.storm('tomato', undefined, undefined, true)],
+  ['Pipe storm', 'pipes', () => happenings.storm('pipe', 8 + ((Math.random() * 6) | 0), undefined, true)],
+  ['Tomato & pipe storm', 'storms', () => happenings.storm('mixed', undefined, undefined, true)],
+  ['Rose storm', 'roseStorms', () => happenings.storm('rose', 14, undefined, true)],
+  ['Standing ovation', 'ovations', () => standingOvation(9)],
+  ['Sugar shower', 'sugar', () => happenings.sugarThrow(5)],
+  ['Heckler', 'hecklers', () => { if (npcs.busy || audienceAway) sidebar.ticker('Someone is already on stage'); else npcs.heckle(getLeno); }],
+  ['Stagehand snack', 'snacks', () => { if (npcs.busy) sidebar.ticker('Someone is already on stage'); else npcs.deliverSnack(getLeno, 'sugar'); }],
+  ['Applause', 'cheers', () => crowdDo('applause', 1, true)],
+  ['Cheers', 'cheers', () => crowdDo('cheer', 1, true)],
+  ['Laughter', 'cheers', () => crowdDo('laugh', 1, true)],
+  ['Gasp', 'gasps', () => crowdDo('gasp', 1, true)],
+  ['Boos', 'boos', () => crowdDo('boo', 1, true)],
+];
+$('segments').insertAdjacentHTML('beforeend', `<div class="seg-head">Events</div>` +
+  EVENT_BUTTONS.map(([label, sw], i) => `<button class="mini" data-evbtn="${i}" data-sw="${sw}">${label}</button>`).join(''));
+$('segments').querySelectorAll('button[data-evbtn]').forEach((b) => (b.onclick = () => { if (!switches.blocked(b.dataset.sw)) EVENT_BUTTONS[+b.dataset.evbtn][2](); }));
 
 // ------------------------------------------------------------------ event switches, Peaceful Mode
 buildEventsPanel($('events'), switches, [['Show segments', Object.entries(SEGMENTS).map(([k, v]) => ['seg:' + k, v.title.replace(/"/g, ''), !!v.harmful])]]);
@@ -774,7 +805,7 @@ function applySwitches() {
   show.gentle = P;
   // the manual buttons for harmful things are greyed out in Peaceful Mode
   for (const [id, sw] of [['throwTomato', 'tomatoes'], ['throwPipe', 'pipes']]) { const b = $(id); b.disabled = switches.blocked(sw); b.classList.toggle('grayed', b.disabled); }
-  document.querySelectorAll('#segments button').forEach((b) => { b.disabled = switches.blocked('seg:' + b.dataset.seg); b.classList.toggle('grayed', b.disabled); });
+  document.querySelectorAll('#segments button').forEach((b) => { b.disabled = switches.blocked(b.dataset.seg ? 'seg:' + b.dataset.seg : b.dataset.sw); b.classList.toggle('grayed', b.disabled); });
   for (const k of AVERSIVE_STIMS) {
     const el = sidebar.stimEls[k]; if (!el) continue;
     el.btn.disabled = P; el.btn.classList.toggle('grayed', P);

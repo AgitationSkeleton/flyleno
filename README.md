@@ -247,8 +247,11 @@ same way: the strings lower him into a curl, forehead to the floor.
   the segments that have gone longest without a run, so every segment comes round within a few episodes. The
   lullaby closes about one episode in three (at least every third). 8–18 s between segments, 20–35 s between
   episodes. Segments that need a stagehand wait for one to be free.
-- **Controls:** the "Tonight's show" panel lists the rundown and has a button for every segment. A
-  segment holds the director's random events while it runs. Each segment also has a switch in the Events panel.
+- **Controls:** the "Tonight's show" panel lists the rundown and has a button for every segment, and below them a
+  button for every other event (visitors, predators, happenings, storms, the ovation, a sugar shower, the heckler,
+  the stagehand's snack, and each crowd reaction). Started by hand, an event happens even if its switch is off;
+  Peaceful Mode greys out the harmful ones. A segment holds the director's random events while it runs. Each
+  segment also has a switch in the Events panel.
 - **No script on screen:** the host's lines from the shows are kept in `js/show.js` as cue cards, but
   they are not displayed (commented out in `cue()` in `js/main.js`). The fly brain does the talking:
   Leno says whatever his articulator neurons produce, and only the segment's events happen. Nothing makes him

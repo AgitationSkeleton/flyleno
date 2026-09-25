@@ -517,12 +517,14 @@ export class Happenings {
   }
 
   /** a barrage from the audience: `kind` 'mixed' (tomatoes and pipes) or 'rose'; n throws over `dur` seconds */
-  storm(kind = 'mixed', n = 14 + ((Math.random() * 16) | 0), dur = rand(5, 9)) {
+  storm(kind = 'mixed', n = 14 + ((Math.random() * 16) | 0), dur = rand(5, 9), force = false) {
     const ctx = this.ctx;
     if (ctx.audienceAway()) return false;
     // a mixed storm throws whichever of tomatoes and pipes are switched on; 'tomato' / 'pipe': only that
+    // (force: started by hand, so only Peaceful Mode stops it)
+    const can = (k) => (force ? !ctx.blocked?.(k) : ctx.allowed(k));
     const kinds = kind === 'rose' ? ['rose']
-      : [...(ctx.allowed('tomatoes') && kind !== 'pipe' ? ['tomato', 'tomato', 'tomato'] : []), ...(ctx.allowed('pipes') && kind !== 'tomato' ? ['pipe'] : [])];
+      : [...(can('tomatoes') && kind !== 'pipe' ? ['tomato', 'tomato', 'tomato'] : []), ...(can('pipes') && kind !== 'tomato' ? ['pipe'] : [])];
     if (!kinds.length) return false;
     ctx.ticker(kind === 'rose' ? 'Roses rain down from the audience!' : kinds.includes('pipe') && kinds.includes('tomato')
       ? 'The audience unleashes a storm of tomatoes and pipes!' : kinds.includes('pipe') ? 'The audience unleashes a storm of pipes!' : 'The audience unleashes a storm of tomatoes!');

@@ -229,3 +229,4 @@ button:disabled { cursor: not-allowed; }
   #viewTools { bottom: 8px; right: 8px; }
   #viewTools button { width: 30px; height: 30px; }
 }
+.segments .seg-head { flex-basis: 100%; margin: 6px 0 0; font: 600 10.5px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: #8d8a96; }
