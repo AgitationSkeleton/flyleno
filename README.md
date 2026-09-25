@@ -90,7 +90,8 @@ is said).
 - **Cams:** live cameras following Leno.
 - **YouTube:** any YouTube video on the big backdrop screen. The real iframe is placed in 3D behind a
   transparent hole in the WebGL canvas, so objects in front occlude it.
-- **Green:** a lime full-bright green screen.
+- **Green:** a lime full-bright green screen. Nothing overrides it: while it's chosen, the show's cards and clips
+  stay off the screens.
 
 The fly **sees** the big screen: its left and right halves (brightness + frame-to-frame motion),
 weighted by whether the screen is in Leno's field of view, drive 400 sampled R1-6 photoreceptors per

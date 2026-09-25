@@ -243,8 +243,11 @@ export class Show {
     }
     if (key === 'clip') {
       ctx.cue('Jesus Christ, take a look at this next one, huh?');
-      s.prevMode = ctx.screens?.mode; s.prevVideo = ctx.screens?.videoId;
-      if (ctx.screens?.available) ctx.screens.setMode('video', pick(CLIP_VIDEOS), { randomStart: true });
+      // (not over a green screen the viewer has chosen: that stays green)
+      if (ctx.screens?.available && ctx.screens.mode !== 'green') {
+        s.prevMode = ctx.screens.mode; s.prevVideo = ctx.screens.videoId;
+        ctx.screens.setMode('video', pick(CLIP_VIDEOS), { randomStart: true });
+      }
     }
     if (key === 'monologue') {
       this.spot.on(() => ctx.hostHead()); s.jokes = 0; s.next = 2.2; s.fbT = 3;
@@ -349,7 +352,7 @@ export class Show {
       if (t > SEGMENTS.open.dur) { this.spot.off(); return true; }
     }
     if (key === 'clip') {
-      this.at(C, 4, () => { const title = ctx.screens?.title(); if (title) ctx.ticker(`On the screens: ${title}`); });
+      this.at(C, 4, () => { const title = s.prevMode && ctx.screens?.title(); if (title) ctx.ticker(`On the screens: ${title}`); });
       if (t > 26 && !s.back) {
         s.back = true;
         this.restoreScreens(s);

@@ -113,7 +113,7 @@ export class StageScreens {
 
   /** put a show card (js/cards.js) on every screen for `secs` seconds, then go back to the current mode */
   showCard(card, secs = 8) {
-    if (!this.available) return;
+    if (!this.available || this.mode === 'green') return;          // a green screen chosen by the viewer stays green
     this.clearCard(false);
     const tex = new THREE.CanvasTexture(card.canvas);
     tex.colorSpace = THREE.SRGBColorSpace;
