@@ -1197,7 +1197,8 @@ $('aboutLink').onclick = (e) => {
     <a href="https://commons.wikimedia.org/wiki/File:Drum_Roll_-_Concert_Band_-_United_States_Air_Force_Band.mp3" target="_blank" rel="noopener">United States Air Force Band</a> (public domain).
     Mic feedback: <a href="https://freesound.org/people/celesti-whispers/sounds/443023/" target="_blank" rel="noopener">celesti-whispers</a> and
     <a href="https://freesound.org/people/Breviceps/sounds/489566/" target="_blank" rel="noopener">Breviceps</a> (Freesound, CC0).
-    Body impacts: <i>Half-Life 2</i>'s physics/body sounds, © Valve. Kybo Rin: kylorant.mp3 (a meme remix) and
+    Body impacts: <i>Half-Life 2</i>'s physics/body sounds, © Valve. Kybo Rin's rant: voiced by Vinny, from
+    <a href="https://www.youtube.com/watch?v=ki3ssj466E0" target="_blank" rel="noopener">The Grey Leno Show</a>; his lightsaber:
     <i>Star Wars</i> lightsaber sounds, © Lucasfilm.</p>
     <p class="credit"><b>Grey Leno model:</b> ported by <b>huckleberrypie</b> (Nexus Mods: huckpie):
     <a href="https://www.nexusmods.com/deadasdisco/mods/917" target="_blank" rel="noopener">Grey Leno for Dead as Disco (Nexus Mods)</a>.

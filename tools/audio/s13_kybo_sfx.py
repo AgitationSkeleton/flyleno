@@ -1,7 +1,7 @@
 """
 Kybo Rin's sounds, used as they are from assets/audio/sfx/kylo/ (no conversion):
-  - kylorant.mp3: his rant (a meme remix), 83 s. Registered as `music.kylorant`, a group the audio preload skips:
-    it is fetched when he walks on
+  - kylorant.mp3: his rant, voiced by Vinny, from The Grey Leno Show (ki3ssj466E0), 83 s. Registered as
+    `music.kylorant`, a group the audio preload skips: it is fetched when he walks on
   - SABER/*.WAV: Star Wars lightsaber sounds (ignition, hum loops, swings, smacks, clashes, sparks, power-off)
 
     python tools/audio/s13_kybo_sfx.py
@@ -49,7 +49,8 @@ def main():
         man["sfx"][kind] = [clip(f"{DIR}/SABER/{n}.WAV", "kybo-saber") for n in names]
         print(kind, len(names))
     man["sources"] = [s for s in man.get("sources", []) if s["id"] not in ("kybo-rant", "kybo-saber")]
-    man["sources"].append({"id": "kybo-rant", "url": "", "title": "kylorant.mp3 (a Kylo Ren rant meme remix)", "author": "unknown"})
+    man["sources"].append({"id": "kybo-rant", "url": "https://www.youtube.com/watch?v=ki3ssj466E0",
+                           "title": "kylorant.mp3: Kybo Rin's rant, from [Vinesauce] Vinny - The Grey Leno Show", "author": "Vinny (Vinesauce)"})
     man["sources"].append({"id": "kybo-saber", "url": "", "title": "Star Wars lightsaber sounds (SABER)", "author": "Lucasfilm"})
     json.dump(man, open(man_path, "w", encoding="utf-8"), indent=1)
 

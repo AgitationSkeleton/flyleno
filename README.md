@@ -460,9 +460,10 @@ Stock sounds for the monologue (`tools/audio/s10_stock_sfx.py`), from freely lic
   celesti-whispers and [Short microphone feedback](https://freesound.org/people/Breviceps/sounds/489566/) by
   Breviceps (Freesound, CC0).
 
-Kybo Rin (`tools/audio/s13_kybo_sfx.py`, files used as they are in `sfx/kylo/`): his rant `kylorant.mp3` (a meme
-remix; kept out of the preload as `music.kylorant`) and *Star Wars* lightsaber sounds (`SABER/`: ignition, hum,
-swings, smacks, clashes, sparks, power-off), © Lucasfilm.
+Kybo Rin (`tools/audio/s13_kybo_sfx.py`, files used as they are in `sfx/kylo/`): his rant `kylorant.mp3`, voiced by
+Vinny, from [The Grey Leno Show](https://www.youtube.com/watch?v=ki3ssj466E0) (kept out of the preload as
+`music.kylorant`), and *Star Wars* lightsaber sounds (`SABER/`: ignition, hum, swings, smacks, clashes, sparks,
+power-off), © Lucasfilm.
 
 Leno's body hitting the floor and the set (`tools/audio/s11_body_sfx.py`): *Half-Life 2*'s
 `sound/physics/body` impacts (`body_medium_impact_soft*`, `body_medium_impact_hard*`, `body_medium_break*`),
