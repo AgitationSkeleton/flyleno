@@ -216,7 +216,7 @@ export class Show {
   /** solid moving props */
   colliders() {
     const out = [...this.car.colliders()];
-    if (this.frog.active) out.push({ key: 'frog', pos: this.frog.active.g.position, radius: 0.6, height: 1.3 });
+    if (this.frog.active) out.push({ key: 'frog', pos: this.frog.active.g.position, radius: 0.45, height: 2.5 });
     return out;
   }
 
@@ -466,7 +466,7 @@ export class Show {
     }
     if (key === 'guest') {
       this.at(C, 3, () => { ctx.cue('Give it up for Mr. Frog!'); ctx.crowd('applause', 1); this.frog.enter(ctx.getHost, 48); this.spot.on(() => this.frog.headPos() ?? ctx.hostHead(), 700); });
-      if (this.frog.active?.state === 'sit') {
+      if (this.frog.active?.state === 'stand') {
         s.askT = (s.askT ?? 2) - dt;
         if (s.askT <= 0) {
           s.askT = 7 + Math.random() * 5;
@@ -628,7 +628,7 @@ export class Show {
   // ---------------------------------------------------------------- guests
   frogEvent(type, d = {}) {
     const ctx = this.ctx;
-    if (type === 'enter') ctx.ticker('Mr. Frog hops onto the stage');
+    if (type === 'enter') ctx.ticker(d.armed ? "Mr. Frog walks onto the stage. He's brought a toy revolver." : 'Mr. Frog walks onto the stage');
     if (type === 'croak') ctx.ticker(`Mr. Frog: "${'Good. '.repeat(d.n).trim()}"`);
     if (type === 'tongue') ctx.pulse('frogLoom', 'heckler', 220, 0.3);                       // LC4: something shoots at him
     if (type === 'hit') {
@@ -637,6 +637,15 @@ export class Show {
         ctx.ticker('Mr. Frog catches Fly-Leno with his tongue!');
         const fp = this.frog.headPos(); if (fp) ctx.impulse(fp.sub(ctx.hostPos()).multiplyScalar(90));
       } else ctx.ticker("Mr. Frog's tongue slaps Leno");
+    }
+    if (type === 'shot') {
+      // a real report, no BANG! flag: when it hits, a hard shove and a sting (mechanosensory, punishment)
+      if (d.hit) {
+        ctx.ticker('BANG! Mr. Frog shoots Leno');
+        ctx.pulse('frogShot', 'ambientTouch', 100, 0.5); ctx.reinforce(-0.5, 0.8); ctx.react('frogShot');
+        const away = ctx.hostPos().sub(d.from).setY(0); if (away.lengthSq() < 1e-4) away.set(0, 0, 1);
+        ctx.impulse(away.normalize().multiplyScalar(300).add(new THREE.Vector3(0, 70, 0)));
+      } else { ctx.ticker('BANG! Mr. Frog misses'); ctx.crowd('gasp', 0.7); }
     }
     if (type === 'spit') {
       ctx.ticker('…and spits him back out. Too grey.');

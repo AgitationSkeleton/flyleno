@@ -12,7 +12,7 @@ export const EVENT_GROUPS = [
     ['swatter', 'Swatter glove', true],
     ['racket', 'Electric racket', true],
     ['aliens', 'Duendes', true],
-    ['frogTongue', "Mr. Frog's tongue", true],
+    ['frogTongue', "Mr. Frog's tongue and gun", true],
     ['carBump', 'Car nudges', true],
     ['clowns', 'Clown car', true],
   ]],

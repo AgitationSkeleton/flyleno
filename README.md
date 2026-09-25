@@ -171,7 +171,7 @@ snack, and keeping track of them while it flies), tastes them (sugar neurons →
 
 **Events panel and Peaceful Mode** (`js/events.js`):
 - **Switches:** the Events panel in the sidebar has an on/off switch for every event: visitors and predators
-  (goose, spider-Leno, swatter, electric racket, duendes, Mr. Frog's tongue, the car nudging him, the clown car),
+  (goose, spider-Leno, swatter, electric racket, duendes, Mr. Frog's tongue and gun, the car nudging him, the clown car),
   happenings (Rapture, rain cloud, mushroom, falling rig), every kind of audience action (cheers/laughs/applause,
   gasps, boos, rose / sugar / tomato / pipe throws, rose storms, tomato-and-pipe storms, ovations, hecklers), the
   stage crew and director's cues (stagehand snacks, rotten éclairs, applause cues, walk drives, the bitter-taste
@@ -180,7 +180,8 @@ snack, and keeping track of them while it flies), tastes them (sugar neurons →
   punishes the fly) and greys it out: the harmful switches, the tomato and pipe buttons, harmful segments, the
   aversive "Show events" stimuli and the brain worms. Switched on mid-show, the harmful things leave at once (the
   spider climbs away, the glove floats off, the rain cloud drifts away, the aliens scatter). Mr. Frog keeps his
-  tongue in, the car steers around Leno instead of nudging him, and the UFO's beam only lifts him a little.
+  tongue in and leaves his revolver at home, the car steers around Leno instead of nudging him, and the UFO's beam
+  only lifts him a little.
 - **Overlap:** the Rapture, the rain cloud, the duendes and the clown car don't start while one of the others is on (one
   that's blocked tries again 20–40 s later), and spider-Leno and the glove don't visit at the same time.
   Everything else runs on its own timer.
@@ -264,7 +265,7 @@ same way: the strings lower him into a curl, forehead to the floor.
 |---|---|---|
 | Opening | "Hey everybody and welcome to the Grey Leno Show!" title card; "Today we have a show." gets applause for nothing; a "GREY LE-NO" chant | sound (JO), screen picture (R1-6), reward dopamine from the crowd |
 | "Take a look at this next one" | the big screen plays a random point in one of five Grey Leno videos (The Grey Leno Show and four others) for ~25 s, then goes back to what it showed | the video (R1-6, with tab capture) and its sound (JO) |
-| Guest: Mr. Frog | a frog hops to the guest spot, answers every question with "Good. Good. Good." (croaks), and flicks his tongue at the host. He can catch and spit out Fly-Leno. He leaves when Leno bites his ankles (mouth open right next to him), shouts him off ("Up yours! You're out of here, Mr. Frog"), or his time is up | croaks (JO); tongue = looming (LC4) + hit (mechanosensory, punishment); the crowd reacts |
+| Guest: Mr. Frog | a frog-headed man (grey robe, rope belt, black gloves, a black cap with pointed flaps, big blue heavy-lidded eyes) walks to the guest spot and answers every question with "Good. Good. Good." (croaks, his jaw working). On about half his visits he now and then opens his mouth and flicks his tongue at the host, and can catch and spit out Fly-Leno; on the others he has brought a toy revolver like the Jonkler's (no BANG! flag in it) and takes a shot every so often: a crack and a muzzle flash, and when it hits (7 in 10) a hard shove. He leaves when Leno bites his ankles (mouth open right next to him), shouts him off ("Up yours! You're out of here, Mr. Frog"), or his time is up | croaks (JO); tongue = looming (LC4) + hit (mechanosensory, punishment); gunshot (JO) + hit (mechanosensory, punishment); the crowd reacts |
 | Sunday drive | a vintage roadster laps the stage, brakes and honks "a-oo-gah" when Leno is in the way ("do you drive a car?") | engine rumble (JO-B), floor vibration (mechanosensory), headlights approaching (LC4) |
 | Take it away, Johnny! | a spotlight swings to the empty band stool; the music drops out, crickets; "Where's Johnny?"; rimshot | sudden silence, crickets (JO-A), spotlight on the eyes |
 | A word from our sponsor | GRONK sponsor card (a slow, throbbing glow; no strobe), then "Buy Grey Leno NFTs" | pulsing light on the eyes (R1-6) |

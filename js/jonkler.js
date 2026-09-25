@@ -25,6 +25,19 @@ function flagTexture() {
   return flagTex;
 }
 
+/** a toy revolver (the Jonkler's, and Mr. Frog's on some visits): its barrel along -y, which is "forward" in arm
+ *  space once the arm is raised to point it; .muzzle: the end of the barrel */
+export function toyRevolver() {
+  const gun = new THREE.Group();
+  const metal = new THREE.MeshStandardMaterial({ color: 0x2c2c30, metalness: 0.7, roughness: 0.35 }), wood = new THREE.MeshStandardMaterial({ color: 0x6b3f1f, roughness: 0.7 });
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.26, 10).translate(0, -0.15, 0.03), metal);
+  const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.07, 10).translate(0, -0.03, 0.03), metal);
+  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.06, 0.14).translate(0, 0.03, -0.04), wood);
+  gun.add(barrel, drum, grip);
+  gun.muzzle = V(0, -0.28, 0.03);
+  return gun;
+}
+
 /** the Jonkler, on the stagehands' rig (skirt, body, head, armL, armR, handOffset) plus .gun and .flag on the right hand */
 export function jonklerFigure() {
   mat ||= keep(new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.7, side: THREE.DoubleSide }));
@@ -62,15 +75,10 @@ export function jonklerFigure() {
   g.body.add(g.head, g.armL, g.armR);
   g.add(g.skirt, g.body);
   g.handOffset = V(0.03, -0.58, 0.05).multiplyScalar(S);
-  // the toy revolver in the right hand, along the arm (arm-local -y is "forward" once he points it)
-  const gun = new THREE.Group(); gun.position.copy(g.handOffset);
-  const metal = new THREE.MeshStandardMaterial({ color: 0x2c2c30, metalness: 0.7, roughness: 0.35 }), wood = new THREE.MeshStandardMaterial({ color: 0x6b3f1f, roughness: 0.7 });
-  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.26, 10).translate(0, -0.15, 0.03), metal);
-  const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.07, 10).translate(0, -0.03, 0.03), metal);
-  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.06, 0.14).translate(0, 0.03, -0.04), wood);
-  gun.add(barrel, drum, grip);
+  // the toy revolver in the right hand, along the arm
+  const gun = toyRevolver(); gun.position.copy(g.handOffset);
   // the BANG! flag: a stick out of the barrel with a banner hanging from its end (hidden until he fires)
-  const flag = new THREE.Group(); flag.position.set(0, -0.28, 0.03);
+  const flag = new THREE.Group(); flag.position.copy(gun.muzzle);
   const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.34, 6).translate(0, -0.17, 0), new THREE.MeshStandardMaterial({ color: 0xeeeeee }));
   const banner = new THREE.Sprite(new THREE.SpriteMaterial({ map: flagTexture(), depthWrite: true }));
   banner.position.set(0, -0.3, -0.14); banner.scale.set(0.56, 0.28, 1);

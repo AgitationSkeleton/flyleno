@@ -520,6 +520,17 @@ export class ShowSfx {
       }
       return 2.5;
     }
+    if (kind === 'gunshot') {                                 // a revolver: a sharp crack, a boom, the room ringing
+      const n = this.noise(), hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 900;
+      const g = ctx.createGain(); n.connect(hp).connect(g).connect(out); this.env(g.gain, t, 0.0008, 1.2, 0.004, 0.09);
+      const n2 = this.noise(), lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700;
+      const g2 = ctx.createGain(); n2.connect(lp).connect(g2).connect(out); this.env(g2.gain, t, 0.002, 1.1, 0.02, 0.35);
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.2);
+      const og = ctx.createGain(); o.connect(og).connect(out); this.env(og.gain, t, 0.002, 0.9, 0.01, 0.22);
+      if (this.audio.reverb) { const r = ctx.createGain(); r.gain.value = 0.45; out.connect(r).connect(this.audio.reverb); }
+      n.start(t, Math.random()); n.stop(t + 0.15); n2.start(t, Math.random()); n2.stop(t + 0.5); o.start(t); o.stop(t + 0.3);
+      return 0.6;
+    }
     if (kind === 'bang') {                                    // a toy cap gun: a sharp pop, then a comic boing
       const n = this.noise(), hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1200;
       const g = ctx.createGain(); n.connect(hp).connect(g).connect(out); this.env(g.gain, t, 0.001, 1, 0.01, 0.08);

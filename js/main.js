@@ -263,7 +263,7 @@ function reinforce(valence, seconds) {
 const pulseTimers = {};
 // how much a sensory pulse jolts him when he's asleep (and what woke him)
 const JOLT = { hitTouch: [1.5, 'a hit'], hitTaste: [0.4, 'a splat'], rigTouch: [2, 'a crash'], swatHit: [2, 'a swat'], zapTouch: [2, 'a zap'],
-  spiderGrab: [2, 'a grab'], spiderBump: [1.5, 'a bump'], alienKick: [1, 'a kick'], frogHit: [1.5, "the frog's tongue"], fallTouch: [1.5, 'a fall'],
+  spiderGrab: [2, 'a grab'], spiderBump: [1.5, 'a bump'], alienKick: [1, 'a kick'], frogHit: [1.5, "the frog's tongue"], frogShot: [2, "Mr. Frog's gun"], fallTouch: [1.5, 'a fall'],
   rainTouch: [0.25, 'the rain'], boltTouch: [1.2, 'thunder'], contactTouch: [0.1, 'a nudge'], confettiTouch: [0.05, 'confetti'], roseTouch: [0.15, 'a rose'],
   sugarTouch: [0.05, 'a sugar cube'], pieHit: [1.5, 'a pie in the face'], bangHit: [2, 'a BANG!'], saberHit: [2, 'a lightsaber'], saberLoom: [0.9, 'a lightsaber'], itch: [0.2, 'an itch'], loom: [0.9, 'something flying at him'], spiderLoom: [0.9, 'a spider'],
   swatLoom: [0.9, 'a swatter'], frogLoom: [0.9, "the frog's tongue"] };
@@ -324,7 +324,7 @@ const audience = new Audience(audio, reinforce, {
   onReact: (e) => {
     const verb = { cheer: 'cheers', laugh: 'laughs', applause: 'applauds', boo: 'boos', gasp: 'gasps' }[e.kind] || e.kind;
     const what = { speak: 'babbling', stroll: 'stroll', startle: 'flinch', groom: 'grooming', tomatoHit: 'tomato hit', pipeHit: 'pipe hit', eat: 'meal', burp: 'burp', fall: 'fall',
-      eatPoop: 'goose-dropping snack', lay: 'egg', hatch: 'hatching', goose: 'goose', frogTongue: "frog's tongue", frogSpit: 'spit-out', frogBite: 'ankle bite',
+      eatPoop: 'goose-dropping snack', lay: 'egg', hatch: 'hatching', goose: 'goose', frogTongue: "frog's tongue", frogShot: "frog's gunshot", frogSpit: 'spit-out', frogBite: 'ankle bite',
       frogKicked: 'frog getting kicked out', backflip: 'backflip', backflipFail: 'missing backflip', spiderDrop: 'spider dropping him', swatHit: 'swat', zap: 'zap',
       alienKick: 'shin kick', rigHit: 'falling rig', powerUp: 'power-up', roseHit: 'rose', dodge: 'narrow escape', doze: 'host dozing off', pieHit: 'pie in the face', bang: 'BANG! flag', saber: 'lightsaber hit' }[e.act] || e.act;
     sidebar.ticker(`Audience ${verb} at the ${what}`);
@@ -854,7 +854,7 @@ const AVERSIVE_STIMS = ['heckler', 'tomato', 'stink'];         // "Show events" 
 let wasPeaceful = null;
 function applySwitches() {
   const P = switches.peaceful;
-  show.frog.tongueOn = allowed('frogTongue');
+  show.frog.attacksOn = allowed('frogTongue');
   show.car.gentle = !allowed('carBump');
   show.gentle = P;
   // the manual buttons for harmful things are greyed out in Peaceful Mode
@@ -938,7 +938,7 @@ function movers() {
   const out = [];
   for (const n of npcs.list) out.push({ key: n, p: n.headPos(), r: 0.6 });                               // stagehand, heckler
   if (goose.active) out.push({ key: goose.active, p: goose.active.g.position.clone().add(V(0, 0.5, 0)), r: 0.45 });
-  const fr = show.frog.active; if (fr) out.push({ key: fr, p: fr.g.position.clone().add(V(0, 0.8, 0)), r: 0.75 });
+  const fr = show.frog.active; if (fr) out.push({ key: fr, p: show.frog.headPos(), r: 0.6 });
   show.loomers().forEach((o, i) => out.push({ key: 'show' + i, ...o }));                               // tongue, car, UFO
   predators.loomers().forEach((o, i) => out.push({ key: 'pred' + i, ...o }));                          // spider, swatter
   const sp = predators.spider.active; if (sp) out.push({ key: sp, p: sp.root.position, r: 1.0 });

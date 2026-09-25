@@ -21,6 +21,7 @@ const EFFECTS = {
   spiderBump: { injury: 0.03, dizzy: 0.1 },
   alienKick: { injury: 0.006, dizzy: 0.05 },      // lots of little kicks
   frogHit: { injury: 0.03, grime: 0.06 },        // sticky tongue
+  frogShot: { injury: 0.04, dizzy: 0.2 },        // Mr. Frog's revolver
   fallTouch: { injury: 0.05, dizzy: 0.2 },
   softFall: { dizzy: 0.15 },                     // knocked over by a cream pie
   bangHit: { injury: 0.01, dizzy: 0.35 },        // thrown by the Jonkler's BANG! flag
