@@ -257,7 +257,7 @@ export class KyboRin {
       this.hum.src.playbackRate.value = 1 + Math.min(0.3, speed / 30);
       this.hum.g.gain.value = (0.25 + Math.min(0.25, speed / 40)) * this.ext; this.hum.p.pan.value = pan;
     }
-    if (this.rant) this.rant.p.pan.value = pan;
+    if (this.rant) this.rant.p.pan.value = pan * 0.4;                // (never all in one ear)
     this.swingCool -= dt;
     if (this.ext > 0.9 && speed > 5 && this.swingCool <= 0) {
       this.swingCool = rand(0.3, 0.5);
@@ -294,16 +294,25 @@ export class KyboRin {
     if (!clip || !A.ctx) return;
     const buf = await A.load(clip.file);
     if (!buf || !this.present || this.want === 0 || this.rant) return;
-    const v = this.rant = this.voice(buf, 0.9, false);
+    const v = this.rant = this.voice(buf, 1, false, true);
     v.src.onended = () => { if (this.rant === v) this.rantDone = true; };
   }
 
-  /** a sound he carries about: buffer -> gain -> panner -> the in-world bus */
-  voice(buf, gain, loop) {
+  /** a sound he carries about: buffer -> gain -> panner -> the in-world bus. loud: compressed, made up and limited
+   *  first (the rant: about 9 dB louder, peaks held under 0 dB, so it carries over the saber) */
+  voice(buf, gain, loop, loud = false) {
     const A = this.ctx.audio, ctx = A.ctx;
     const src = ctx.createBufferSource(), g = ctx.createGain(), p = ctx.createStereoPanner();
     src.buffer = buf; src.loop = loop; g.gain.value = gain;
-    src.connect(g).connect(p).connect(A.bus); src.start();
+    let head = src;
+    if (loud) {
+      const comp = ctx.createDynamicsCompressor(), makeup = ctx.createGain(), lim = ctx.createDynamicsCompressor();
+      Object.entries({ threshold: -28, knee: 6, ratio: 6, attack: 0.003, release: 0.25 }).forEach(([k, v]) => (comp[k].value = v));
+      Object.entries({ threshold: -6, knee: 0, ratio: 20, attack: 0, release: 0.08 }).forEach(([k, v]) => (lim[k].value = v));
+      makeup.gain.value = 2;
+      head = src.connect(comp).connect(makeup).connect(lim);
+    }
+    head.connect(g).connect(p).connect(A.bus); src.start();
     return { src, g, p };
   }
 
