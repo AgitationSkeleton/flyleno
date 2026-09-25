@@ -34,6 +34,7 @@ export class Brood {
     this.ray = new THREE.Raycaster();
     this.surface = null; this.checkT = 0; this.wasFlying = false;
     this.grounds = stage.ground;
+    this.center = new THREE.Vector3().fromArray(stage.markers.stageCenter.position);
   }
 
   surfaceUnder(p) {
@@ -103,14 +104,46 @@ export class Brood {
       if (e.t >= e.hatchAt) { this.eggs.splice(this.eggs.indexOf(e), 1); this.hatch(e); }
     }
     for (const y of this.young) this.think(dt, y, host);
-    // grown up and gone: after a few minutes a hatchling leaves the show (and is freed)
+    // grown up: after a few minutes a hatchling leaves the show, and is freed once it's gone
     for (const y of [...this.young]) {
       y.life -= dt;
-      if (y.life <= 0) { disposeObject(y.body.root); this.young.splice(this.young.indexOf(y), 1); this.onEvent?.('leave'); }
+      if (y.life <= 0 && !y.leaving) this.leave(y);
+      if (y.gone) { disposeObject(y.body.root); this.young.splice(this.young.indexOf(y), 1); this.onEvent?.('leave'); }
     }
   }
 
+  /** a fly-form hatchling takes off and flies up and away from the stage; a humanoid one walks off into the nearer
+   *  wing (where the stagehands come on) */
+  leave(y) {
+    y.leaving = true; y.leaveT = 0;
+    const pos = y.kind === 'fly' ? y.body.pos : y.body.root.position;
+    if (y.kind === 'fly') {
+      const out = pos.clone().sub(this.center).setY(0);
+      if (out.lengthSq() < 0.01) out.set(Math.random() - 0.5, 0, Math.random() - 0.5);
+      out.normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), (Math.random() - 0.5) * 1.2);
+      y.exit = pos.clone().addScaledVector(out, 40);
+      y.body.away = true;
+    } else {
+      const side = pos.x >= this.center.x ? 1 : -1;
+      y.exit = this.center.clone().add(new THREE.Vector3(side * 12, 0, -4));
+    }
+    this.onEvent?.('leaving', { kind: y.kind });
+  }
+
+  exit(dt, y) {
+    const b = y.body, pos = y.kind === 'fly' ? b.pos : b.root.position;
+    y.leaveT += dt;
+    const fwd = b.forward(), to = y.exit.clone().sub(pos).setY(0);
+    const ang = Math.atan2(fwd.z * to.x - fwd.x * to.z, fwd.x * to.x + fwd.z * to.z);
+    const walk = y.kind === 'fly' ? 0 : Math.abs(ang) < 0.6 ? 1.4 : 0.2;
+    b.setMotor({ forward: walk, backward: 0, turn: Math.max(-1, Math.min(1, ang * 2)), startle: 0, groom: 0, feed: 0 });
+    this.step(dt, y);
+    // gone: out of sight up in the rafters, or through the wing (or given up on, if something is in the way)
+    y.gone = y.kind === 'fly' ? b.altitude > 8 || y.leaveT > 12 : to.length() < 0.6 || y.leaveT > 60;
+  }
+
   think(dt, y, host) {
+    if (y.leaving) { this.exit(dt, y); return; }
     y.t += dt;
     const b = y.body;
     const pos = y.kind === 'fly' ? b.pos : b.root.position;

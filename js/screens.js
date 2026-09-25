@@ -65,24 +65,27 @@ export class StageScreens {
 
   setVolume(v, master = this.master) { this.volume = v; this.master = master; if (this.player?.setVolume) this.player.setVolume(v * master); }
 
-  /** opts.randomStart: once the video is playing, jump to a random point in it (not the first 10 s or last 40 s) */
+  /** opts.randomStart: once the video is playing, jump to a random point in it (not the first 10 s or last 40 s);
+   *  opts.once: play it once from the start, without looping (playback().ended says when it's over);
+   *  opts.resume: back to the mode after a show card (keeps `once`) */
   async setMode(mode, videoId, opts = {}) {
     if (!this.available) return;
     if (videoId) this.videoId = videoId;
     this.randomStart = !!opts.randomStart && mode === 'video';
+    if (!opts.resume) { this.once = !!opts.once && mode === 'video'; this.ended = false; }
     if (this.card) this.clearCard(false);
     this.mode = mode;
     this.big.material = mode === 'green' ? this.greenMat : mode === 'video' ? this.holeMat : this.camMats.big;
     this.sides.forEach((m, i) => (m.material = mode === 'green' ? this.greenMat : this.camMats.sides[i]));
     this.greenGlow = mode === 'green';          // main loop tints the screen spill light
     this.cssObj.visible = mode === 'video';
-    if (mode === 'video') await this.playVideo(this.videoId);
+    if (mode === 'video') await this.playVideo(this.videoId, !!opts.once);
     else this.player?.pauseVideo?.();
     this.prev = null;
     this.onChange?.(mode);
   }
 
-  async playVideo(id) {
+  async playVideo(id, restart = false) {
     const YT = await loadYouTubeApi();
     if (!this.player) {
       await new Promise((resolve) => {
@@ -92,7 +95,7 @@ export class StageScreens {
           events: {
             onReady: (e) => { e.target.setVolume(this.volume * this.master); e.target.unMute(); e.target.playVideo(); resolve(); },
             onStateChange: (e) => {
-              if (e.data === 0) e.target.playVideo();
+              if (e.data === 0) { if (this.once) this.ended = true; else e.target.playVideo(); }
               if (e.data === 1 && this.randomStart) {
                 const d = e.target.getDuration?.() || 0;
                 if (d > 0) { this.randomStart = false; if (d > 60) e.target.seekTo(10 + Math.random() * (d - 50), true); }
@@ -106,10 +109,16 @@ export class StageScreens {
       this.iframe = this.el.querySelector('iframe');
     } else if (this.player.getVideoData?.().video_id !== id) {
       this.player.loadVideoById(id);
-    } else this.player.playVideo();
+    } else { if (restart) this.player.seekTo(0, true); this.player.playVideo(); }
   }
 
   title() { return this.player?.getVideoData?.().title || ''; }
+
+  /** the screen video's playback: { playing, t, dur (s), ended (a `once` video that has finished) } */
+  playback() {
+    const p = this.player;
+    return { playing: p?.getPlayerState?.() === 1, t: p?.getCurrentTime?.() ?? 0, dur: p?.getDuration?.() ?? 0, ended: !!this.ended };
+  }
 
   /** put a show card (js/cards.js) on every screen for `secs` seconds, then go back to the current mode */
   showCard(card, secs = 8) {
@@ -130,7 +139,7 @@ export class StageScreens {
     if (!this.card) return;
     this.card.tex.dispose(); this.card.mat.dispose();
     this.card = null;
-    if (restore) this.setMode(this.mode);
+    if (restore) this.setMode(this.mode, undefined, { resume: true });
   }
 
   update(dt) {

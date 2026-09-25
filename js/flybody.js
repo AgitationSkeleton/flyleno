@@ -257,14 +257,21 @@ export class FlyLeno {
     this.yawRate += (c.turn * 2.6 - this.yawRate) * Math.min(1, dt * 8);
     this.heading += this.yawRate * dt;
     const fwd = this.forward();
-    const sp = (c.forward - c.backward) * 3.0 * this.k;
-    this.speed += (sp - this.speed) * Math.min(1, dt * 6);
-    const next = this.pos.clone().addScaledVector(fwd, this.speed * dt);
-    const gy = this.groundBelow(next.clone().setY(next.y + 1));
-    if (gy > next.y - 1.2 * this.k * 3) { this.pos.set(next.x, gy, next.z); }        // don't walk off tall drops
-    else this.heading += Math.PI * 0.6;
-    // flutter: short hops into the air
-    this.altitude = this.flying ? Math.min(this.altitude + dt * 2.5, 1.5) : Math.max(0, this.altitude - dt * 2);
+    if (this.away) {
+      // leaving the show (js/brood.js): up and away, over everything
+      this.flying = true;
+      this.pos.addScaledVector(fwd, 2.4 * dt);
+      this.altitude += dt * (1 + this.altitude * 0.25);
+    } else {
+      const sp = (c.forward - c.backward) * 3.0 * this.k;
+      this.speed += (sp - this.speed) * Math.min(1, dt * 6);
+      const next = this.pos.clone().addScaledVector(fwd, this.speed * dt);
+      const gy = this.groundBelow(next.clone().setY(next.y + 1));
+      if (gy > next.y - 1.2 * this.k * 3) { this.pos.set(next.x, gy, next.z); }        // don't walk off tall drops
+      else this.heading += Math.PI * 0.6;
+      // flutter: short hops into the air
+      this.altitude = this.flying ? Math.min(this.altitude + dt * 2.5, 1.5) : Math.max(0, this.altitude - dt * 2);
+    }
     this.root.position.set(this.pos.x, this.pos.y + this.altitude, this.pos.z);
     this.root.quaternion.setFromAxisAngle(UP, this.heading);
     this.pose(dt, !this.flying);

@@ -38,6 +38,7 @@ export class Behavior {
     // phrases: start when voicing > ON, continue while > OFF (max PHRASE_MAX s), then a pause
     this.inPhrase = false; this.phraseT = 0; this.pause = 2;
     this.nausea = 0; this.retchCool = 0; this.fartCool = 0; this.vomitCool = 0;
+    this.sick = 0;                       // 0..1 food poisoning (the rotten éclair): every retch brings something up
     this.transcript = [];
     this.lesson = null;                  // { text, phones:[...], pos }
     this.enabled = { voice: true, body: true };
@@ -107,21 +108,22 @@ export class Behavior {
     // ------------------------------------------------ body
     if (!this.enabled.body) return;
     this.retchCool -= dt; this.fartCool -= dt; this.vomitCool -= dt;
-    this.nausea = Math.max(0, this.nausea - dt * 0.15);
+    this.nausea = Math.max(this.sick * 0.7, this.nausea - dt * 0.15);
     const retchDrive = this.rates.pharynx > 12 && this.rates.feed < 20 && !this.asleep;         // (asleep: no retching)
     if (retchDrive && this.retchCool <= 0) {
       this.nausea += 0.4;
       if (this.nausea > 1 && this.vomitCool <= 0) {
         const len = this.audio.sfx('vomit', { pan }); this.onEvent?.('vomit', { len });
-        this.nausea = 0; this.vomitCool = 6; this.retchCool = 3;
+        this.nausea = 0; this.vomitCool = this.sick > 0 ? 2 + 4 * (1 - this.sick) : 6; this.retchCool = this.sick > 0 ? 1.2 : 3;
       } else {
         this.audio.sfx('retch', { pan }); this.onEvent?.('retch', {});
         this.retchCool = 1.4;
       }
     }
     if (this.rates.fart > 15 && this.fartCool <= 0) {
-      this.audio.sfx('fart', { pan }); this.onEvent?.('fart', {});
+      const len = this.audio.sfx('fart', { pan }); this.onEvent?.('fart', {});
       this.fartCool = 2.5;
+      Promise.resolve(len).then((d) => { this.fartCool = Math.max(this.fartCool, (d || 0) * 0.8); });   // (one fart sound at a time)
     }
   }
 

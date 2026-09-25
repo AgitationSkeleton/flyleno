@@ -528,10 +528,10 @@ const instincts = new Instincts({
         sidebar.ticker('Leno eats the mushroom: POWER UP!');
       }
       if (item.rotten) {
-        // "Oh, excuse me, it's the rotten eclair again": drive the pharyngeal motor neurons; the model's own
-        // retch/vomit readout (js/behavior.js) takes it from there
+        // "Oh, excuse me, it's the rotten eclair again": food poisoning (see updatePoisoning)
         behavior.nausea = Math.max(behavior.nausea, 0.7);
-        setTimeout(() => { pulse('eclairRetch', 'retchDrive', 45, 2.5); cue("Oh, excuse me, it's the rotten éclair again."); }, 2500);
+        poisoned = 1; poisonT = 2.5;
+        sidebar.ticker('The éclair was rotten. It is not going to stay down.');
         reinforce(-0.4, 1.5);
       } else if (Math.random() < 0.45) setTimeout(() => { audio.sfx('burp', { pan: leftOrRight() }); audience.react('burp'); }, 900);
     }
@@ -567,9 +567,10 @@ if (stageScreens.available) {
 // ------------------------------------------------------------------ eggs & hatchlings
 const brood = new Brood({
   scene, stage, lenoScene: lenoPristine, audio,
-  onEvent: (type) => {
+  onEvent: (type, d) => {
     if (type === 'lay') { sidebar.ticker('Leno lays an egg!'); audience.react('lay'); }
     if (type === 'hatch') { sidebar.ticker('An egg hatches!'); audience.react('hatch'); }
+    if (type === 'leaving') sidebar.ticker(d.kind === 'fly' ? 'A mini Fly-Leno flies off' : 'A mini Leno walks off into the wings');
   },
 });
 const entityCols = physHost ? new EntityColliders(physHost.RAPIER, physHost.world) : null;
@@ -633,7 +634,6 @@ const show = new Show({
   happen: (kind) => showPrize(kind),
   gooseVisit: () => { if (goose.active || !allowed('goose')) return false; goose.spawn(); return true; },
   gooseHead: () => goose.headPos(),
-  wave: (laps) => cultists.wave(laps),
   dim: (x) => (dimTarget = x),
   lullaby: (on) => (sleep.lullaby = on),
   asleep: () => sleep.asleep,
@@ -838,7 +838,7 @@ function applySwitches() {
   $('optWorms').disabled = P; $('optWorms').closest('label')?.classList.toggle('grayed', P);
   if (P && wasPeaceful === false) {
     // switched on mid-show: the harmful things leave now
-    predators.calmDown(); happenings.calmDown(); clownCar.leave(); jonkler.leave();
+    predators.calmDown(); happenings.calmDown(); clownCar.leave(); jonkler.leave(); poisoned = 0;
     if ($('optWorms').checked) setWorms(false);
     if (show.cur && SEGMENTS[show.cur.key]?.harmful) show.stopSegment();
     sidebar.ticker('🕊 Peaceful Mode: nothing harmful will happen');
@@ -937,6 +937,23 @@ function looming(dt) {
   }
   loomMap = next;
   stimAlias('loomNpc', 'heckler', Math.min(200, Math.max(0, best) * 900));
+}
+
+// food poisoning from the rotten éclair: for about a minute, bouts of drive to the pharyngeal motor neurons (the
+// model's own retch/vomit readout in js/behavior.js turns them into retching), and while it lasts every retch brings
+// something up. The bouts come less often and less hard as it wears off.
+const POISON_S = 60;
+let poisoned = 0, poisonT = 0;                           // 1 just after the éclair, down to 0 over POISON_S
+function updatePoisoning(dt) {
+  behavior.sick = poisoned;
+  if (poisoned <= 0) return;
+  poisoned = Math.max(0, poisoned - dt / POISON_S);
+  if (poisoned === 0) { sidebar.ticker("Leno's stomach settles"); return; }
+  poisonT -= dt;
+  if (poisonT <= 0) {
+    poisonT = 2.5 + 5 * (1 - poisoned) + Math.random() * 2;
+    pulse('eclairRetch', 'retchDrive', 30 + 25 * poisoned, 1.5);
+  }
 }
 
 // Leno's body hitting the floor or the set: Half-Life 2's body impact sounds, at their stock volume
@@ -1148,6 +1165,8 @@ $('aboutLink').onclick = (e) => {
     (Freesound, <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>). Drum rolls:
     <a href="https://commons.wikimedia.org/wiki/File:Drum_Roll_Intro.ogg" target="_blank" rel="noopener">Drum Roll Intro</a> (Wikimedia Commons, CC0) and the
     <a href="https://commons.wikimedia.org/wiki/File:Drum_Roll_-_Concert_Band_-_United_States_Air_Force_Band.mp3" target="_blank" rel="noopener">United States Air Force Band</a> (public domain).
+    Mic feedback: <a href="https://freesound.org/people/celesti-whispers/sounds/443023/" target="_blank" rel="noopener">celesti-whispers</a> and
+    <a href="https://freesound.org/people/Breviceps/sounds/489566/" target="_blank" rel="noopener">Breviceps</a> (Freesound, CC0).
     Body impacts: <i>Half-Life 2</i>'s physics/body sounds, © Valve.</p>
     <p class="credit"><b>Grey Leno model:</b> ported by <b>huckleberrypie</b> (Nexus Mods: huckpie):
     <a href="https://www.nexusmods.com/deadasdisco/mods/917" target="_blank" rel="noopener">Grey Leno for Dead as Disco (Nexus Mods)</a>.
@@ -1177,7 +1196,7 @@ function resetShow() {
   if (host === flyHost) flyHost.place(physHost.home, 0);
   else if (host.rag) { host.rag.place(host.home, 0); host.gesture = null; host.fallenFor = 0; host.getUp = 0; }
   else leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
-  mind.mood = 0; behavior.nausea = 0; behavior.transcript.length = 0;
+  mind.mood = 0; behavior.nausea = 0; behavior.transcript.length = 0; poisoned = 0;
   brood.clear(); goose.clear(); show.clear(); predators.clear(); happenings.clear(); clownCar.clear(); jonkler.clear(); convulseT = 0; cultists.ovation = 0;
   sleep.wake('show reset'); sleep.pressure = 0.15; dimTarget = 1; sleep.lullaby = false;
   food.clear(); for (const n of npcs.list) n.remove(); npcs.list.length = 0; cultists.hidden.clear(); instincts.hunger = 0.4;
@@ -1197,6 +1216,7 @@ renderer.setAnimationLoop(() => {
   director.update(dt);
   mind.update(dt);
   audience.update(dt);
+  updatePoisoning(dt);
   behavior.update(dt, { pan: leftOrRight() });
   if (lastMotor) {
     const adj = instincts.update(dt, host, lastMotor.command, window.flyleno?.lastTick?.rates);

@@ -87,6 +87,12 @@
    "title": "sound effect"
   },
   {
+   "id": "hl2-physics-body",
+   "url": "https://store.steampowered.com/app/220/HalfLife_2/",
+   "title": "Half-Life 2: sound/physics/body",
+   "author": "Valve"
+  },
+  {
    "id": "freesound-561869",
    "url": "https://freesound.org/people/FREE_SOUND_ENTERTAINMENT/sounds/561869/",
    "title": "Ba dum tss [Joke Rimshot] - Unmixed",
@@ -129,10 +135,24 @@
    "author": "United States Air Force Band"
   },
   {
-   "id": "hl2-physics-body",
-   "url": "https://store.steampowered.com/app/220/HalfLife_2/",
-   "title": "Half-Life 2: sound/physics/body",
-   "author": "Valve"
+   "id": "freesound-443023",
+   "url": "https://freesound.org/people/celesti-whispers/sounds/443023/",
+   "title": "Microphone feedback dry",
+   "license": "CC0",
+   "author": "celesti-whispers"
+  },
+  {
+   "id": "freesound-489566",
+   "url": "https://freesound.org/people/Breviceps/sounds/489566/",
+   "title": "Short microphone feedback",
+   "license": "CC0",
+   "author": "Breviceps"
+  },
+  {
+   "id": "fart-memes",
+   "url": "",
+   "title": "fartreverb.mp3 and brainfart.mp3 (meme sounds)",
+   "author": "unknown"
   }
  ],
  "leno": {
@@ -4532,28 +4552,32 @@
   ],
   "fart": [
    {
-    "file": "sfx/fart/fart_001.ogg",
-    "dur": 1.0,
-    "rms": 0.143,
+    "file": "sfx/fart/fartreverb.ogg",
+    "dur": 6.87,
+    "rms": null,
     "f0": null,
     "src": {
-     "video": "ki3ssj466E0",
-     "t0": 437.0,
-     "t1": 438.0
+     "video": "fart-memes",
+     "file": "fartreverb.mp3",
+     "t0": 0,
+     "t1": 6.87
     },
-    "conf": 0.535
+    "conf": null,
+    "origin": "meme"
    },
    {
-    "file": "sfx/fart/fart_002.ogg",
-    "dur": 0.6,
-    "rms": 0.1245,
+    "file": "sfx/fart/brainfart.ogg",
+    "dur": 1.72,
+    "rms": null,
     "f0": null,
     "src": {
-     "video": "ki3ssj466E0",
-     "t0": 1009.95,
-     "t1": 1010.55
+     "video": "fart-memes",
+     "file": "brainfart.mp3",
+     "t0": 0,
+     "t1": 1.72
     },
-    "conf": 0.483
+    "conf": null,
+    "origin": "meme"
    }
   ],
   "pipe": [
@@ -5089,6 +5113,47 @@
     },
     "conf": null,
     "origin": "valve"
+   }
+  ],
+  "micfeedback": [
+   {
+    "file": "sfx/micfeedback/micfeedback_s001.ogg",
+    "dur": 3.7,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "freesound-443023",
+     "t0": 0.5,
+     "t1": 4.2
+    },
+    "conf": null,
+    "origin": "stock"
+   },
+   {
+    "file": "sfx/micfeedback/micfeedback_s002.ogg",
+    "dur": 5.4,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "freesound-443023",
+     "t0": 4.9,
+     "t1": 10.3
+    },
+    "conf": null,
+    "origin": "stock"
+   },
+   {
+    "file": "sfx/micfeedback/micfeedback_s003.ogg",
+    "dur": 0.9,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "freesound-489566",
+     "t0": 0.1,
+     "t1": 1.0
+    },
+    "conf": null,
+    "origin": "stock"
    }
   ]
  },

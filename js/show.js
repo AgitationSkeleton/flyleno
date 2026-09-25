@@ -40,7 +40,7 @@ export const SEGMENTS = {
   dance: { title: 'Grey Leno dance party', dur: 22, pace: 'big' },
   rally: { title: 'Vote Leno', dur: 32, pace: 'big' },
   birthday: { title: '500 years young', dur: 42, pace: 'big' },
-  wave: { title: 'The Leno Wave', dur: 17, pace: 'big' },
+  doleno: { title: 'Do The Leno', dur: 45, pace: 'big' },
   wheel: { title: 'Spin the Wheel of Leno', dur: 24, pace: 'big' },
   lullaby: { title: 'Lullaby', dur: 36, pace: 'late' },
   signoff: { title: 'Sign-off', dur: 26, major: true },
@@ -49,6 +49,8 @@ const MIDDLE = Object.keys(SEGMENTS).filter((k) => SEGMENTS[k].pace === 'calm' |
 
 // "Take a look at this next one": a random point in one of these Grey Leno videos
 const CLIP_VIDEOS = ['ki3ssj466E0', 'VzNDmsiiX1A', 'YAlx4zH3ag4', '1e2vLW7LMtc', 'ODIA7UsOmWs'];
+// "Do The Leno": the Super Mario Bros. Super Show's closing "Do the Mario!" (45 s), played whole
+const DO_THE_LENO = '65uNCLBTje0';
 
 // callers (the questions are heard as a garbled voice on the line and shown in the ticker; the answer, if any,
 // is whatever the fly says)
@@ -68,7 +70,7 @@ export class Show {
    * ctx: { scene, stage, audio, sfx, screens, npcs, getHost, isFly, hostPos, hostHead, impulse, backflip,
    *        stimAlias, pulse, reinforce, setStim, crowd, react, ticker, cue, motor, duckMusic, voice, mouthOpen,
    *        deliverSnack, onChange, allowed(switch), said() (words spoken so far), transcript(),
-   *        happen(kind) (a prize), gooseVisit(), gooseHead(), wave(laps), dim(level), lullaby(on), asleep(), mic(on),
+   *        happen(kind) (a prize), gooseVisit(), gooseHead(), dim(level), lullaby(on), asleep(), mic(on),
    *        jonkler() }
    */
   constructor(ctx) {
@@ -254,6 +256,7 @@ export class Show {
     if (key === 'monologue') {
       this.spot.on(() => ctx.hostHead()); s.jokes = 0; s.next = 2.2; s.fbT = 3;
       ctx.mic(true); this.ctx.sfx.sting('mictap', { gain: 0.6 });
+      s.squealAt = Math.random() < 0.5 ? 0.5 + Math.random() * 1.2 : null;           // half the time the PA squeals as it comes on
       ctx.ticker('The spotlight finds Leno at the mic: joke time');
     }
     if (key === 'phonein') { this.ctx.sfx.sting('ring', { gain: 0.8 }); s.call = pick(CALLS); ctx.ticker('📞 The phone on the desk rings'); }
@@ -297,7 +300,16 @@ export class Show {
       ctx.screens?.showCard(makeCard('birthday'), 16);
       this.balloons.drop(this.center, 14); ctx.crowd('cheer', 0.9);
     }
-    if (key === 'wave') { ctx.ticker('Everybody do the Leno Wave!'); ctx.crowd('cheer', 0.7); }
+    if (key === 'doleno') {
+      // the video on the screens with its sound, the dance party lights, and a spotlight on him
+      ctx.ticker('Everybody do the Leno!');
+      this.disco.start(); this.spot.on(() => ctx.hostHead()); ctx.duckMusic(0.08); ctx.crowd('cheer', 0.9);
+      // (not over a green screen the viewer has chosen: that stays green, and the dance party's beat plays instead)
+      if (ctx.screens?.available && ctx.screens.mode !== 'green') {
+        s.prevMode = ctx.screens.mode; s.prevVideo = ctx.screens.videoId; s.video = true;
+        ctx.screens.setMode('video', DO_THE_LENO, { once: true });
+      } else s.beat = this.ctx.sfx.beat({ gain: 0.55 });
+    }
     if (key === 'wheel') {
       // the prize is decided up front; the wheel is drawn to land on it
       const prizes = this.prizes();
@@ -327,7 +339,7 @@ export class Show {
     const sc = this.ctx.screens;
     if (!sc?.available || !s.prevMode) return;
     if (s.prevMode !== 'video') sc.setMode(s.prevMode);
-    else if (s.prevVideo && s.prevVideo !== sc.videoId) sc.setMode('video', s.prevVideo);
+    else if (s.prevVideo && (s.prevVideo !== sc.videoId || sc.once)) sc.setMode('video', s.prevVideo);
   }
 
   /** the audience's verdict on a joke, anything from applause to a storm of pipes (harmful ones only where their
@@ -393,12 +405,16 @@ export class Show {
       // while he's talking; when he stops, a rimshot (a cymbal crash on the last one) and the audience reacts;
       // if he says nothing, crickets. Loud stretches can make the PA feed back.
       s.next -= dt;
+      if (s.squealAt != null && t > s.squealAt) {
+        s.squealAt = null; s.fbT = 6; this.ctx.sfx.feedback(); ctx.ticker('The mic squeals');
+        if (Math.random() < 0.4) setTimeout(() => ctx.crowd('laugh', 0.5), 900);
+      }
       if (!s.listening && s.next <= 0 && s.jokes < 3) this.listen(s);
       if (s.listening && !s.roll && ctx.said() > s.w0) s.roll = this.ctx.sfx.drumroll({ gain: 0.4 });
       if (s.listening) {
         s.fbT -= dt;
         if (ctx.voice() > 0.85 && s.fbT <= 0 && Math.random() < dt * 0.6) {
-          s.fbT = 6; this.ctx.sfx.feedback({ gain: 0.09 }); ctx.ticker('The mic squeals');
+          s.fbT = 6; this.ctx.sfx.feedback(); ctx.ticker('The mic squeals');
           if (Math.random() < 0.4) setTimeout(() => ctx.crowd('laugh', 0.5), 700);
         }
       }
@@ -525,11 +541,18 @@ export class Show {
       this.at(C, 20, () => { if (s.ok) ctx.ticker('The cake is on the floor in front of him. Five hundred candles, give or take.'); });
       return t > SEGMENTS.birthday.dur;
     }
-    if (key === 'wave') {
-      // the audience does a stadium wave, three times round, chanting his name
-      this.at(C, 1.5, () => { ctx.wave(3); this.ctx.sfx.chant({ n: 6, period: 1.6, gain: 0.5, vowels: [V.EH, V.OW] }); });
-      this.at(C, 13, () => ctx.crowd('applause', 0.9));
-      return t > SEGMENTS.wave.dur;
+    if (key === 'doleno') {
+      // as long as the video: until it has played to the end
+      const sc = ctx.screens;
+      if (s.video && (sc.mode !== 'video' || sc.videoId !== DO_THE_LENO)) { s.video = false; s.viewer = true; }   // the viewer changed the screens
+      if (!s.video) return t > SEGMENTS.doleno.dur;
+      const v = sc.playback();
+      if (v.playing) s.seen = true;
+      if (!s.seen) {
+        if (t > 8 && !s.beat) s.beat = this.ctx.sfx.beat({ gain: 0.55 });         // the video won't start: the beat instead
+        return t > SEGMENTS.doleno.dur + 8;
+      }
+      return v.ended || (v.dur > 0 && v.t > v.dur - 0.4);                        // (a stalled video: the show's time limit)
     }
     if (key === 'wheel') {
       this.at(C, 7.4, () => {
@@ -572,10 +595,11 @@ export class Show {
     if (key === 'drive' && this.car.present) this.car.active.phase = 'out';
     if (key === 'johnny' && s.ducked) ctx.duckMusic(1);
     if (key === 'dance') { this.disco.stop(); s.beat?.stop(); ctx.setStim('turnL', false); ctx.setStim('turnR', false); ctx.crowd('cheer', 0.8); }
+    if (key === 'doleno') { this.disco.stop(); s.beat?.stop(); ctx.duckMusic(1); if (s.video) this.restoreScreens(s); ctx.crowd('applause', 1); ctx.crowd('cheer', 0.8); }
     if (key === 'lullaby') { s.box?.stop(); ctx.dim(1); ctx.duckMusic(1); ctx.lullaby(false); }
     if (key === 'signoff') { s.hum?.stop(); if (this.ufo.state !== 'off') this.ufo.state = 'leave'; }
     if (key === 'jonkler') this.ctx.jonkler().leave();
-    if (['open', 'johnny', 'guest', 'monologue', 'gooseguest', 'jonkler'].includes(key)) this.spot.off();
+    if (['open', 'johnny', 'guest', 'monologue', 'gooseguest', 'jonkler', 'doleno'].includes(key)) this.spot.off();
     if (['sponsor', 'static', 'telethon', 'rally', 'open', 'birthday', 'wheel'].includes(key)) ctx.screens?.clearCard();
   }
 

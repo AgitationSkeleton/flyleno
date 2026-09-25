@@ -301,8 +301,10 @@ export class ShowSfx {
   }
 
   /** microphone feedback: a squeal that swells and dies away */
-  feedback({ gain = 0.1 } = {}) {
+  feedback({ gain = 0.5 } = {}) {
     if (!this.ctx) return 0;
+    if (this.audio.clips('sfx', 'micfeedback')?.length) return this.audio.sfx('micfeedback', { gain });   // stock recordings
+    gain *= 0.18;
     const ctx = this.ctx, t = ctx.currentTime, f = rand(1900, 3200), dur = rand(0.5, 0.9), out = this.out(0.0001);
     const o = ctx.createOscillator(); o.type = 'sine';
     o.frequency.setValueAtTime(f, t); o.frequency.linearRampToValueAtTime(f * 1.03, t + dur);

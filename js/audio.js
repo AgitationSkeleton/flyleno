@@ -64,7 +64,8 @@ export class AudioWorld {
       .connect(drive).connect(shaper).connect(post).connect(this.voiceMic);
     post.connect(slap).connect(slapGain).connect(this.voiceMic);
     this.voiceMic.connect(this.bus);
-    // a big hall reverb (the fart meme): a long, decaying stereo noise impulse response
+    // a big hall reverb (for the synthesised fart, when the sound bank has no fart clips): a long, decaying stereo
+    // noise impulse response
     const len = Math.floor(ctx.sampleRate * 3.6), ir = ctx.createBuffer(2, len, ctx.sampleRate);
     for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.4); }
     this.reverb = ctx.createConvolver(); this.reverb.buffer = ir;
@@ -140,14 +141,13 @@ export class AudioWorld {
     return this.buffers.get(file);
   }
 
-  /** reverb: send level into the big hall reverb; warble: depth (cents) of a wobble in pitch */
-  async playClip(clip, { gain = 1, rate = 1, pan = 0, when = 0, voice = false, reverb = 0, warble = 0 } = {}) {
+  /** warble: depth (cents) of a wobble in pitch */
+  async playClip(clip, { gain = 1, rate = 1, pan = 0, when = 0, voice = false, warble = 0 } = {}) {
     const buf = await this.load(clip.file);
     if (!buf) return 0;
     const ctx = this.ctx, src = ctx.createBufferSource(), g = ctx.createGain(), p = ctx.createStereoPanner();
     src.buffer = buf; src.playbackRate.value = rate; g.gain.value = gain; p.pan.value = pan;
     src.connect(g).connect(p).connect(voice ? this.voiceBus : this.bus);
-    if (reverb && this.reverb) { const s = ctx.createGain(); s.gain.value = reverb; g.connect(s).connect(this.reverb); }
     const t0 = ctx.currentTime + when, len = buf.duration / rate;
     if (warble && src.detune) {
       const lfo = ctx.createOscillator(); lfo.frequency.value = rand(4, 9);
@@ -235,8 +235,8 @@ export class AudioWorld {
     const mouthy = ['retch', 'vomit', 'burp'].includes(kind);            // come out of Leno's mouth -> lip-sync
     // gag/vomit SFX are recorded by other people: pitch them down a little toward Leno's low voice
     const rate = mouthy && kind !== 'burp' ? rand(0.82, 0.9) : rand(0.94, 1.06);
-    // a fart gets the meme treatment: a huge reverb tail, a random pitch and a warble
-    if (kind === 'fart' && clips?.length) return this.playClip(pick(clips), { pan, gain: gain * 1.1, rate: rand(0.7, 1.35), reverb: 0.9, warble: rand(40, 160) });
+    // a fart is one of the meme sounds (the fart with reverb, the brain fart) at a random pitch, with a warble
+    if (kind === 'fart' && clips?.length) return this.playClip(pick(clips), { pan, gain, rate: rand(0.7, 1.35), warble: rand(40, 160) });
     if (clips?.length) return this.playClip(pick(clips), { pan, gain, rate, voice: mouthy });
     if (kind === 'vomit' && this.clips('sfx', 'retch')) {
       // no vomit clips: a heave followed by a splash

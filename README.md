@@ -62,7 +62,7 @@ the connectome, labelled as such in the sidebar).
 | voice: babble, mutters, stammers | song/flight DNs DNg02+DNp13 (voicing) + pharyngeal (vowels) and mouthpart (consonants) motor neurons | neural, phoneme mapping engineered |
 | lip-sync | loudness of Leno's own sounds → `MouthOpen` shape key (jaw drop) | — |
 | retch / vomit | pharyngeal-pump motor neurons (PhN, not MN9) while MN9 is quiet; repeated retching → vomit | neural |
-| fart | oviposition DNs (oviDN); the sound gets a huge reverb, a random pitch and a warble | neural |
+| fart | oviposition DNs (oviDN); the sound is one of two meme sounds (the fart with reverb, the brain fart) at a random pitch with a warble, one at a time | neural |
 | eating | touching food → all 129 sugar taste neurons → the model's MN9 (proboscis motor neuron) decides | neural |
 | walking toward food when hungry | food taxis | engineered (see below) |
 | homing to his starting mark | he roams freely within ~4.5 m of his mark. Farther out, homesickness builds slowly (minutes; faster the farther away), and when it's full (or on a whim, about every 5 minutes) he makes a trip home: a home vector (path integration, which real flies do in the central complex, not modelled here) drives the brain's own DNa01/02 steering and P9 walking neurons until he's back near the mark. The ragdoll is also led gently by its strings, since its own walking is weak | engineered input onto neural DNs |
@@ -270,17 +270,17 @@ same way: the strings lower him into a curl, forehead to the floor.
 | A word from our sponsor | GRONK sponsor card (a slow, throbbing glow; no strobe), then "Buy Grey Leno NFTs" | pulsing light on the eyes (R1-6) |
 | Technical difficulties | screens full of soft grey static; "Dave, can you fix the static?" | visual noise (R1-6), hiss (JO-A) |
 | Phone-in | the desk phone rings and a garbled caller asks e.g. "Why do you puke so much?" or "What do the worms in your brain tell you?" (shown in the ticker). Then the line goes quiet for up to 9 s: whatever Leno says on his own is quoted as his answer (nothing drives his voice). Silence gets crickets and the caller hangs up | ring and voice (JO); laughs/applause or silence |
-| Monologue | a mic tap-tap, a spotlight, and his voice through a PA microphone (band-limited, a presence boost, gain into a soft clipper so loud syllables peak, a slapback; about 3 dB above his dry voice). Three "jokes": he has the floor for up to 8 s each, and nothing makes him talk. A recorded snare roll builds while he talks; when he stops, a recorded rimshot (a cymbal crash on the last) and the audience's verdict, picked at random: laughs, applause, a standing ovation (with roses), boos, boos and a few tomatoes or pipes, or a tomato, pipe or mixed storm (the harmful ones only where their switches allow; the last joke leans toward an ovation). Silence gets crickets, sometimes boos. Loud stretches can make the mic squeal with feedback | spotlight (R1-6), drum roll, rimshots, feedback (JO), reward or punishment from the crowd |
+| Monologue | a mic tap-tap, a spotlight, and his voice through a PA microphone (band-limited, a presence boost, gain into a soft clipper so loud syllables peak, a slapback; about 3 dB above his dry voice). Three "jokes": he has the floor for up to 8 s each, and nothing makes him talk. A recorded snare roll builds while he talks; when he stops, a recorded rimshot (a cymbal crash on the last) and the audience's verdict, picked at random: laughs, applause, a standing ovation (with roses), boos, boos and a few tomatoes or pipes, or a tomato, pipe or mixed storm (the harmful ones only where their switches allow; the last joke leans toward an ovation). Silence gets crickets, sometimes boos. Half the time the PA squeals with feedback as it comes on, and loud stretches can make it squeal again (recorded feedback) | spotlight (R1-6), drum roll, rimshots, feedback (JO), reward or punishment from the crowd |
 | Guest: The Jonkler | a purple-suited, green-haired, chalk-white clown with a red painted grin strolls on, points a toy revolver at Leno and pulls the trigger three times: each time a "BANG!" flag pops out on a stick. Nothing is fired, yet Leno is thrown across the stage, twice as hard each shot (the whole body gets the same kick, so the ragdoll flies in one piece; landing from it isn't an injury). The Jonkler cackles after each one, bows and strolls off | the BANG (JO), a sudden shape (LC4), a huge shove (touch), crowd gasps and laughs |
 | Guest: a goose | "Our next guest… a goose!" The goose waddles on in a follow spot, honks and poops | honks (JO), a spotlit mover (LC4, R1-6), droppings to eat |
 | 500 years young | "I'm 500 years young, folks": a stagehand carries out a birthday cake with candles, the crowd sings Happy Birthday, balloons and confetti. The cake is food he goes for even when not hungry | the song and applause (JO), sugar taste, reward |
-| The Leno Wave | the audience does a stadium wave three times round, chanting "LE-NO" | a wave of motion across the seats (R1-6), chant (JO), cheers |
+| Do The Leno | the screens play the Super Mario Bros. Super Show's "Do the Mario!" ([65uNCLBTje0](https://www.youtube.com/watch?v=65uNCLBTje0)) with its sound, from the start, under the dance party lights with a spotlight on Leno; the segment lasts as long as the video (45 s). The viewer's music ducks while it plays. Over a green screen the viewer has chosen, the screens stay green and the dance party's beat plays instead | the song (JO, with tab capture the picture too), coloured beams and the spotlight (R1-6), cheers and applause |
 | Spin the Wheel of Leno | a prize wheel on the screens spins (at most ~1 turn a second, soft colours) and lands on a prize: a sugar shower, roses, an ovation, confetti, a goose, a mushroom, nothing, or (only when tomato storms are on) tomatoes | moving picture (R1-6), clicks (JO), then the prize |
 | Lullaby | the studio lights fade down to about half, a music-box lullaby (Brahms) plays, the music ducks and the audience hushes; sleep pressure builds fast and he nods off (a soft "aww"); nothing that happens wakes him until the lights fade back up | dim light (R1-6), soft music (JO), sleep |
 | Space scabies telethon | telethon card with a donation counter ("three out of four Martians have the same problem") | itching: bursts on the mechanosensory and antennal JO neurons (→ grooming) |
 | Grey Leno dance party | disco lights and strobe, a synthesised beat; "my body is moving on its own": fictive left/right turning drives on the beat | beat (JO), strobe (R1-6), DNa01/02 fictive drives |
 | Vote Leno | campaign card, confetti and balloon drop, "LE-NO!" chant; "Folks, I can do a backflip": the backflip happens only if the giant fibre fires within 9 s, otherwise no backflip and boos | confetti landing on him (JO + touch, like dust → grooming); cheers or boos (dopamine) |
-| The rotten éclair | a stagehand brings an éclair. It's sweet (sugar neurons) and bitter (bitter neurons); after eating it the pharyngeal motor neurons are driven, so the model's own retch/vomit readout usually brings it back up ("it's the rotten éclair again") | taste, then punishment dopamine |
+| The rotten éclair | a stagehand brings an éclair. It's sweet (sugar neurons) and bitter (bitter neurons). Eating it gives him food poisoning for about a minute ("it's the rotten éclair again"): bouts of drive to the pharyngeal motor neurons, which the model's own retch/vomit readout turns into retching, and while it lasts every retch brings something up. The bouts come less often and less hard as it wears off, then his stomach settles | taste, then punishment dopamine, then retching drive |
 | Sign-off | "…drive your car home safe, I'm gonna get my UFO": a flying saucer comes down, its tractor beam lifts Leno a few metres (in Peaceful Mode only a little), then it flies off | UFO hum (JO), beam light (R1-6), looming saucer (LC4) |
 
 The director's random stagehand also brings the rotten éclair instead of a sugar cube one time in four
@@ -307,7 +307,8 @@ after 2.5 s, shown as a commercial break during the show.
   fly-form.
 - **Hatchlings:** they wander in fly-like bouts near where they hatched, return toward their parent
   when it is far away, chirp in a sped-up Leno voice, and fly-form ones flutter. Up to 16 hatchlings; each one
-  leaves the show after 3–5 minutes.
+  leaves the show after 3–5 minutes: fly-form ones take off and fly up and away, humanoid ones walk off into the
+  nearer wing.
 - **Brain:** hatchlings run on simple autonomous behaviour; only the host is driven by the fly brain.
 
 **Senses:**
@@ -429,7 +430,10 @@ Most clips are cut from the two videos:
 - **Leno's phonemes, syllables, mutters and words:** Leno's voice, identified by speaker
   clustering, from [w7lBVJwHABM](https://www.youtube.com/watch?v=w7lBVJwHABM) and
   [ki3ssj466E0](https://www.youtube.com/watch?v=ki3ssj466E0).
-- **Farts, splats, gasps, laughs and applause:** found in those videos by AudioSet tagging.
+- **Splats, gasps, laughs and applause:** found in those videos by AudioSet tagging.
+
+Leno's farts are two meme sound files, `fartreverb.mp3` (the "fart with reverb" meme) and `brainfart.mp3`,
+at their own level (`tools/audio/s12_fart_sfx.py`, `sfx/fart`).
 
 The videos contain no clean booing, cheering or vomiting. The tagger's "retch" hits turned out to be
 burps and are kept as `sfx/burp`. So those categories come from short YouTube sound-effect uploads:
@@ -440,7 +444,7 @@ burps and are kept as `sfx/burp`. So those categories come from short YouTube so
 - **Pipe clang:** f8mL0_4GeV0.
 - **Goose honks:** zcDiAD8RGq8, J0WO22NhTK8, A8nqfY3rUKw.
 
-Stock percussion for the monologue (`tools/audio/s10_stock_sfx.py`), from freely licensed recordings:
+Stock sounds for the monologue (`tools/audio/s10_stock_sfx.py`), from freely licensed recordings:
 - **Rimshots:** "Ba dum tss [Joke Rimshot]" (Unmixed, Blue Ridge, Boutique SP12, Modern Club) by
   FREE_SOUND_ENTERTAINMENT on Freesound, [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/):
   [561869](https://freesound.org/people/FREE_SOUND_ENTERTAINMENT/sounds/561869/),
@@ -451,6 +455,9 @@ Stock percussion for the monologue (`tools/audio/s10_stock_sfx.py`), from freely
   DIY (Wikimedia Commons, CC0), and
   [Drum Roll - Concert Band](https://commons.wikimedia.org/wiki/File:Drum_Roll_-_Concert_Band_-_United_States_Air_Force_Band.mp3)
   by the United States Air Force Band (public domain).
+- **Mic feedback:** [Microphone feedback dry](https://freesound.org/people/celesti-whispers/sounds/443023/) by
+  celesti-whispers and [Short microphone feedback](https://freesound.org/people/Breviceps/sounds/489566/) by
+  Breviceps (Freesound, CC0).
 
 Leno's body hitting the floor and the set (`tools/audio/s11_body_sfx.py`): *Half-Life 2*'s
 `sound/physics/body` impacts (`body_medium_impact_soft*`, `body_medium_impact_hard*`, `body_medium_break*`),

@@ -1,14 +1,15 @@
 """
-Stock percussion for the show (the monologue's rimshots and drum rolls), from freely licensed recordings:
+Stock sounds for the show (the monologue's rimshots, drum rolls and mic feedback), from freely licensed recordings:
   - "Ba dum tss [Joke Rimshot]" by FREE_SOUND_ENTERTAINMENT on Freesound, CC BY 3.0 (credit required)
   - "Drum Roll Intro.ogg" on Wikimedia Commons, CC0
   - "Drum Roll - Concert Band - United States Air Force Band.mp3" on Wikimedia Commons, public domain (US government)
+  - "Microphone feedback dry" by celesti-whispers and "Short microphone feedback" by Breviceps on Freesound, CC0
 
     python tools/audio/s10_stock_sfx.py        (system Python + ffmpeg)
 
 - downloads each source to assets/_src/audio/stock/
 - cuts, fades, loudness-normalises to -18 LUFS, mono 48 kHz Opus (like s09_extra_sfx.py)
-- writes clips to assets/audio/sfx/{rimshot,drumroll}/ and merges them into assets/audio/manifest.json, with each
+- writes clips to assets/audio/sfx/{rimshot,drumroll,micfeedback}/ and merges them into assets/audio/manifest.json, with each
   source's licence and author in `sources`
 """
 import json
@@ -40,6 +41,12 @@ SOURCES = [
      "https://upload.wikimedia.org/wikipedia/commons/0/05/Drum_Roll_-_Concert_Band_-_United_States_Air_Force_Band.mp3",
      "https://commons.wikimedia.org/wiki/File:Drum_Roll_-_Concert_Band_-_United_States_Air_Force_Band.mp3",
      "Drum Roll - Concert Band - United States Air Force Band", "Public domain", "United States Air Force Band", [(1.5, 31.5)]),
+    # a PA squealing: two swells of a ~4.3 kHz howl, and a short squeak
+    ("micfeedback", "freesound-443023", "https://cdn.freesound.org/previews/443/443023_9161216-hq.mp3",
+     "https://freesound.org/people/celesti-whispers/sounds/443023/", "Microphone feedback dry", "CC0", "celesti-whispers",
+     [(0.5, 4.2), (4.9, 10.3)]),
+    ("micfeedback", "freesound-489566", "https://cdn.freesound.org/previews/489/489566_9159316-hq.mp3",
+     "https://freesound.org/people/Breviceps/sounds/489566/", "Short microphone feedback", "CC0", "Breviceps", [(0.1, 1.0)]),
 ]
 
 
