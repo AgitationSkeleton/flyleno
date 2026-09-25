@@ -34,6 +34,7 @@ export const SEGMENTS = {
   telethon: { title: 'Space scabies telethon', dur: 24, pace: 'calm' },
   eclair: { title: 'The rotten éclair', dur: 30, pace: 'calm', harmful: true },
   guest: { title: 'Guest: Mr. Frog', dur: 60, pace: 'big', major: true },
+  jonkler: { title: 'Guest: The Jonkler', dur: 45, pace: 'big', major: true, harmful: true },
   gooseguest: { title: 'Guest: a goose', dur: 40, pace: 'big', major: true },
   drive: { title: 'Sunday drive', dur: 55, pace: 'big', major: true },
   dance: { title: 'Grey Leno dance party', dur: 22, pace: 'big' },
@@ -67,7 +68,8 @@ export class Show {
    * ctx: { scene, stage, audio, sfx, screens, npcs, getHost, isFly, hostPos, hostHead, impulse, backflip,
    *        stimAlias, pulse, reinforce, setStim, crowd, react, ticker, cue, motor, duckMusic, voice, mouthOpen,
    *        deliverSnack, onChange, allowed(switch), said() (words spoken so far), transcript(),
-   *        happen(kind) (a prize), gooseVisit(), gooseHead(), wave(laps), dim(level), lullaby(on), asleep(), mic(on) }
+   *        happen(kind) (a prize), gooseVisit(), gooseHead(), wave(laps), dim(level), lullaby(on), asleep(), mic(on),
+   *        jonkler() }
    */
   constructor(ctx) {
     this.ctx = ctx;
@@ -256,6 +258,10 @@ export class Show {
     }
     if (key === 'phonein') { this.ctx.sfx.sting('ring', { gain: 0.8 }); s.call = pick(CALLS); ctx.ticker('📞 The phone on the desk rings'); }
     if (key === 'guest') ctx.cue("We're gonna have a guest, Mr. Frog. Mr. Frog will be on… at some point.");
+    if (key === 'jonkler') {
+      s.ok = ctx.jonkler().enter();
+      if (s.ok) { ctx.ticker('Our next guest… the Jonkler!'); ctx.crowd('applause', 0.8); this.spot.on(() => ctx.jonkler().headPos() ?? ctx.hostHead(), 700); }
+    }
     if (key === 'gooseguest') {
       s.ok = ctx.gooseVisit() || !!ctx.gooseHead();                  // (if the goose is already on stage, it's the guest)
       if (s.ok) { ctx.ticker('Our next guest… a goose!'); ctx.crowd('applause', 0.9); this.spot.on(() => ctx.gooseHead() ?? ctx.hostHead(), 700); }
@@ -441,6 +447,11 @@ export class Show {
       }
       if (t > 3.5 && !this.frog.active) { this.spot.off(); return true; }
     }
+    if (key === 'jonkler') {
+      if (!s.ok) return true;
+      if (t > 3 && !ctx.jonkler().present) { this.spot.off(); ctx.crowd('applause', 0.7); return true; }
+      return t > SEGMENTS.jonkler.dur;
+    }
     if (key === 'gooseguest') {
       if (!s.ok) return true;
       this.at(C, 12, () => ctx.crowd('laugh', 0.8));
@@ -563,7 +574,8 @@ export class Show {
     if (key === 'dance') { this.disco.stop(); s.beat?.stop(); ctx.setStim('turnL', false); ctx.setStim('turnR', false); ctx.crowd('cheer', 0.8); }
     if (key === 'lullaby') { s.box?.stop(); ctx.dim(1); ctx.duckMusic(1); ctx.lullaby(false); }
     if (key === 'signoff') { s.hum?.stop(); if (this.ufo.state !== 'off') this.ufo.state = 'leave'; }
-    if (['open', 'johnny', 'guest', 'monologue', 'gooseguest'].includes(key)) this.spot.off();
+    if (key === 'jonkler') this.ctx.jonkler().leave();
+    if (['open', 'johnny', 'guest', 'monologue', 'gooseguest', 'jonkler'].includes(key)) this.spot.off();
     if (['sponsor', 'static', 'telethon', 'rally', 'open', 'birthday', 'wheel'].includes(key)) ctx.screens?.clearCard();
   }
 

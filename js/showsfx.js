@@ -518,6 +518,34 @@ export class ShowSfx {
       }
       return 2.5;
     }
+    if (kind === 'bang') {                                    // a toy cap gun: a sharp pop, then a comic boing
+      const n = this.noise(), hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1200;
+      const g = ctx.createGain(); n.connect(hp).connect(g).connect(out); this.env(g.gain, t, 0.001, 1, 0.01, 0.08);
+      n.start(t, Math.random()); n.stop(t + 0.12);
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(220, t + 0.05); o.frequency.exponentialRampToValueAtTime(700, t + 0.3);
+      const vib = ctx.createOscillator(); vib.frequency.value = 14; const vg = ctx.createGain(); vg.gain.value = 40; vib.connect(vg).connect(o.frequency);
+      const og = ctx.createGain(); o.connect(og).connect(out); this.env(og.gain, t + 0.05, 0.01, 0.35, 0.2, 0.25);
+      o.start(t + 0.05); vib.start(t + 0.05); o.stop(t + 0.6); vib.stop(t + 0.6);
+      return 0.6;
+    }
+    if (kind === 'cackle') {                                  // a maniacal "ha-ha-ha-ha-HA", rising then falling
+      const n = 10;
+      for (let k = 0; k < n; k++) {
+        const st = t + k * 0.14 * (1 - k * 0.02), f0 = 190 + 90 * Math.sin((k / n) * Math.PI) + rand(-8, 8);
+        const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f0 * 1.08, st); o.frequency.exponentialRampToValueAtTime(f0 * 0.9, st + 0.1);
+        const mix = ctx.createGain();
+        for (const [f, q, a] of [[760, 6, 1], [1150, 8, 0.6], [2500, 10, 0.3]]) {
+          const b = ctx.createBiquadFilter(); b.type = 'bandpass'; b.frequency.value = f; b.Q.value = q;
+          const bg = ctx.createGain(); bg.gain.value = a * 2.2; o.connect(b).connect(bg).connect(mix);
+        }
+        const h = this.noise(), hb = ctx.createBiquadFilter(); hb.type = 'bandpass'; hb.frequency.value = 1500; hb.Q.value = 1;
+        const hg = ctx.createGain(); h.connect(hb).connect(hg).connect(mix); this.env(hg.gain, st, 0.005, 0.25, 0.01, 0.02);
+        mix.connect(out); this.env(mix.gain, st, 0.012, 0.3 * (1 - k / (n * 1.6)), 0.05, 0.05);
+        o.start(st); o.stop(st + 0.14); h.start(st, Math.random()); h.stop(st + 0.05);
+      }
+      return n * 0.14;
+    }
     if (kind === 'clownhorn') {                               // a squeeze-bulb horn: honk honk
       for (const dt of [0, 0.26]) {
         const o = ctx.createOscillator(); o.type = 'sawtooth';

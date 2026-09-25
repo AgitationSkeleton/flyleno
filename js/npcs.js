@@ -237,6 +237,14 @@ export class Npcs {
     return c;
   }
 
+  /** a walking figure with a scripted plan (the Jonkler): `steps(npc)` returns its list of walk/face/pose steps */
+  scripted(fig, start, steps) {
+    const c = new Npc(this, null, fig).at(start);
+    c.plan.push(...steps(c));
+    this.list.push(c);
+    return c;
+  }
+
   /** heads of NPCs that are approaching Leno (for the fly's looming detectors) */
   approaching() { return this.list.filter((n) => n.heckler && !n.done).map((n) => n.headPos()); }
 

@@ -38,6 +38,7 @@ import { Wellbeing } from './wellbeing.js';
 import { EventSwitches, buildEventsPanel } from './events.js';
 import { Sleep } from './sleep.js';
 import { ClownCar } from './clowns.js';
+import { Jonkler } from './jonkler.js';
 const wellbeing = new Wellbeing();                  // state of mind and body (read-outs for the Mind panel)
 const switches = new EventSwitches();               // an on/off switch per event, and Peaceful Mode (the Events panel)
 const sleep = new Sleep();                          // sleep pressure; dozing off when tired and safe
@@ -263,7 +264,7 @@ const pulseTimers = {};
 const JOLT = { hitTouch: [1.5, 'a hit'], hitTaste: [0.4, 'a splat'], rigTouch: [2, 'a crash'], swatHit: [2, 'a swat'], zapTouch: [2, 'a zap'],
   spiderGrab: [2, 'a grab'], spiderBump: [1.5, 'a bump'], alienKick: [1, 'a kick'], frogHit: [1.5, "the frog's tongue"], fallTouch: [1.5, 'a fall'],
   rainTouch: [0.25, 'the rain'], boltTouch: [1.2, 'thunder'], contactTouch: [0.1, 'a nudge'], confettiTouch: [0.05, 'confetti'], roseTouch: [0.15, 'a rose'],
-  sugarTouch: [0.05, 'a sugar cube'], pieHit: [1.5, 'a pie in the face'], itch: [0.2, 'an itch'], loom: [0.9, 'something flying at him'], spiderLoom: [0.9, 'a spider'],
+  sugarTouch: [0.05, 'a sugar cube'], pieHit: [1.5, 'a pie in the face'], bangHit: [2, 'a BANG!'], itch: [0.2, 'an itch'], loom: [0.9, 'something flying at him'], spiderLoom: [0.9, 'a spider'],
   swatLoom: [0.9, 'a swatter'], frogLoom: [0.9, "the frog's tongue"] };
 function pulse(alias, group, rate, seconds) {
   wellbeing.sensed(alias, rate);
@@ -324,7 +325,7 @@ const audience = new Audience(audio, reinforce, {
     const what = { speak: 'babbling', stroll: 'stroll', startle: 'flinch', groom: 'grooming', tomatoHit: 'tomato hit', pipeHit: 'pipe hit', eat: 'meal', burp: 'burp', fall: 'fall',
       eatPoop: 'goose-dropping snack', lay: 'egg', hatch: 'hatching', goose: 'goose', frogTongue: "frog's tongue", frogSpit: 'spit-out', frogBite: 'ankle bite',
       frogKicked: 'frog getting kicked out', backflip: 'backflip', backflipFail: 'missing backflip', spiderDrop: 'spider dropping him', swatHit: 'swat', zap: 'zap',
-      alienKick: 'shin kick', rigHit: 'falling rig', powerUp: 'power-up', roseHit: 'rose', dodge: 'narrow escape', doze: 'host dozing off', pieHit: 'pie in the face' }[e.act] || e.act;
+      alienKick: 'shin kick', rigHit: 'falling rig', powerUp: 'power-up', roseHit: 'rose', dodge: 'narrow escape', doze: 'host dozing off', pieHit: 'pie in the face', bang: 'BANG! flag' }[e.act] || e.act;
     sidebar.ticker(`Audience ${verb} at the ${what}`);
     cultists.react(e.kind, e.intensity);
     // an unhappy crowd throws things
@@ -637,7 +638,30 @@ const show = new Show({
   lullaby: (on) => (sleep.lullaby = on),
   asleep: () => sleep.asleep,
   mic: (on) => audio.setMic(on),
+  jonkler: () => jonkler,
 });
+// the Jonkler: nothing leaves his toy gun but a BANG! flag, and yet each shot throws Leno twice as hard as the last
+const jonkler = new Jonkler({
+  npcs, sfx: showSfx, center: show.center, stageRadius: physHost?.stageRadius ?? 7.3, getLeno, ticker: (t) => sidebar.ticker(t),
+  onBang: (shot, from) => {
+    const dir = hostAt().clone().sub(from).setY(0); if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1); dir.normalize();
+    const mag = 320 * Math.pow(2, shot);                 // 320, 640, 1280 N·s
+    launchHost(dir.multiplyScalar(mag).add(new THREE.Vector3(0, mag * 0.35, 0)));
+    lastPieHit = performance.now();                      // (a slapstick throw: landing from it isn't an injury)
+    pulse('bangHit', 'ambientTouch', 90, 0.5); pulse('bangLoom', 'heckler', 200, 0.3);
+    audience.react('bang');
+    sidebar.ticker(shot ? `BANG! (${2 ** shot}× harder)` : 'BANG!');
+  },
+  onLaugh: () => { if (Math.random() < 0.6) crowdDo('laugh', 0.7); },
+});
+/** throw him bodily: the same velocity change for every part of the ragdoll (a huge shove on one part would tear it) */
+function launchHost(v) {
+  if (host === flyHost) { flyHost.applyImpulse('thorax', v); return; }
+  if (!host.rag) return;
+  const bodies = Object.values(host.rag.bodies), M = bodies.reduce((a, b) => a + b.mass(), 0);
+  for (const b of bodies) { const k = b.mass() / M; b.applyImpulse({ x: v.x * k, y: v.y * k, z: v.z * k }, true); }
+  host.loosen?.(0.95, 1.6);
+}
 // the wheel's prizes (and anything else a segment hands out)
 function showPrize(kind) {
   if (kind === 'sugar') return happenings.sugarThrow(6);
@@ -814,7 +838,7 @@ function applySwitches() {
   $('optWorms').disabled = P; $('optWorms').closest('label')?.classList.toggle('grayed', P);
   if (P && wasPeaceful === false) {
     // switched on mid-show: the harmful things leave now
-    predators.calmDown(); happenings.calmDown(); clownCar.leave();
+    predators.calmDown(); happenings.calmDown(); clownCar.leave(); jonkler.leave();
     if ($('optWorms').checked) setWorms(false);
     if (show.cur && SEGMENTS[show.cur.key]?.harmful) show.stopSegment();
     sidebar.ticker('🕊 Peaceful Mode: nothing harmful will happen');
@@ -1146,7 +1170,7 @@ function resetShow() {
   else if (host.rag) { host.rag.place(host.home, 0); host.gesture = null; host.fallenFor = 0; host.getUp = 0; }
   else leno.place(stage.markers.host, stage.ground, stage.markers.stageCenter);
   mind.mood = 0; behavior.nausea = 0; behavior.transcript.length = 0;
-  brood.clear(); goose.clear(); show.clear(); predators.clear(); happenings.clear(); clownCar.clear(); convulseT = 0; cultists.ovation = 0;
+  brood.clear(); goose.clear(); show.clear(); predators.clear(); happenings.clear(); clownCar.clear(); jonkler.clear(); convulseT = 0; cultists.ovation = 0;
   sleep.wake('show reset'); sleep.pressure = 0.15; dimTarget = 1; sleep.lullaby = false;
   food.clear(); for (const n of npcs.list) n.remove(); npcs.list.length = 0; cultists.hidden.clear(); instincts.hunger = 0.4;
   sidebar.ticker('Show reset');
@@ -1325,6 +1349,6 @@ renderer.setAnimationLoop(() => {
 
 window.flyleno = {
   scene, camera, controls, leno, stageScreens, brood, goose, show, showSfx, predators, happenings, stageLODs, propLOD, glitch, get host() { return host; },
-  switches, sleep, wellbeing, clownCar, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
+  switches, sleep, wellbeing, clownCar, jonkler, setForm, stage, cultists, food, npcs, instincts, projectiles, liveCams, throwThing, worker, director, mind, audience, behavior, audio, music, hearing, fx, motorGains,
   get motor() { return lastMotor; },
 };

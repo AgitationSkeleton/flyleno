@@ -23,6 +23,7 @@ const EFFECTS = {
   frogHit: { injury: 0.03, grime: 0.06 },        // sticky tongue
   fallTouch: { injury: 0.05, dizzy: 0.2 },
   softFall: { dizzy: 0.15 },                     // knocked over by a cream pie
+  bangHit: { injury: 0.01, dizzy: 0.35 },        // thrown by the Jonkler's BANG! flag
   contactTouch: { injury: 0.001 },
   rainTouch: { wet: 0.06 },
   confettiTouch: { grime: 0.01 },
