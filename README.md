@@ -100,7 +100,7 @@ browsers don't expose iframe pixels otherwise. The video's sound reaches the fly
 
 **The goose** (`js/goose.js`): at random intervals (every ~1–3 minutes, on its own schedule) a
 low-poly goose waddles onto the stage. It honks (YouTube SFX) and defecates profusely. The droppings
-are food: humanoid Leno ignores them, but Fly-Leno seeks them out even when barely hungry (over a nearer plain
+are food: humanoid Leno eats them when he's hungry, and Fly-Leno seeks them out even when barely hungry (over a nearer plain
 snack, and keeping track of them while it flies), tastes them (sugar neurons → MN9) and eats them.
 
 **Predators** (`js/predators.js`, engineered; random visits like the goose, never lethal, off with `?quiet`):
@@ -268,7 +268,7 @@ same way: the strings lower him into a curl, forehead to the floor.
 | Technical difficulties | screens full of soft grey static; "Dave, can you fix the static?" | visual noise (R1-6), hiss (JO-A) |
 | Phone-in | the desk phone rings and a garbled caller asks e.g. "Why do you puke so much?" or "What do the worms in your brain tell you?" (shown in the ticker). Then the line goes quiet for up to 9 s: whatever Leno says on his own is quoted as his answer (nothing drives his voice). Silence gets crickets and the caller hangs up | ring and voice (JO); laughs/applause or silence |
 | Monologue | a mic tap-tap, a spotlight, and his voice through a PA microphone (band-limited, a presence boost, gain into a soft clipper so loud syllables peak, a slapback; about 3 dB above his dry voice). Three "jokes": he has the floor for up to 8 s each, and nothing makes him talk. A recorded snare roll builds while he talks; when he stops, a recorded rimshot (a cymbal crash on the last) and the audience's verdict, picked at random: laughs, applause, a standing ovation (with roses), boos, boos and a few tomatoes or pipes, or a tomato, pipe or mixed storm (the harmful ones only where their switches allow; the last joke leans toward an ovation). Silence gets crickets, sometimes boos. Loud stretches can make the mic squeal with feedback | spotlight (R1-6), drum roll, rimshots, feedback (JO), reward or punishment from the crowd |
-| Guest: a goose | "Our next guest… a goose!" The goose waddles on in a follow spot, honks and poops | honks (JO), a spotlit mover (LC4, R1-6), droppings for Fly-Leno |
+| Guest: a goose | "Our next guest… a goose!" The goose waddles on in a follow spot, honks and poops | honks (JO), a spotlit mover (LC4, R1-6), droppings to eat |
 | 500 years young | "I'm 500 years young, folks": a stagehand carries out a birthday cake with candles, the crowd sings Happy Birthday, balloons and confetti. The cake is food he goes for even when not hungry | the song and applause (JO), sugar taste, reward |
 | The Leno Wave | the audience does a stadium wave three times round, chanting "LE-NO" | a wave of motion across the seats (R1-6), chant (JO), cheers |
 | Spin the Wheel of Leno | a prize wheel on the screens spins (at most ~1 turn a second, soft colours) and lands on a prize: a sugar shower, roses, an ovation, confetti, a goose, a mushroom, nothing, or (only when tomato storms are on) tomatoes | moving picture (R1-6), clicks (JO), then the prize |

@@ -55,9 +55,10 @@ export class Instincts {
     const fwd = host.forward();
 
     // ---- food: taxis, taste on contact, eating
-    // humanoid Leno ignores goose droppings; Fly-Leno is keen on them. Something he's keen on (droppings for the fly,
-    // the mushroom, a cake) wins over a nearer plain snack; in flight the fly still sees food on the floor below
-    const edible = host.isFly ? null : (it) => it.kind !== 'poop';
+    // goose droppings are food for both forms: humanoid Leno eats them when he's hungry, Fly-Leno is keen on them.
+    // Something he's keen on (droppings for the fly, the mushroom, a cake) wins over a nearer plain snack; in flight
+    // the fly still sees food on the floor below
+    const edible = null;
     const keen = (it) => (host.isFly && it.kind === 'poop') || !!it.eager;
     const dy = host.isFly && host.flying ? 8 : 1.5;
     const near = this.food.nearest(pos, 18, (it) => (!edible || edible(it)) && keen(it), dy) ?? this.food.nearest(pos, 18, edible, dy);

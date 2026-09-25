@@ -517,7 +517,7 @@ const instincts = new Instincts({
       if (item.rotten) pulse('eclairBitter', 'tomato', 60, 0.5);          // it has gone off: bitter receptors too
     }
     if (type === 'ate') {
-      sidebar.ticker(item.kind === 'poop' ? 'Fly-Leno happily slurps up the goose droppings' : `Leno finished the ${item.kind}`);
+      sidebar.ticker(item.kind === 'poop' ? (host === flyHost ? 'Fly-Leno happily slurps up the goose droppings' : 'Leno eats the goose droppings') : `Leno finished the ${item.kind}`);
       audience.react(item.kind === 'poop' ? 'eatPoop' : item.kind === 'mushroom' ? 'powerUp' : 'eat');
       wellbeing.ate(item.kind);
       if (item.kind === 'mushroom') {

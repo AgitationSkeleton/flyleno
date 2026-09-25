@@ -1,5 +1,5 @@
 // A low-poly goose that wanders onto the stage at random intervals (every ~1-3 minutes), honks, and defecates profusely. Its droppings are
-// food in the world (js/food.js, kind 'poop') - ignored by humanoid Leno, but Fly-Leno happily seeks them out,
+// food in the world (js/food.js, kind 'poop') - humanoid Leno eats them when he's hungry, Fly-Leno happily seeks them out,
 // as flies do.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
