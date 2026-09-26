@@ -41,6 +41,7 @@ export const EVENT_GROUPS = [
     ['cueApplause', 'Applause cues', false],
     ['cueDrives', 'Walk drives', false],
     ['cueBitter', 'Bitter-taste cue', true],
+    ['wbrb', "We'll Be Right Back", false],
   ]],
 ];
 

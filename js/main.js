@@ -602,6 +602,7 @@ function cue(text) {
   // sidebar.ticker(`Cue card: "${text}"`);
 }
 function pushHost(v) {
+  maybeWBRB(v.length());
   if (host === flyHost) { flyHost.applyImpulse('pelvis', v); return; }
   if (!host.rag) return;
   host.rag.applyImpulse('pelvis', v);
@@ -668,6 +669,43 @@ const kybo = new KyboRin({
     audience.react('saber'); sidebar.ticker('The lightsaber sends Leno flying!');
   },
 });
+// "We'll Be Right Back": now and then, when something sends Leno flying (a knock of WBRB_MIN N·s or more), the
+// picture freezes a moment later, mid-flight: posterised and tinted like the meme, "We'll Be Right Back" in the
+// corner, the Eric Andre Show sting playing and everything else silent. The world and the brain hold still until
+// the sting ends.
+const WBRB_MIN = 450, WBRB_CHANCE = 0.35, WBRB_GAP = 45000;
+let frozen = false, wbrbNext = 0;
+function maybeWBRB(impulse) {
+  if (impulse < WBRB_MIN || frozen || paused || !allowed('wbrb') || performance.now() < wbrbNext || Math.random() > WBRB_CHANCE) return;
+  wbrbNext = performance.now() + WBRB_GAP;
+  setTimeout(freezeFrame, 350);                          // (once he's in the air)
+}
+async function freezeFrame() {
+  const clip = audio.clips('sfx', 'wbrb')?.[0];
+  if (!clip || !audio.ctx || frozen || paused) return;
+  const buf = await audio.load(clip.file);
+  if (!buf || frozen || paused) return;
+  frozen = true;
+  worker.postMessage({ type: 'pause' });
+  const A = audio.ctx, musicWas = music.master, video = stageScreens?.mode === 'video' && stageScreens.player?.getPlayerState?.() === 1;
+  audio.bus.gain.setTargetAtTime(0.0001, A.currentTime, 0.03);                   // the studio goes quiet
+  music.setMaster(0);
+  if (video) stageScreens.player.pauseVideo();
+  $('viewport').classList.add('wbrb');
+  const src = A.createBufferSource(); src.buffer = buf; src.connect(audio.master);
+  const done = () => {
+    if (!frozen) return;
+    frozen = false;
+    $('viewport').classList.remove('wbrb');
+    audio.bus.gain.setTargetAtTime(1, A.currentTime, 0.05);
+    music.setMaster(musicWas);
+    if (video && stageScreens.mode === 'video') stageScreens.player.playVideo();
+    if (!paused) worker.postMessage({ type: 'run' });
+  };
+  src.onended = done; src.start();
+  setTimeout(done, buf.duration * 1000 + 600);          // (in case it never reports its end)
+}
+
 /** Kybo Rin's lightsaber: the first thing the blade (from `from` along `dir`, `len` long) runs into, and whether
  *  that is Leno, the floor or something else (the set, a prop, another figure) */
 function bladeHit(from, dir, len, npc) {
@@ -686,6 +724,7 @@ function bladeHit(from, dir, len, npc) {
 }
 /** throw him bodily: the same velocity change for every part of the ragdoll (a huge shove on one part would tear it) */
 function launchHost(v) {
+  maybeWBRB(v.length());
   if (host === flyHost) { flyHost.applyImpulse('thorax', v); return; }
   if (!host.rag) return;
   const bodies = Object.values(host.rag.bodies), M = bodies.reduce((a, b) => a + b.mass(), 0);
@@ -838,6 +877,7 @@ const EVENT_BUTTONS = [
   ['Sugar shower', 'sugar', () => happenings.sugarThrow(5)],
   ['Heckler', 'hecklers', () => { if (npcs.busy || audienceAway) sidebar.ticker('Someone is already on stage'); else npcs.heckle(getLeno); }],
   ['Stagehand snack', 'snacks', () => { if (npcs.busy) sidebar.ticker('Someone is already on stage'); else npcs.deliverSnack(getLeno, 'sugar'); }],
+  ["We'll Be Right Back", 'wbrb', () => freezeFrame()],
   ['Applause', 'cheers', () => crowdDo('applause', 1, true)],
   ['Cheers', 'cheers', () => crowdDo('cheer', 1, true)],
   ['Laughter', 'cheers', () => crowdDo('laugh', 1, true)],
@@ -1197,6 +1237,7 @@ $('aboutLink').onclick = (e) => {
     <a href="https://commons.wikimedia.org/wiki/File:Drum_Roll_-_Concert_Band_-_United_States_Air_Force_Band.mp3" target="_blank" rel="noopener">United States Air Force Band</a> (public domain).
     Mic feedback: <a href="https://freesound.org/people/celesti-whispers/sounds/443023/" target="_blank" rel="noopener">celesti-whispers</a> and
     <a href="https://freesound.org/people/Breviceps/sounds/489566/" target="_blank" rel="noopener">Breviceps</a> (Freesound, CC0).
+    "We'll Be Right Back": <i>The Eric Andre Show</i> (Adult Swim).
     Body impacts: <i>Half-Life 2</i>'s physics/body sounds, © Valve. Kybo Rin's rant: voiced by Vinny, from
     <a href="https://www.youtube.com/watch?v=ki3ssj466E0" target="_blank" rel="noopener">The Grey Leno Show</a>; his lightsaber:
     <i>Star Wars</i> lightsaber sounds, © Lucasfilm.</p>
@@ -1237,6 +1278,7 @@ function resetShow() {
 
 renderer.setAnimationLoop(() => {
   const rawDt = Math.min(0.05, clock.getDelta());
+  if (frozen) return;                                    // "We'll Be Right Back": the last frame stays up
   const dt = paused ? 0 : rawDt;
   if (!paused) {
   // sleep: dozes off when he's tired and safe; asleep, his own initiative rests (the show goes on around him)

@@ -301,6 +301,13 @@ I don't need, like policies" (candidacy speech).
 its self-sustained ~900k spikes/s state every so often, even at idle. The runaway guard resets it
 after 2.5 s, shown as a commercial break during the show.
 
+**We'll Be Right Back:** now and then (about 1 in 3, at most every 45 s) when something sends Leno flying (a knock
+of 450 N·s or more: the Jonkler's bigger shots, Kybo Rin's saber), the picture freezes 0.35 s later, mid-flight. The
+frame is posterised and tinted like the meme, "We'll Be Right Back" appears in the lower right, and the Eric Andre
+Show sting plays (`tools/audio/s14_wbrb_sfx.py`: [8d0apIpKMh8](https://www.youtube.com/watch?v=8d0apIpKMh8) from
+0:29 until it fades, 4.4 s) with the studio, the music and the screens silent. The world and the brain hold still
+until the sting ends. It has a switch in the Events panel and a button in Tonight's show.
+
 **Eggs and hatchlings** (`js/brood.js`, engineered):
 - **Laying:** each time Leno reaches a new surface (floor, a platform step, the platform top, or a
   landing after flight) there is a 5% chance he squats and lays a Drosophila-style egg: white, with two

@@ -230,3 +230,9 @@ button:disabled { cursor: not-allowed; }
   #viewTools button { width: 30px; height: 30px; }
 }
 .segments .seg-head { flex-basis: 100%; margin: 6px 0 0; font: 600 10.5px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: #8d8a96; }
+/* "We'll Be Right Back": the frozen frame posterised and tinted, the caption in the lower right */
+#viewport.wbrb > canvas#three, #viewport.wbrb > div:first-child { filter: url(#wbrbFx) sepia(.4) saturate(.8) hue-rotate(-8deg) contrast(1.1); }
+#wbrb { display: none; position: absolute; right: max(18px, 6cqw); bottom: max(64px, 7cqw); z-index: 3; pointer-events: none;
+  font: 700 clamp(26px, 6.4cqw, 88px)/1.02 "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: -0.01em;
+  color: #f3efe2; text-shadow: .04em .05em 0 #0008; }
+#viewport.wbrb #wbrb { display: block; }

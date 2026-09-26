@@ -19,6 +19,14 @@
   <main id="app">
     <section id="viewport">
       <canvas id="three"></canvas>
+      <div id="wbrb" aria-hidden="true">We'll<br>Be<br>Right<br>Back</div>
+      <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <filter id="wbrbFx" color-interpolation-filters="sRGB"><feComponentTransfer>
+          <feFuncR type="discrete" tableValues="0.1 0.3 0.52 0.76 0.98"/>
+          <feFuncG type="discrete" tableValues="0.1 0.32 0.54 0.76 0.96"/>
+          <feFuncB type="discrete" tableValues="0.05 0.2 0.38 0.58 0.8"/>
+        </feComponentTransfer></filter>
+      </svg>
       <div id="hud">
         <div class="hud-title">TUURD <span>Talk</span></div>
         <div class="hud-sub">Tonight's host: Grey Leno, piloted by <em>Drosophila melanogaster</em></div>

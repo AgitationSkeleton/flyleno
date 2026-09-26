@@ -165,6 +165,11 @@
    "url": "",
    "title": "Star Wars lightsaber sounds (SABER)",
    "author": "Lucasfilm"
+  },
+  {
+   "id": "8d0apIpKMh8",
+   "url": "https://www.youtube.com/watch?v=8d0apIpKMh8",
+   "title": "Eric Andre Show We'll Be Right Back Full Song"
   }
  ],
  "leno": {
@@ -5530,6 +5535,21 @@
     },
     "conf": null,
     "origin": "kybo"
+   }
+  ],
+  "wbrb": [
+   {
+    "file": "sfx/wbrb/wbrb_001.ogg",
+    "dur": 4.4,
+    "rms": null,
+    "f0": null,
+    "src": {
+     "video": "8d0apIpKMh8",
+     "t0": 29.0,
+     "t1": 33.4
+    },
+    "conf": null,
+    "origin": "youtube"
    }
   ]
  },
