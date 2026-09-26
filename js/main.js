@@ -343,7 +343,7 @@ const projectiles = host !== leno ? new Projectiles(scene, host, {
     if (kind === 'pie') food.addPie(floor ?? rest ?? p);                     // a pie ends up on the floor either way: food
     else if (!onLeno) food.addTomato(rest ?? p);
   },
-  onImpact: (it, { hitLeno, speed }) => {
+  onImpact: (it, { hitLeno, speed, bodyName }) => {
     const p = it.mesh.position.clone().project(camera), pan = Math.max(-1, Math.min(1, p.x));
     if (it.kind === 'sugar') {
       // a sugar cube can't hurt him: a soft tick, and on him just a light touch
@@ -388,6 +388,7 @@ const projectiles = host !== leno ? new Projectiles(scene, host, {
       if (hitLeno && !it.hitLeno) {
         it.hitLeno = true;
         pulse('rigTouch', 'ambientTouch', 100, 0.6); reinforce(-0.9, 1.2); crowdDo('gasp', 1); audience.react('rigHit');
+        struck(25 * speed);
         sidebar.ticker(`A falling ${it.kind === 'camera' ? 'camera' : 'stage light'} hits Leno!`);
       }
       return;
@@ -402,6 +403,7 @@ const projectiles = host !== leno ? new Projectiles(scene, host, {
       pulse('hitTouch', 'ambientTouch', 90, 0.6);                      // a metal pipe hurts
       reinforce(-0.8, 1.0);
       audience.react('pipeHit');
+      if (!it.struck) { it.struck = true; struck(20 * speed * (bodyName === 'head' ? 1.3 : 1)); }
     }
   },
 }) : null;
@@ -602,7 +604,7 @@ function cue(text) {
   // sidebar.ticker(`Cue card: "${text}"`);
 }
 function pushHost(v) {
-  maybeWBRB(v.length());
+  struck(v.length());
   if (host === flyHost) { flyHost.applyImpulse('pelvis', v); return; }
   if (!host.rag) return;
   host.rag.applyImpulse('pelvis', v);
@@ -669,14 +671,16 @@ const kybo = new KyboRin({
     audience.react('saber'); sidebar.ticker('The lightsaber sends Leno flying!');
   },
 });
-// "We'll Be Right Back": now and then, when something sends Leno flying (a knock of WBRB_MIN N·s or more), the
-// picture freezes a moment later, mid-flight: posterised and tinted like the meme, "We'll Be Right Back" in the
-// corner, the Eric Andre Show sting playing and everything else silent. The world and the brain hold still until
-// the sting ends.
-const WBRB_MIN = 450, WBRB_CHANCE = 0.35, WBRB_GAP = 45000;
+// "We'll Be Right Back": now and then, when something hits Leno hard enough, the picture freezes a moment later:
+// posterised and tinted like the meme, "We'll Be Right Back" in the corner, the Eric Andre Show sting playing and
+// everything else silent. The world and the brain hold still until the sting ends.
+// How hard a hit is, in N·s of knock: a shove or a launch, its size; a pipe or a falling camera or light, by how
+// fast it was going when it hit him (a pipe to the head counts extra); a duende's kick, by how hard that one kicked.
+// WBRB_MIN or more can do it, at most once every WBRB_GAP (hard hits are common: duendes kick by the dozen).
+const WBRB_MIN = 300, WBRB_CHANCE = 0.35, WBRB_GAP = 5 * 60000;
 let frozen = false, wbrbNext = 0;
-function maybeWBRB(impulse) {
-  if (impulse < WBRB_MIN || frozen || paused || !allowed('wbrb') || performance.now() < wbrbNext || Math.random() > WBRB_CHANCE) return;
+function struck(size) {
+  if (size < WBRB_MIN || frozen || paused || !allowed('wbrb') || performance.now() < wbrbNext || Math.random() > WBRB_CHANCE) return;
   wbrbNext = performance.now() + WBRB_GAP;
   setTimeout(freezeFrame, 350);                          // (once he's in the air)
 }
@@ -724,7 +728,7 @@ function bladeHit(from, dir, len, npc) {
 }
 /** throw him bodily: the same velocity change for every part of the ragdoll (a huge shove on one part would tear it) */
 function launchHost(v) {
-  maybeWBRB(v.length());
+  struck(v.length());
   if (host === flyHost) { flyHost.applyImpulse('thorax', v); return; }
   if (!host.rag) return;
   const bodies = Object.values(host.rag.bodies), M = bodies.reduce((a, b) => a + b.mass(), 0);
@@ -830,14 +834,16 @@ const happenings = new Happenings({
     return [hostAt().clone().add(new THREE.Vector3(0, 0.4, 0))];
   },
   kick: (i, dir) => {
-    // a kick in the shins: knocks the leg (and him) around
-    if (host === flyHost) flyHost.applyImpulse('thorax', dir.clone().multiplyScalar(110).add(new THREE.Vector3(0, 60, 0)));
+    // a kick in the shins: knocks the leg (and him) around; some duendes kick harder than others (k)
+    const k = 0.75 + Math.random() * 0.55;
+    struck(280 * k);
+    if (host === flyHost) flyHost.applyImpulse('thorax', dir.clone().multiplyScalar(110 * k).add(new THREE.Vector3(0, 60 * k, 0)));
     else if (host.rag) {
       // the leg is swept, and the whole body gets shoved and popped up a little
-      host.rag.applyImpulse(i ? 'calf_r' : 'calf_l', dir.clone().multiplyScalar(90));
-      host.rag.applyImpulse('pelvis', dir.clone().setY(0).multiplyScalar(110).add(new THREE.Vector3(0, 70, 0)));
-      host.rag.applyImpulse('chest', dir.clone().setY(0).multiplyScalar(60));
-      loosenHost(160);
+      host.rag.applyImpulse(i ? 'calf_r' : 'calf_l', dir.clone().multiplyScalar(90 * k));
+      host.rag.applyImpulse('pelvis', dir.clone().setY(0).multiplyScalar(110 * k).add(new THREE.Vector3(0, 70 * k, 0)));
+      host.rag.applyImpulse('chest', dir.clone().setY(0).multiplyScalar(60 * k));
+      loosenHost(160 * k);
     }
     pulse('alienKick', 'ambientTouch', 60, 0.3); reinforce(-0.15, 0.4); audience.react('alienKick');
   },
